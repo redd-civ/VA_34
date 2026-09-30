@@ -1,611 +1,501 @@
+/* ===== Вдохновение Астрала — единый стиль для всех страниц ===== */
+/* НЕТ медиа-запросов — фиксированные цвета для всех устройств */
 
-:root{
-  --bg:#f9f4ec;
-  --bg2:#f2ebe0;
-  --card:#fffdf9;
-  --ink:#2b2724;
-  --ink2:#57514a;
-  --ink3:#8b8377;
-  --line:#e6ddd0;
-  --line2:#d6cbba;
-  --shadow:0 1px 2px rgba(70,55,35,.05), 0 6px 18px rgba(70,55,35,.06);
-
-  --teal:#0d9488;      --teal-w:#dceceb;
-  --amber:#b96f22;     --amber-w:#f6ead8;
-  --plum:#7b3f74;      --plum-w:#efe3ee;
-  --rust:#b04a30;      --rust-w:#f5e2db;
-  --forest:#2f6f42;    --forest-w:#e0eee4;
-  --indigo:#3f4f96;    --indigo-w:#e2e7f4;
-  --gold:#9c7a1e;      --gold-w:#f3ecd6;
-  --cyan:#2b7a8c;      --cyan-w:#dceef2;
-  --rose:#a24d6a;      --rose-w:#f5e2e9;
-
-  --k-pos:#2f6f42;
-  --k-neg:#b04a30;
-  --k-neu:#b96f22;
-  --k-evil:#5e2a5a;
-
-  --r:10px;
+:root {
+  --bg: #f5f0e8;
+  --panel: #faf6ee;
+  --text: #2a2520;
+  --heading: #1a4a5a;
+  --accent: #d4880a;
+  --accent-light: #f0c060;
+  --link: #1a6a8a;
+  --border: #c4b89a;
+  --positive: #2a8a3a;
+  --negative: #c0392b;
+  --neutral: #6a6a6a;
+  --gm-note: #8a6a20;
+  --gm-bg: #fdf6e3;
+  --tag-pos-bg: #e8f5e9;
+  --tag-pos-text: #2a8a3a;
+  --tag-neg-bg: #fde8e8;
+  --tag-neg-text: #c0392b;
+  --tag-neu-bg: #e8e8e8;
+  --tag-neu-text: #555;
 }
 
-*{box-sizing:border-box;}
-html{scroll-behavior:smooth;}
+* { box-sizing: border-box; }
 
-body{
-  margin:0;
-  font-family:"Georgia","Iowan Old Style","Palatino Linotype",serif;
-  background:
-    radial-gradient(1200px 600px at 15% -10%, #fdf8f1 0%, transparent 60%),
-    radial-gradient(1000px 500px at 100% 0%, #f4efe6 0%, transparent 55%),
-    var(--bg);
-  color:var(--ink);
-  line-height:1.62;
-  font-size:16px;
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  font-size: 16px;
 }
 
-/* ===== Декоративный разделитель ===== */
-.divider{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  margin:26px 0 14px;
-  color:var(--ink3);
-  font-size:.9rem;
-  letter-spacing:.3em;
-}
-.divider::before,
-.divider::after{
-  content:"";
-  flex:1;
-  height:1px;
-  background:linear-gradient(90deg, transparent, var(--line2), transparent);
+/* ===== Заголовки ===== */
+h1, h2, h3, h4 {
+  color: var(--heading);
+  font-weight: 600;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
 }
 
-.layout{
-  display:flex;
-  max-width:1400px;
-  margin:0 auto;
-  gap:26px;
-  padding:24px 20px 90px;
+h1 {
+  font-size: 2em;
+  text-align: center;
+  border-bottom: 3px solid var(--accent);
+  padding-bottom: 0.3em;
 }
 
-/* ===== НАВИГАЦИЯ ===== */
-nav.toc{
-  position:sticky;
-  top:18px;
-  align-self:flex-start;
-  width:256px;
-  flex:0 0 256px;
-  max-height:calc(100vh - 36px);
-  overflow-y:auto;
-  background:linear-gradient(180deg,#fffdf9 0%, #fbf6ee 100%);
-  border:1px solid var(--line);
-  border-radius:var(--r);
-  padding:16px 14px;
-  box-shadow:var(--shadow);
-  font-size:.83rem;
-}
-nav.toc h2{
-  font-size:.72rem;
-  text-transform:uppercase;
-  letter-spacing:.13em;
-  color:var(--teal);
-  margin:0 0 12px;
-  font-weight:700;
-  border-bottom:2px solid var(--teal-w);
-  padding-bottom:8px;
-  display:flex;
-  align-items:center;
-  gap:8px;
-}
-nav.toc a{
-  display:flex;
-  align-items:center;
-  gap:7px;
-  color:var(--ink2);
-  text-decoration:none;
-  padding:3px 7px;
-  border-radius:6px;
-  line-height:1.32;
-  border-left:2px solid transparent;
-  transition:all .15s;
-}
-nav.toc a .ico{
-  flex:0 0 18px;
-  text-align:center;
-  font-size:.95em;
-  opacity:.75;
-}
-nav.toc a:hover{
-  background:var(--teal-w);
-  color:var(--teal);
-  border-left-color:var(--teal);
-}
-nav.toc a:hover .ico{opacity:1;}
-nav.toc .toc-sub{
-  padding-left:22px;
-  font-size:.76rem;
-  color:var(--ink3);
-}
-nav.toc .toc-sub .ico{font-size:.85em;}
-
-main{flex:1 1 auto;min-width:0;}
-
-/* ===== ШАПКА ===== */
-header.hero{
-  background:
-    radial-gradient(600px 300px at 90% -30%, #f3e7d4 0%, transparent 70%),
-    linear-gradient(135deg,#0d9488 0%, #14b8a6 55%, #2dd4bf 100%);
-  color:#fff;
-  border-radius:var(--r);
-  padding:34px 32px 30px;
-  margin-bottom:24px;
-  box-shadow:0 8px 26px rgba(13,148,136,.22);
-  border:1px solid #0a6e66;
-  position:relative;
-  overflow:hidden;
-  text-align:center;
-}
-header.hero::before{
-  content:"✦  ✧  ✦";
-  position:absolute;
-  top:14px;
-  left:0;
-  right:0;
-  text-align:center;
-  font-size:.85rem;
-  letter-spacing:.8em;
-  opacity:.55;
-}
-header.hero::after{
-  content:"✧  ✦  ✧";
-  position:absolute;
-  bottom:12px;
-  left:0;
-  right:0;
-  text-align:center;
-  font-size:.85rem;
-  letter-spacing:.8em;
-  opacity:.55;
-}
-header.hero .hero-icon{
-  font-size:2.4rem;
-  line-height:1;
-  margin-bottom:8px;
-  display:block;
-  filter:drop-shadow(0 2px 4px rgba(0,0,0,.2));
-}
-header.hero h1{
-  margin:0 0 8px;
-  font-size:2rem;
-  font-weight:600;
-  letter-spacing:.02em;
-  text-shadow:0 1px 3px rgba(0,0,0,.2);
-}
-header.hero .sub{
-  margin:0;
-  font-size:1.04rem;
-  opacity:.94;
-  font-style:italic;
+h2 {
+  font-size: 1.5em;
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 0.2em;
 }
 
-/* ===== СЕКЦИИ ===== */
-section{
-  --a:var(--teal);
-  --aw:var(--teal-w);
-  background:var(--card);
-  border:1px solid var(--line);
-  border-radius:var(--r);
-  padding:24px 26px;
-  margin-bottom:20px;
-  box-shadow:var(--shadow);
-  border-top:3px solid var(--a);
-  position:relative;
+h3 { font-size: 1.25em; }
+h4 { font-size: 1.1em; }
+
+/* ===== Ссылки ===== */
+a {
+  color: var(--link);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--link);
 }
-section > h2{
-  margin:0 0 16px;
-  font-size:1.26rem;
-  color:var(--a);
-  font-weight:600;
-  padding-bottom:9px;
-  border-bottom:2px solid var(--aw);
-  display:flex;
-  align-items:center;
-  gap:12px;
-}
-section > h2 .h-ico{
-  flex:0 0 36px;
-  height:36px;
-  border-radius:9px;
-  background:var(--aw);
-  color:var(--a);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:1.15rem;
-  box-shadow:inset 0 0 0 1px rgba(0,0,0,.03);
+a:hover {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
 }
 
-.sec-teal{--a:var(--teal);--aw:var(--teal-w);}
-.sec-amber{--a:var(--amber);--aw:var(--amber-w);}
-.sec-plum{--a:var(--plum);--aw:var(--plum-w);}
-.sec-rust{--a:var(--rust);--aw:var(--rust-w);}
-.sec-forest{--a:var(--forest);--aw:var(--forest-w);}
-.sec-indigo{--a:var(--indigo);--aw:var(--indigo-w);}
-.sec-gold{--a:var(--gold);--aw:var(--gold-w);}
-.sec-cyan{--a:var(--cyan);--aw:var(--cyan-w);}
-.sec-rose{--a:var(--rose);--aw:var(--rose-w);}
+/* ===== Абзацы и списки ===== */
+p { margin: 0.6em 0; }
 
-h3{
-  font-size:1.06rem;
-  margin:26px 0 8px;
-  color:var(--ink);
-  font-weight:600;
-  border-left:4px solid var(--a,var(--teal));
-  padding-left:10px;
-  display:flex;
-  align-items:center;
-  gap:9px;
-}
-h3 .h-ico{
-  font-size:1.05em;
-  filter:saturate(1.1);
-}
-h4{
-  font-size:.99rem;
-  margin:18px 0 6px;
-  color:var(--ink);
-  font-weight:600;
-}
-h5{
-  font-size:.92rem;
-  margin:12px 0 4px;
-  color:var(--ink2);
-  font-weight:600;
+ul, ol { margin: 0.5em 0 0.5em 1.5em; padding: 0; }
+li { margin: 0.3em 0; }
+
+/* ===== Навигация (левая панель) ===== */
+.nav-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 240px;
+  height: 100vh;
+  overflow-y: auto;
+  background: var(--panel);
+  border-right: 2px solid var(--border);
+  padding: 15px 12px;
+  font-size: 14px;
 }
 
-p{margin:0 0 10px;}
-p+p{margin-top:-2px;}
-
-ul,ol{margin:6px 0 12px;padding-left:22px;}
-li{margin:3px 0;}
-
-ul.plain{list-style:none;padding-left:0;}
-ul.plain > li{
-  padding-left:18px;
-  position:relative;
+.nav-panel a {
+  display: block;
+  padding: 4px 8px;
+  color: var(--text);
+  border-bottom: none;
+  border-radius: 4px;
+  text-decoration: none;
 }
-ul.plain > li::before{
-  content:"▸";
-  position:absolute;
-  left:0;
-  color:var(--a,var(--teal));
-  font-size:.85em;
-  top:.15em;
+.nav-panel a:hover {
+  background: var(--accent-light);
+  color: var(--text);
 }
 
-/* ===== МАРКЕРЫ ===== */
-.pos{color:var(--forest);font-weight:600;}
-.neg{color:var(--rust);font-style:italic;}
-.neu{color:var(--amber);}
-
-.pos::before{content:"✔ ";font-size:.85em;}
-.neg::before{content:"✖ ";font-size:.85em;}
-.neu::before{content:"◐ ";font-size:.85em;}
-
-/* ===== ПЛАШКИ-ЗАМЕТКИ ===== */
-.note{
-  background:var(--amber-w);
-  border-left:4px solid var(--amber);
-  border-radius:0 var(--r) var(--r) 0;
-  padding:12px 16px 12px 44px;
-  margin:14px 0;
-  color:#5d4423;
-  font-size:.94rem;
-  position:relative;
-}
-.note::before{
-  content:"💡";
-  position:absolute;
-  left:14px;
-  top:11px;
-  font-size:1.05rem;
-}
-.note strong{color:#3e2d14;}
-
-.rule{
-  background:var(--teal-w);
-  border:1px solid #c3dcda;
-  border-left:4px solid var(--teal);
-  border-radius:var(--r);
-  padding:14px 18px 14px 46px;
-  margin:12px 0;
-  position:relative;
-}
-.rule::before{
-  content:"⚡";
-  position:absolute;
-  left:16px;
-  top:12px;
-  font-size:1.1rem;
-}
-.rule .rule-title{
-  font-weight:600;
-  color:var(--teal);
-  margin-bottom:4px;
+.nav-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--heading);
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid var(--accent);
 }
 
-/* ===== ПРЕДУПРЕЖДЕНИЕ ===== */
-.warn{
-  background:var(--rust-w);
-  border-left:4px solid var(--rust);
-  border-radius:0 var(--r) var(--r) 0;
-  padding:12px 16px 12px 44px;
-  margin:14px 0;
-  color:#5a2a1c;
-  font-size:.94rem;
-  position:relative;
-}
-.warn::before{
-  content:"⚠️";
-  position:absolute;
-  left:14px;
-  top:11px;
-  font-size:1.05rem;
+/* ===== Основной контент ===== */
+.main-content {
+  margin-left: 260px;
+  padding: 20px 30px;
+  max-width: 900px;
 }
 
-/* ===== ПРИМЕРЫ ===== */
-.example{
-  background:linear-gradient(180deg,#fdf9f0 0%, #faf3e6 100%);
-  border:1px solid #e8dcc2;
-  border-left:4px solid var(--gold);
-  border-radius:var(--r);
-  padding:16px 20px 16px 46px;
-  margin:14px 0;
-  font-size:.94rem;
-  color:var(--ink2);
-  position:relative;
+/* ===== Шапка ===== */
+.header-block {
+  text-align: center;
+  padding: 30px 20px;
+  background: linear-gradient(135deg, #1a4a5a 0%, #2a6a7a 50%, #1a4a5a 100%);
+  color: #f5f0e8;
+  border-radius: 8px;
+  margin-bottom: 20px;
 }
-.example::before{
-  content:"📜";
-  position:absolute;
-  left:16px;
-  top:14px;
-  font-size:1.05rem;
+.header-block h1 {
+  color: #f5f0e8;
+  border-bottom: 2px solid var(--accent-light);
 }
-.example .ex-head{
-  font-weight:600;
-  color:var(--gold);
-  margin-bottom:6px;
-}
-.example .quote{
-  border-left:3px solid #d9c7a0;
-  padding-left:14px;
-  margin:10px 0;
-  color:var(--ink2);
-  font-style:italic;
-  position:relative;
-}
-.example .quote::before{
-  content:"❝";
-  color:#c9b68e;
-  font-size:1.3rem;
-  font-style:normal;
-  margin-right:4px;
-  vertical-align:-.15em;
+.header-block p {
+  color: #d4d0c8;
+  font-size: 1.1em;
 }
 
-.calc{
-  font-family:"Consolas","Menlo",monospace;
-  background:#2b2724;
-  color:#f0e6d2;
-  border-radius:6px;
-  padding:5px 12px;
-  display:inline-block;
-  margin:6px 0;
-  font-size:.88rem;
-  letter-spacing:.02em;
-  border-left:3px solid var(--amber);
+/* ===== Секции ===== */
+.section {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 15px 20px;
+  margin: 12px 0;
 }
 
-/* ===== РАСЫ ===== */
-.race-grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:12px;}
-
-.race{
-  --k:var(--k-neu);
-  --kw:var(--amber-w);
-  background:linear-gradient(180deg,#fffdf9 0%, #fbf7ef 100%);
-  border:1px solid var(--line);
-  border-left:5px solid var(--k);
-  border-radius:var(--r);
-  padding:16px 18px;
-  box-shadow:0 1px 3px rgba(70,55,35,.04);
-  position:relative;
+/* ===== Таблицы ===== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
 }
-.race.karma-pos{--k:var(--k-pos);--kw:var(--forest-w);}
-.race.karma-neg{--k:var(--k-neg);--kw:var(--rust-w);}
-.race.karma-neu{--k:var(--k-neu);--kw:var(--amber-w);}
-.race.karma-evil{--k:var(--k-evil);--kw:#efe3ee;}
-
-.race > h4{
-  margin-top:0;
-  color:var(--k);
-  font-size:1.04rem;
-  border-bottom:1px solid var(--line);
-  padding-bottom:7px;
-  display:flex;
-  align-items:center;
-  gap:8px;
-  flex-wrap:wrap;
+th {
+  background: #1a4a5a;
+  color: #f5f0e8;
+  padding: 8px 10px;
+  text-align: left;
+  font-weight: 600;
 }
-.race .karma-tag{
-  display:inline-flex;
-  align-items:center;
-  gap:4px;
-  font-size:.7rem;
-  letter-spacing:.06em;
-  text-transform:uppercase;
-  background:var(--kw);
-  color:var(--k);
-  border-radius:20px;
-  padding:2px 10px;
-  font-weight:700;
-  border:1px solid color-mix(in srgb, var(--k) 25%, transparent);
+td {
+  background: #faf6ee;
+  color: #2a2520;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
 }
-.race .karma-tag::before{
-  content:"●";
-  font-size:.7em;
+tr:nth-child(even) td {
+  background: #f0eadc;
 }
 
-.race .traits{
-  list-style:none;
-  padding-left:0;
-  margin:8px 0;
+/* ===== Бейджи и теги ===== */
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  margin: 2px 3px;
 }
-.race .traits li{
-  padding-left:18px;
-  position:relative;
-  margin:3px 0;
+.tag-pos {
+  background: var(--tag-pos-bg);
+  color: var(--tag-pos-text);
 }
-.race .traits li::before{
-  content:"◆";
-  position:absolute;
-  left:2px;
-  color:var(--k);
-  font-size:.7em;
-  top:.4em;
+.tag-neg {
+  background: var(--tag-neg-bg);
+  color: var(--tag-neg-text);
 }
-
-.race .subrace{
-  background:var(--bg2);
-  border-radius:8px;
-  padding:12px 14px;
-  margin:10px 0 4px;
-  border-left:3px solid var(--k);
-}
-.race .subrace > h5{
-  margin-top:0;
-  color:var(--ink);
-  display:flex;
-  align-items:center;
-  gap:6px;
-}
-.race .subrace > h5::before{
-  content:"⌄";
-  color:var(--k);
-  font-weight:700;
+.tag-neu {
+  background: var(--tag-neu-bg);
+  color: var(--tag-neu-text);
 }
 
-/* ===== ТАБЛИЦЫ ===== */
-table{
-  width:100%;
-  border-collapse:collapse;
-  margin:12px 0;
-  font-size:.92rem;
-  border-radius:8px;
-  overflow:hidden;
-  box-shadow:0 1px 2px rgba(70,55,35,.05);
+/* ===== Заметки ГМа ===== */
+.gm-note {
+  background: var(--gm-bg);
+  border-left: 4px solid var(--gm-note);
+  padding: 10px 14px;
+  margin: 10px 0;
+  color: #5a4a10;
+  border-radius: 0 4px 4px 0;
+  font-size: 14px;
 }
-th,td{
-  border:1px solid var(--line);
-  padding:7px 11px;
-  text-align:left;
-  vertical-align:top;
-}
-th{
-  background:var(--teal);
-  color:#fff;
-  font-weight:600;
-  letter-spacing:.02em;
-}
-tr:nth-child(even) td{background:#fbf6ee;}
-tr:hover td{background:var(--teal-w);}
-
-/* ===== ГЛОССАРИЙ ===== */
-.glossary{
-  list-style:none;
-  padding:0;
-  margin:10px 0;
-}
-.glossary > li{
-  padding:9px 0 9px 14px;
-  border-bottom:1px solid var(--line);
-  border-left:2px solid transparent;
-  transition:all .15s;
-}
-.glossary > li:last-child{border-bottom:none;}
-.glossary > li:hover{
-  border-left-color:var(--a,var(--teal));
-  background:#fdfaf4;
-}
-.glossary .term{
-  font-weight:600;
-  color:var(--a,var(--teal));
-}
-.glossary .term::before{
-  content:"✦ ";
-  font-size:.8em;
-  opacity:.7;
+.gm-note::before {
+  content: "Заметка ГМа: ";
+  font-weight: 700;
+  color: var(--gm-note);
 }
 
-/* ===== БЕЙДЖИ СТИХИЙ / ТИПОВ ===== */
-.badge{
-  display:inline-flex;
-  align-items:center;
-  gap:4px;
-  padding:1px 9px;
-  border-radius:20px;
-  font-size:.75rem;
-  font-weight:600;
-  letter-spacing:.03em;
-  border:1px solid;
-  white-space:nowrap;
-  vertical-align:middle;
+/* ===== Кнопка возврата ===== */
+.back-btn {
+  display: inline-block;
+  padding: 8px 18px;
+  background: #1a4a5a;
+  color: #f5f0e8 !important;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  border-bottom: none;
+  margin: 10px 0;
+  transition: background 0.2s;
 }
-.badge.fire{background:#fde8dc;color:#b04a30;border-color:#eec9b6;}
-.badge.water{background:#dceef2;color:#2b7a8c;border-color:#b6dbe3;}
-.badge.air{background:#e6eef4;color:#3f6f9c;border-color:#c2d6e4;}
-.badge.earth{background:#e8e0cf;color:#7a5a2a;border-color:#d4c5a6;}
-.badge.light{background:#f6efd6;color:#9c7a1e;border-color:#e6d9a8;}
-.badge.dark{background:#e7e0ee;color:#5e2a5a;border-color:#d1c1dd;}
-.badge.nature{background:#e0eee4;color:#2f6f42;border-color:#bcd9c5;}
-.badge.ice{background:#e2f0f5;color:#2b6a8c;border-color:#c0dce6;}
-.badge.tech{background:#e4e7f0;color:#3f4f96;border-color:#c5cbdd;}
+.back-btn:hover {
+  background: #2a6a7a;
+  color: #fff !important;
+}
 
-/* ===== СТАТ-БЛОК ===== */
-.stats{
-  display:flex;
-  flex-wrap:wrap;
-  gap:10px;
-  margin:10px 0 14px;
+/* ===== Карточки владык (сетка) ===== */
+.lords-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin: 15px 0;
 }
-.stat{
-  background:var(--bg2);
-  border:1px solid var(--line);
-  border-radius:8px;
-  padding:8px 14px;
-  font-size:.85rem;
-  display:flex;
-  align-items:center;
-  gap:7px;
+.lord-card {
+  background: var(--panel);
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  padding: 12px;
+  text-align: center;
+  transition: border-color 0.2s;
 }
-.stat .stat-ico{font-size:1.05rem;}
-.stat b{color:var(--a,var(--teal));}
+.lord-card:hover {
+  border-color: var(--accent);
+}
+.lord-card h3 {
+  margin: 0 0 6px 0;
+  font-size: 1em;
+  color: var(--heading);
+}
+.lord-card p {
+  margin: 0;
+  font-size: 14px;
+}
+.lord-card .empty-slot {
+  color: var(--neutral);
+  font-style: italic;
+}
 
-/* ===== МЕТКА ТИРА ===== */
-.tier{
-  display:inline-block;
-  font-size:.7rem;
-  font-weight:700;
-  letter-spacing:.06em;
-  text-transform:uppercase;
-  padding:1px 8px;
-  border-radius:4px;
-  vertical-align:middle;
-  margin-left:6px;
+/* ===== Карточки Ход ИС ===== */
+.turns-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+  margin: 15px 0;
 }
-.tier-1{background:#e0eee4;color:#2f6f42;}
-.tier-2{background:#dceef2;color:#2b7a8c;}
-.tier-3{background:#f6ead8;color:#b96f22;}
-.tier-4{background:#f5e2db;color:#b04a30;}
+.turn-card {
+  background: var(--panel);
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  padding: 10px;
+  text-align: center;
+}
+.turn-card h4 {
+  margin: 0 0 4px 0;
+  color: var(--heading);
+  font-size: 1em;
+}
+.turn-card p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--neutral);
+}
 
+/* ===== Страница владыки ===== */
+.lord-header {
+  text-align: center;
+  padding: 25px 20px;
+  background: linear-gradient(135deg, #1a4a5a 0%, #2a6a7a 50%, #1a4a5a 100%);
+  color: #f5f0e8;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+.lord-header h1 {
+  color: #f5f0e8;
+  border-bottom: 2px solid var(--accent-light);
+  font-size: 1.8em;
+}
+.lord-header .subtitle {
+  color: #d4d0c8;
+  font-size: 1.05em;
+  margin: 4px 0;
+}
+.lord-header .motto {
+  font-style: italic;
+  color: var(--accent-light);
+  font-size: 1.15em;
+  margin: 8px 0;
+}
+
+/* ===== Блоки данных владыки ===== */
+.data-row {
+  display: flex;
+  gap: 8px;
+  margin: 4px 0;
+  align-items: baseline;
+}
+.data-label {
+  font-weight: 700;
+  color: var(--heading);
+  min-width: 100px;
+}
+.data-value {
+  color: var(--text);
+}
+
+/* ===== Войска ===== */
+.troop-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px 15px;
+  margin: 10px 0;
+}
+.troop-card h4 {
+  color: var(--accent);
+  font-size: 1.1em;
+  margin: 0 0 2px 0;
+}
+.troop-type {
+  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--link);
+  letter-spacing: 0.5px;
+  margin: 0 0 6px 0;
+}
+.troop-desc {
+  color: #4a4540;
+  margin: 6px 0;
+  font-size: 14px;
+}
+.troop-tags {
+  margin-top: 6px;
+}
+
+/* ===== Навыки героя ===== */
+.skill-badge {
+  display: inline-block;
+  background: #e0eef5;
+  color: #1a4a5a;
+  padding: 3px 10px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  margin: 3px 4px 3px 0;
+}
+
+/* ===== Способность ===== */
+.ability-block {
+  background: var(--panel);
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  padding: 15px 20px;
+  margin: 15px 0;
+}
+.ability-block h3 {
+  color: var(--accent);
+  font-size: 1.3em;
+  margin-top: 0;
+}
+.ability-block .ability-quote {
+  font-style: italic;
+  color: var(--gm-note);
+  margin: 6px 0;
+  padding-left: 12px;
+  border-left: 3px solid var(--accent-light);
+}
+.ability-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 10px 0;
+  font-size: 14px;
+}
+.ability-meta span {
+  background: #f0eadc;
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+/* Таблица внутри блока способности */
+.ability-block table th {
+  background: #3a2a1a;
+  color: #f0c060;
+}
+.ability-block table td {
+  color: #2a2520;
+}
+
+/* ===== Сводка старта ===== */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  margin: 15px 0;
+}
+.summary-card {
+  background: var(--panel);
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  padding: 15px;
+  text-align: center;
+}
+.summary-card .value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--accent);
+  display: block;
+}
+.summary-card .label {
+  font-size: 13px;
+  color: var(--neutral);
+  margin-top: 4px;
+}
+
+/* ===== Особенности расы ===== */
+.race-traits {
+  list-style: none;
+  margin: 10px 0;
+  padding: 0;
+}
+.race-traits li {
+  padding: 4px 0 4px 20px;
+  position: relative;
+}
+.race-traits li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* Положительные особенности */
+.trait-pos { color: var(--positive); font-weight: 600; }
+.trait-neg { color: var(--negative); font-weight: 600; }
+.trait-neu { color: var(--text); }
+
+/* ===== Подвал ===== */
+.footer {
+  text-align: center;
+  padding: 15px;
+  margin-top: 20px;
+  color: var(--neutral);
+  font-size: 13px;
+  border-top: 1px solid var(--border);
+}
+
+/* ===== Гарнизон ===== */
+.garrison-list {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0;
+}
+.garrison-list li {
+  padding: 3px 0;
+  border-bottom: 1px dotted var(--border);
+}
+.garrison-list .garrison-name {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* ===== Технологии ===== */
+.tech-list {
+  list-style: none;
+  padding: 0;
+}
+.tech-list li {
+  padding: 6px 10px;
+  margin: 4px 0;
+  background: var(--panel);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 4px 4px 0;
+}
+.tech-list .tech-name {
+  font-weight: 700;
+  color: var(--heading);
+}

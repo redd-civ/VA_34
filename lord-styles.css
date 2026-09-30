@@ -1,0 +1,631 @@
+/* ===== LORD PAGE STYLES ===== */
+/* Dark theme for Lord character pages */
+
+body {
+  background: #1a1a2e;
+  color: #d4d4e0;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  line-height: 1.7;
+  margin: 0;
+  padding: 0;
+}
+
+/* Navigation bar */
+.nav-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.8rem 2rem;
+  background: rgba(20, 20, 40, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 180, 80, 0.2);
+}
+
+.back-btn {
+  display: inline-block;
+  padding: 0.5rem 1.2rem;
+  background: linear-gradient(135deg, #2a2a4a, #1e1e3a);
+  color: #f0c060;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: bold;
+  border: 1px solid rgba(240, 192, 96, 0.3);
+  transition: all 0.3s ease;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+.back-btn:hover {
+  background: linear-gradient(135deg, #8b0000, #5a0000);
+  color: #fff;
+  border-color: #ff4444;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 0, 0, 0.4);
+}
+
+.nav-title {
+  color: #f0c060;
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+/* Header */
+.lord-header {
+  text-align: center;
+  padding: 3rem 2rem 2rem;
+  background: linear-gradient(180deg, #1a1a2e 0%, #161630 100%);
+  border-bottom: 1px solid rgba(240, 192, 96, 0.15);
+}
+
+.lord-header-ornament {
+  font-size: 1.5rem;
+  color: #ff6b35;
+  margin-bottom: 0.5rem;
+}
+
+.lord-header h1 {
+  font-size: 2.2rem;
+  color: #f0c060;
+  text-shadow: 0 0 20px rgba(240, 192, 96, 0.3);
+  margin: 0 0 0.5rem;
+}
+
+.lord-subtitle {
+  color: #b0b0cc;
+  font-size: 1rem;
+  margin: 0.3rem 0;
+}
+
+.lord-motto {
+  font-size: 1.2rem;
+  font-style: italic;
+  color: #ff8c42;
+  margin: 0.5rem 0;
+}
+
+.lord-tag {
+  color: #888899;
+  font-size: 0.85rem;
+  margin: 0.3rem 0 0;
+}
+
+/* Main content */
+.lord-main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Sections */
+section {
+  margin-bottom: 2.5rem;
+  padding: 1.5rem;
+  background: rgba(25, 25, 45, 0.6);
+  border-radius: 10px;
+  border: 1px solid rgba(80, 80, 120, 0.15);
+}
+
+section h2 {
+  color: #f0c060;
+  font-size: 1.5rem;
+  border-bottom: 2px solid rgba(240, 192, 96, 0.2);
+  padding-bottom: 0.5rem;
+  margin-top: 0;
+}
+
+section h3 {
+  color: #ff8c42;
+  font-size: 1.2rem;
+  margin-top: 1rem;
+}
+
+section h4 {
+  color: #7ab8d4;
+  font-size: 1.05rem;
+  margin-top: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Info grid */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.8rem;
+  margin: 1rem 0;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  padding: 0.8rem 1rem;
+  background: rgba(30, 30, 55, 0.8);
+  border-radius: 6px;
+  border: 1px solid rgba(80, 80, 120, 0.1);
+}
+
+.info-label {
+  color: #7ab8d4;
+  font-size: 0.85rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.3rem;
+}
+
+.info-value {
+  color: #e8e8f0;
+  font-size: 1rem;
+}
+
+/* Hero card */
+.hero-card {
+  padding: 1.5rem;
+  background: rgba(30, 30, 55, 0.8);
+  border-radius: 8px;
+  border-left: 3px solid #ff8c42;
+}
+
+.hero-card h3 {
+  margin-top: 0;
+  color: #f0c060;
+}
+
+.hero-meta {
+  color: #b0b0cc;
+  font-size: 0.95rem;
+}
+
+.skill-badge {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  background: rgba(122, 184, 212, 0.15);
+  border: 1px solid rgba(122, 184, 212, 0.3);
+  border-radius: 4px;
+  color: #7ab8d4;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.hero-desc {
+  color: #d4d4e0;
+  margin: 0.8rem 0;
+}
+
+.skill-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.8rem 0;
+}
+
+.skill-list li {
+  padding: 0.4rem 0;
+  color: #c8c8d8;
+  border-bottom: 1px solid rgba(80, 80, 120, 0.1);
+}
+
+.skill-list li strong {
+  color: #7ab8d4;
+}
+
+.hero-summary {
+  color: #88aa88;
+  font-style: italic;
+  margin-top: 0.8rem;
+}
+
+/* Shard card */
+.shard-card {
+  padding: 1.5rem;
+  background: rgba(30, 30, 55, 0.8);
+  border-radius: 8px;
+}
+
+.shard-card h3 {
+  color: #f0c060;
+  margin-top: 0;
+}
+
+.shard-desc {
+  color: #d4d4e0;
+  margin-bottom: 1rem;
+}
+
+/* GM notes */
+.gm-note {
+  padding: 1rem 1.2rem;
+  background: rgba(60, 50, 20, 0.4);
+  border-left: 3px solid #ffd700;
+  border-radius: 4px;
+  margin: 1rem 0;
+  color: #f0d080;
+}
+
+.gm-note strong {
+  color: #ffd700;
+}
+
+/* Garrison list */
+.garrison-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0;
+}
+
+.garrison-list li {
+  padding: 0.4rem 0;
+  color: #c8c8d8;
+  border-bottom: 1px solid rgba(80, 80, 120, 0.08);
+}
+
+/* Troop names (inline) */
+.troop-name {
+  color: #ffb347;
+  font-weight: bold;
+}
+
+/* Troops grid */
+.troops-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.troop-card {
+  padding: 1.2rem;
+  background: rgba(35, 35, 60, 0.9);
+  border-radius: 8px;
+  border: 1px solid rgba(100, 100, 140, 0.2);
+  position: relative;
+}
+
+.troop-number {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.8rem;
+  font-size: 1.8rem;
+  color: rgba(240, 192, 96, 0.15);
+  font-weight: bold;
+}
+
+.troop-title {
+  color: #ffb347;
+  font-size: 1.15rem;
+  margin-top: 0;
+  margin-bottom: 0.3rem;
+  font-weight: bold;
+}
+
+.troop-type {
+  color: #7ab8d4;
+  font-size: 0.9rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0.2rem 0 0.5rem;
+}
+
+.troop-desc {
+  color: #d4d4e0;
+  font-size: 0.95rem;
+  margin: 0.5rem 0;
+}
+
+.troop-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+
+.tag {
+  display: inline-block;
+  padding: 0.25rem 0.7rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.tag-pos {
+  background: rgba(50, 120, 50, 0.25);
+  border: 1px solid rgba(80, 180, 80, 0.3);
+  color: #6fd66f;
+}
+
+.tag-neg {
+  background: rgba(180, 50, 50, 0.25);
+  border: 1px solid rgba(220, 80, 80, 0.3);
+  color: #ff6b6b;
+}
+
+.tag-neutral {
+  background: rgba(100, 100, 140, 0.2);
+  border: 1px solid rgba(130, 130, 170, 0.3);
+  color: #b0b0d0;
+}
+
+/* Magic card */
+.magic-card {
+  padding: 1.5rem;
+  background: rgba(30, 30, 55, 0.8);
+  border-radius: 8px;
+  border-left: 3px solid #9966cc;
+}
+
+.magic-card h3 {
+  color: #c084fc;
+  margin-top: 0;
+}
+
+.magic-desc {
+  color: #d4d4e0;
+  margin: 0.5rem 0 1rem;
+}
+
+/* Tech list */
+.tech-list {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+
+.tech-list li {
+  padding: 0.4rem 0;
+  color: #c8c8d8;
+}
+
+.tech-list li strong {
+  color: #f0c060;
+}
+
+/* Ability card */
+.ability-card {
+  padding: 1.5rem;
+  background: rgba(35, 30, 50, 0.9);
+  border-radius: 8px;
+  border: 1px solid rgba(240, 192, 96, 0.2);
+}
+
+.ability-card h3 {
+  color: #f0c060;
+  font-size: 1.4rem;
+  margin-top: 0;
+}
+
+.ability-quote {
+  font-style: italic;
+  color: #ff8c42;
+  font-size: 1.05rem;
+  border-left: 3px solid #ff8c42;
+  padding-left: 1rem;
+  margin: 0.8rem 0;
+}
+
+.ability-desc {
+  color: #d4d4e0;
+  margin: 0.8rem 0;
+}
+
+.ability-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.8rem 1rem;
+  background: rgba(20, 20, 40, 0.6);
+  border-radius: 6px;
+  margin: 1rem 0;
+}
+
+.ability-meta span {
+  color: #c8c8d8;
+  font-size: 0.9rem;
+}
+
+.ability-meta strong {
+  color: #f0c060;
+}
+
+.ability-list {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.ability-list li {
+  padding: 0.3rem 0;
+  color: #c8c8d8;
+}
+
+.ability-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+
+.ability-table th {
+  background: rgba(240, 192, 96, 0.1);
+  color: #f0c060;
+  padding: 0.6rem;
+  text-align: left;
+  border: 1px solid rgba(240, 192, 96, 0.2);
+}
+
+.ability-table td {
+  padding: 0.6rem;
+  color: #d4d4e0;
+  border: 1px solid rgba(80, 80, 120, 0.15);
+}
+
+.ability-table td strong {
+  color: #ffb347;
+}
+
+/* Traits grid */
+.traits-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.trait-col {
+  padding: 1.2rem;
+  border-radius: 8px;
+}
+
+.trait-pos {
+  background: rgba(40, 80, 40, 0.3);
+  border: 1px solid rgba(80, 160, 80, 0.25);
+}
+
+.trait-neg {
+  background: rgba(80, 40, 40, 0.3);
+  border: 1px solid rgba(160, 80, 80, 0.25);
+}
+
+.trait-col h4 {
+  margin-top: 0;
+  color: #e8e8f0;
+}
+
+.trait-pos h4 {
+  color: #6fd66f;
+}
+
+.trait-neg h4 {
+  color: #ff6b6b;
+}
+
+.trait-col ul {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0;
+}
+
+.trait-col li {
+  padding: 0.4rem 0;
+  color: #d4d4e0;
+}
+
+.trait-pos li {
+  color: #b0d8b0;
+}
+
+.trait-neg li {
+  color: #d8b0b0;
+}
+
+/* Summary grid */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.summary-card {
+  text-align: center;
+  padding: 1.5rem 1rem;
+  background: rgba(30, 30, 55, 0.8);
+  border-radius: 8px;
+  border: 1px solid rgba(240, 192, 96, 0.15);
+}
+
+.summary-value {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #f0c060;
+  margin-bottom: 0.3rem;
+}
+
+.summary-label {
+  color: #b0b0cc;
+  font-size: 0.9rem;
+}
+
+.summary-notes {
+  padding: 1rem;
+  background: rgba(20, 20, 40, 0.4);
+  border-radius: 6px;
+  margin-top: 1rem;
+}
+
+.summary-notes p {
+  color: #a0a0b8;
+  margin: 0.3rem 0;
+}
+
+/* Notes card */
+.notes-card {
+  padding: 1.5rem;
+  background: rgba(30, 30, 55, 0.8);
+  border-radius: 8px;
+}
+
+.notes-card h3 {
+  color: #f0c060;
+  margin-top: 0;
+}
+
+.notes-card p {
+  color: #d4d4e0;
+  margin: 0.5rem 0;
+}
+
+.footer-ornament {
+  text-align: center;
+  color: #ff6b35;
+  font-size: 1.2rem;
+  margin: 1.5rem 0 0.5rem;
+}
+
+.footer-text {
+  text-align: center;
+  color: #888899;
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+/* Bottom back button */
+.bottom-back {
+  text-align: center;
+  padding: 2rem;
+  margin-top: 1rem;
+}
+
+/* Section intro */
+.section-intro {
+  color: #b0b0cc;
+  font-style: italic;
+  margin: 0.5rem 0 1rem;
+}
+
+/* Mobile */
+@media (max-width: 700px) {
+  .nav-bar {
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+  }
+  
+  .nav-title {
+    font-size: 0.95rem;
+  }
+  
+  .lord-header h1 {
+    font-size: 1.6rem;
+  }
+  
+  .traits-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .troops-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .ability-table {
+    font-size: 0.85rem;
+  }
+}

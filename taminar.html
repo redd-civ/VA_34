@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Таминар — Хранитель Истины | Вдохновение Астрала</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* ===== Страница владыки — доп. стили ===== */
+        .lord-page-header {
+            text-align: center;
+            padding: 3rem 1rem 2rem;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            border: 1px solid #e2b97a33;
+        }
+        .lord-page-header h1 {
+            font-size: 2.4rem;
+            color: #e2b97a;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 20px #e2b97a44;
+            letter-spacing: 2px;
+        }
+        .lord-page-header .subtitle {
+            color: #c4b5a0;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .lord-page-header .motto {
+            font-style: italic;
+            color: #e2b97a;
+            font-size: 1.2rem;
+            margin-top: 1rem;
+        }
+        .lord-page-header .badge {
+            display: inline-block;
+            background: #e2b97a22;
+            border: 1px solid #e2b97a55;
+            color: #e2b97a;
+            padding: 0.3rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 1rem;
+        }
+
+        /* Параметры владыки */
+        .lord-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+        .lord-info-card {
+            background: #1a1a2e;
+            border: 1px solid #e2b97a33;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+        .lord-info-card .label {
+            color: #888;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+        .lord-info-card .value {
+            color: #e2b97a;
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        /* Сводка на старт */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border: 1px solid #e2b97a44;
+            border-radius: 10px;
+            padding: 1.2rem;
+            text-align: center;
+        }
+        .stat-card .stat-value {
+            font-size: 2rem;
+            color: #e2b97a;
+            font-weight: bold;
+            display: block;
+        }
+        .stat-card .stat-label {
+            color: #aaa;
+            font-size: 0.85rem;
+            margin-top: 0.3rem;
+            display: block;
+        }
+
+        /* Герой */
+        .hero-block {
+            background: #1a1a2e;
+            border-left: 4px solid #e2b97a;
+            border-radius: 0 8px 8px 0;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        .hero-block .hero-name {
+            font-size: 1.4rem;
+            color: #e2b97a;
+            margin-bottom: 0.5rem;
+        }
+        .hero-block .hero-desc {
+            color: #c4b5a0;
+            line-height: 1.6;
+            margin: 0.8rem 0;
+        }
+
+        /* Родовой осколок */
+        .shard-block {
+            background: #1a1a2e;
+            border: 1px solid #e2b97a33;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        .shard-block .shard-name {
+            font-size: 1.3rem;
+            color: #e2b97a;
+            margin-bottom: 0.5rem;
+        }
+        .shard-block .shard-desc {
+            color: #c4b5a0;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        /* Таблица параметров осколка */
+        .param-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        .param-table td {
+            padding: 0.5rem 1rem;
+            border-bottom: 1px solid #333;
+        }
+        .param-table td:first-child {
+            color: #888;
+            width: 40%;
+        }
+        .param-table td:last-child {
+            color: #e2b97a;
+            font-weight: bold;
+        }
+
+        /* Карточки войск */
+        .unit-card {
+            background: #1a1a2e;
+            border: 1px solid #e2b97a33;
+            border-radius: 8px;
+            padding: 1.2rem;
+            margin: 1rem 0;
+        }
+        .unit-card .unit-name {
+            font-size: 1.1rem;
+            color: #e2b97a;
+            margin-bottom: 0.3rem;
+        }
+        .unit-card .unit-type {
+            color: #888;
+            font-size: 0.9rem;
+            margin-bottom: 0.8rem;
+        }
+        .unit-card .unit-desc {
+            color: #c4b5a0;
+            line-height: 1.5;
+            margin-bottom: 0.8rem;
+        }
+        .unit-card .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .unit-card .tag {
+            display: inline-block;
+            padding: 0.2rem 0.7rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+        .tag-positive {
+            background: #2d5a2d44;
+            color: #7cba7c;
+            border: 1px solid #7cba7c55;
+        }
+        .tag-negative {
+            background: #5a2d2d44;
+            color: #cb7c7c;
+            border: 1px solid #cb7c7c55;
+        }
+
+        /* Способность */
+        .ability-block {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border: 1px solid #e2b97a55;
+            border-radius: 10px;
+            padding: 2rem;
+            margin: 1.5rem 0;
+        }
+        .ability-block .ability-name {
+            font-size: 1.5rem;
+            color: #e2b97a;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        .ability-block .ability-quote {
+            text-align: center;
+            font-style: italic;
+            color: #c4b5a0;
+            margin-bottom: 1.5rem;
+        }
+        .ability-block .ability-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+        .ability-block .meta-pill {
+            background: #e2b97a22;
+            border: 1px solid #e2b97a44;
+            color: #e2b97a;
+            padding: 0.3rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+
+        /* Таблица способов */
+        .method-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        .method-table th {
+            background: #16213e;
+            color: #e2b97a;
+            padding: 0.7rem 1rem;
+            text-align: left;
+            border-bottom: 2px solid #e2b97a44;
+        }
+        .method-table td {
+            padding: 0.7rem 1rem;
+            border-bottom: 1px solid #333;
+            color: #c4b5a0;
+            line-height: 1.5;
+        }
+        .method-table td:first-child {
+            color: #e2b97a;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        /* Особенности расы */
+        .race-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+        .race-features .feat {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+        .feat-positive {
+            background: #2d5a2d22;
+            border-left: 3px solid #7cba7c;
+            color: #7cba7c;
+        }
+        .feat-negative {
+            background: #5a2d2d22;
+            border-left: 3px solid #cb7c7c;
+            color: #cb7c7c;
+        }
+
+        /* Технологии */
+        .tech-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 0.8rem;
+            margin: 1rem 0;
+        }
+        .tech-item {
+            background: #1a1a2e;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 0.8rem 1rem;
+        }
+        .tech-item .tech-name {
+            color: #e2b97a;
+            font-weight: bold;
+        }
+        .tech-item .tech-desc {
+            color: #888;
+            font-size: 0.85rem;
+            margin-top: 0.3rem;
+        }
+
+        /* Заметки */
+        .notes-block {
+            background: #1a1a2eee;
+            border-left: 4px solid #888;
+            border-radius: 0 8px 8px 0;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        /* Кнопка назад */
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1.5rem;
+            color: #e2b97a;
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+        .back-link:hover {
+            color: #fff;
+        }
+
+        /* ГМ-блок */
+        .gm-note {
+            background: #2a2a1e;
+            border-left: 3px solid #c4a955;
+            padding: 0.8rem 1.2rem;
+            border-radius: 0 6px 6px 0;
+            margin: 1rem 0;
+            color: #c4b5a0;
+            font-size: 0.9rem;
+        }
+        .gm-note::before {
+            content: "⚠️ Заметка: ";
+            color: #c4a955;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .lord-page-header h1 { font-size: 1.6rem; }
+            .stat-card .stat-value { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <a href="index.html" class="back-link">← Назад к правилам</a>
+
+    <!-- ===== ШАПКА ===== -->
+    <div class="lord-page-header">
+        <h1>⚔️ ТАМИНАР — ХРАНИТЕЛЬ ИСТИНЫ ⚔️</h1>
+        <div class="subtitle">Владыка Кованных · Заявка мира · Вдохновение Астрала</div>
+        <div class="motto">«Знания и Закон!»</div>
+        <div class="badge">Стартовая заявка · Мир Кованных</div>
+    </div>
+
+    <!-- ===== I. ВЛАДЫКА ===== -->
+    <h2>## I. Владыка</h2>
+
+    <div class="lord-info-grid">
+        <div class="lord-info-card">
+            <div class="label">Имя</div>
+            <div class="value">Таминар — Хранитель Истины</div>
+        </div>
+        <div class="lord-info-card">
+            <div class="label">Раса</div>
+            <div class="value">Кованый (конструкт)</div>
+        </div>
+        <div class="lord-info-card">
+            <div class="label">Девиз</div>
+            <div class="value">«Знания и Закон!»</div>
+        </div>
+        <div class="lord-info-card">
+            <div class="label">Способность</div>
+            <div class="value">Чертёж Истины</div>
+        </div>
+    </div>
+
+    <!-- ===== II. ГЕРОЙ ===== -->
+    <h2>## II. Герой</h2>
+
+    <div class="hero-block">
+        <div class="hero-name">Тар-Морн Тусклый</div>
+        <p style="color:#888;">Кованый (конструкт) · Артефактолог 1 · Исследователь 1</p>
+        <div class="hero-desc">
+            Первый из «Помнящих себя» Кованых. Посвящает все циклы исследованию артефактов и технологий, стремясь восстановить утраченные знания Древних. Его тусклая, покрытая окалиной броня скрывает острый ум и неутомимую тягу к познанию.
+        </div>
+        <ul>
+            <li><b style="color:#e2b97a;">Артефактолог — 1</b> — разбирается в артефактах, может создавать их со скидкой.</li>
+            <li><b style="color:#e2b97a;">Исследователь — 1</b> — ускоренное исследование технологий, скидка.</li>
+        </ul>
+        <p style="color:#888; font-size:0.9rem; margin-top:0.8rem;">Сумма навыков: 2. Идеально сбалансировано для старта.</p>
+    </div>
+
+    <!-- ===== III. РОДОВОЙ ОСКОЛОК ===== -->
+    <h2>## III. Родовой осколок</h2>
+
+    <div class="shard-block">
+        <div class="shard-name">Тамин'ирин</div>
+        <div class="shard-desc">
+            Город-крепость, выстроенный вокруг Залов Творения. Лавовые реки протекают через улицы, освещая кузни багровым светом. Внутри стен — мастерские, литейные цеха и кварталы Кованых. Под городом тянутся древние коммуникации неизвестного назначения.
+        </div>
+        <table class="param-table">
+            <tr><td>Раса</td><td>Кованые</td></tr>
+            <tr><td>Ландшафт</td><td>Лавовый город *</td></tr>
+            <tr><td>Настроение</td><td>Довольны</td></tr>
+            <tr><td>Доход</td><td>8 э</td></tr>
+            <tr><td>Гарнизон</td><td>30 / 30</td></tr>
+        </table>
+        <div class="gm-note">
+            «Лавовый город» — это комбинированный ландшафт (Лавовый + Город). В правилах это два отдельных ландшафта. Прошу подтвердить допустимость или заменить на один из них.
+        </div>
+    </div>
+
+    <h3>### Состав гарнизона (30/30)</h3>
+    <ul>
+        <li><b style="color:#e2b97a;">Защитники кузницы</b> — 8 (тяжёлая пехота, прикрытие)</li>
+        <li><b style="color:#e2b97a;">Стражи ядра</b> — 8 (стрелки, гвардия)</li>
+        <li><b style="color:#e2b97a;">Мастеровые</b> — 3 (инженеры, поддержка)</li>
+        <li><b style="color:#e2b97a;">Железный дождь</b> — 11 (артиллерия, осадная мощь)</li>
+    </ul>
+    <div class="gm-note">
+        11 артиллерии при 8 пехоты — перекос в сторону осады. Артиллерия требует прикрытия, иначе уязвима. Рекомендую перераспределить: Защитники кузницы — 12, Стражи ядра — 8, Железный дождь — 7, Мастеровые — 3.
+    </div>
+
+    <!-- ===== IV. ВОЙСКА ===== -->
+    <h2>## IV. Войска</h2>
+    <p>4 рода войск — базовые (тир 1), с уникальными свойствами Кованых.</p>
+
+    <div class="unit-card">
+        <div class="unit-name">I. Защитники кузницы</div>
+        <div class="unit-type">Тяжёлая пехота</div>
+        <div class="unit-desc">Большие щиты, шестопёры, усиленные броневые пластины. Врождённая стойкость конструктов делает их почти непробиваемой стеной.</div>
+        <div class="tags">
+            <span class="tag tag-positive">Саморемонт</span>
+            <span class="tag tag-negative">Медлительны</span>
+        </div>
+    </div>
+
+    <div class="unit-card">
+        <div class="unit-name">II. Стражи ядра</div>
+        <div class="unit-type">Стрелки (гвардия)</div>
+        <div class="unit-desc">Оружейники-гвардейцы, вооружённые мощным, а главное точным дальнобойным оружием. Способны вести огонь с необычайной точностью и скрытностью.</div>
+        <div class="tags">
+            <span class="tag tag-positive">Повышенная скрытность</span>
+            <span class="tag tag-positive">Гвардия</span>
+        </div>
+    </div>
+
+    <div class="unit-card">
+        <div class="unit-name">III. Мастеровые</div>
+        <div class="unit-type">Инженеры (поддержка)</div>
+        <div class="unit-desc">Ремонтники и строители. Возводят укрепления, роют тоннели, чинят технику прямо в бою.</div>
+        <div class="tags">
+            <span class="tag tag-positive">Поддержка</span>
+            <span class="tag tag-positive">Могут чинить технику</span>
+            <span class="tag tag-negative">Уязвимы без прикрытия</span>
+        </div>
+    </div>
+
+    <div class="unit-card">
+        <div class="unit-name">IV. Железный дождь</div>
+        <div class="unit-type">Артиллерия</div>
+        <div class="unit-desc">Мортиры, баллисты и осадные орудия Кованых. Обрушивают на врага град металла, особенно страшны в обороне.</div>
+        <div class="tags">
+            <span class="tag tag-positive">Осадная мощь</span>
+            <span class="tag tag-negative">Требуют прикрытия</span>
+        </div>
+    </div>
+
+    <!-- ===== V. ШКОЛЫ МАГИИ ===== -->
+    <h2>## V. Школы магии</h2>
+
+    <div class="shard-block">
+        <div class="shard-name">Волшебство</div>
+        <div class="shard-desc">
+            Манипуляция энергией и материей. Идеально подходит конструктам: зачарование оружия и доспехов, телепортация, работа с чистой энергией.
+        </div>
+    </div>
+    <div class="gm-note">
+        По правилам стандартный мир имеет 2 школы магии. Указана только одна — это допустимо, но потребует балансировки. Рекомендуется добавить вторую профильную школу: Рунная, Металл или Земля.
+    </div>
+
+    <!-- ===== VI. СТАРТОВЫЕ ТЕХНОЛОГИИ ===== -->
+    <h2>## VI. Стартовые технологии</h2>
+    <p>Выбранный вариант: <b style="color:#e2b97a;">Инженерное дело +, Кузнечное дело +, Военное дело, Охрана порядка</b> = 4 технологии / 4 уровня. Техномагия и Стрелковая подготовка — изучить позже.</p>
+
+    <div class="tech-list">
+        <div class="tech-item">
+            <div class="tech-name">Инженерное дело +</div>
+            <div class="tech-desc">Строительство, механизмы, дешёвое возведение зданий.</div>
+        </div>
+        <div class="tech-item">
+            <div class="tech-name">Кузнечное дело +</div>
+            <div class="tech-desc">Оружие, доспехи, ресурсы.</div>
+        </div>
+        <div class="tech-item">
+            <div class="tech-name">Военное дело</div>
+            <div class="tech-desc">Тактика, командование, логистика.</div>
+        </div>
+        <div class="tech-item">
+            <div class="tech-name">Охрана порядка</div>
+            <div class="tech-desc">Контрразведка, защита мира от негатива.</div>
+        </div>
+    </div>
+
+    <div class="gm-note">
+        Техномагия и Стрелковая подготовка не вошли в стартовый набор — запланированы к изучению в первых ходах.
+    </div>
+
+    <!-- ===== VII. СПОСОБНОСТЬ ===== -->
+    <h2>## VII. Способность — «Чертёж Истины»</h2>
+
+    <div class="ability-block">
+        <div class="ability-name">Чертёж Истины</div>
+        <div class="ability-quote">«Увидеть — значит понять. Понять — значит скопировать. Скопировать — значит выковать.»</div>
+        <p style="color:#c4b5a0; text-align:center; line-height:1.6;">
+            Кованые не нуждаются в понимании теории, чтобы воспроизвести ремесло.<br>Достаточно чертежа — и металл сам вспомнит форму.
+        </p>
+        <div class="ability-meta">
+            <span class="meta-pill">Тип: активируемая, многоразовая</span>
+            <span class="meta-pill">Стоимость: 2 э (снятие) + воспроизведение</span>
+            <span class="meta-pill">Откат: 1 чертёж за цикл</span>
+            <span class="meta-pill">Хранилище: до 3 чертежей</span>
+            <span class="meta-pill">Сгорают через 3 цикла</span>
+        </div>
+    </div>
+
+    <h3>### Шаг 1 — Снятие чертежа</h3>
+    <p>Раз за цикл Владыка может снять чертёж с любой технологии, школы магии, рода войск, предмета, здания или отряда, которые он наблюдал:</p>
+    <ul>
+        <li>в бою (своими глазами или через разведку/шпионаж);</li>
+        <li>у соседа (при наличии посольства или шпионской сети);</li>
+        <li>на захваченном осколке (если там есть соответствующие объекты).</li>
+    </ul>
+    <p>Чертёж — это <b>схема, а не знание</b>. Владыка не получает технологию навсегда. Он получает одноразовое право воспроизвести то, что изображено на схеме.</p>
+
+    <h3>### Шаг 2 — Использование чертежа</h3>
+
+    <table class="method-table">
+        <thead>
+            <tr><th>Способ</th><th>Что даёт</th><th>Стоимость</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Изучение</td>
+                <td>Скидка 50% на изучение этой технологии/магии/рода войск (единоразово). Чертёж сгорает.</td>
+                <td>0 э (только сам чертёж)</td>
+            </tr>
+            <tr>
+                <td>Копия</td>
+                <td>Создать одну копию вражеского войска/отряда с пониженными характеристиками (штраф −25% к силе). Копия не восполняется, не апгрейдится.</td>
+                <td>2 э за тир войск</td>
+            </tr>
+            <tr>
+                <td>Изготовление</td>
+                <td>Создать предмет, здание или отряд, как если бы Владыка обладал технологией, запечатлённой в чертеже — без её изучения и без расовых скидок.</td>
+                <td>Базовая стоимость + 20% наценки</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>#### Ключевое уточнение по «Изготовлению»</h4>
+    <p>Владыка создаёт объект, но <b>не получает</b> технологию.</p>
+    <ul>
+        <li>Здание строится один раз. Нельзя построить повторно, пока технология не изучена по-настоящему.</li>
+        <li>Предмет создаётся один раз. Нельзя размножить или передать как рецепт.</li>
+        <li>Отряд нанимается один раз. Не становится доступным родом войск — это «штучная» партия.</li>
+        <li>Созданный объект функционирует по правилам технологии, запечатлённой в чертеже.</li>
+        <li>Эпические технологии, магии и уникальные артефакты нельзя воспроизвести через чертёж — только изучить по сниженной цене (если есть доступ к эпику).</li>
+    </ul>
+
+    <h4>#### Ограничения</h4>
+    <ul>
+        <li>Один чертёж — одно применение. После использования чертёж сгорает.</li>
+        <li>Нельзя снять чертёж с того, чего не видел. Нужна разведка, бой, посольство или захваченный осколок.</li>
+        <li>Нельзя снять чертёж с эпического уровня.</li>
+        <li>Нельзя снять чертёж с родового осколка без его захвата или согласия владельца.</li>
+        <li>Созданное через «Изготовление» не даёт опыта героям и не открывает доступ к технологии.</li>
+        <li>Созданное через «Изготовление» можно потерять — и воссоздать только новым чертежом.</li>
+        <li>Нельзя снять чертёж с того, что было создано через «Изготовление» — цепочка не размножается.</li>
+    </ul>
+
+    <div class="gm-note">
+        Опционально (на усмотрение ГМа): если «Изготовление» слишком сильно — можно добавить ограничение: созданный объект существует только 5 циклов, после чего рассыпается. Или наценка не 20%, а 50%.
+    </div>
+
+    <!-- ===== VIII. ОСОБЕННОСТИ РАСЫ ===== -->
+    <h2>## VIII. Особенности расы Кованых</h2>
+
+    <div class="race-features">
+        <div class="feat feat-positive">Высокая физическая сила</div>
+        <div class="feat feat-positive">Стойкость к физ. урону (кроме дробящего)</div>
+        <div class="feat feat-positive">Не устают</div>
+        <div class="feat feat-positive">Иммунитет к болезням и ядам</div>
+        <div class="feat feat-positive">Способны к магии (слабо)</div>
+        <div class="feat feat-negative">Уязвимы к электричеству</div>
+        <div class="feat feat-negative">Не любят сырость — металл ржавеет</div>
+        <div class="feat feat-negative">Медлительны</div>
+        <div class="feat feat-negative">Размножаются только искусственным путём</div>
+        <div class="feat feat-negative">Нет иммунитета к ментальным воздействиям</div>
+    </div>
+
+    <!-- ===== IX. СВОДКА ===== -->
+    <h2>## IX. Сводка на старт</h2>
+
+    <div class="stat-grid">
+        <div class="stat-card">
+            <span class="stat-value">15 э</span>
+            <span class="stat-label">Запас энергии</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-value">8 э</span>
+            <span class="stat-label">Доход / ход</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-value">30</span>
+            <span class="stat-label">Защита мира</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-value">30</span>
+            <span class="stat-label">Гарнизон родового</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-value">4</span>
+            <span class="stat-label">Действия / ход</span>
+        </div>
+    </div>
+    <p style="color:#888; font-size:0.9rem;">
+        Лимит хранения энергии: 20 + 10 × 1 = 30 э.<br>
+        Лимит зданий на родовом: 4.
+    </p>
+
+    <!-- ===== X. ЗАМЕТКИ ===== -->
+    <h2>## X. Заметки Владыки</h2>
+
+    <div class="notes-block">
+        <h3 style="color:#e2b97a; margin-bottom:0.8rem;">О расе Кованных</h3>
+        <p style="color:#c4b5a0; line-height:1.7;">
+            Кованные — конструкты, созданные неким Древним в Залах Творения. В отличие от других конструктов, обладают личностью и разумом, близким к человеческому. Древняя программа утрачена, и каждый Кованый обучается самостоятельно, привнося опыт в библиотеки.
+        </p>
+        <p style="color:#c4b5a0; line-height:1.7; margin-top:0.8rem;">
+            Кованные не производятся сами по себе — только в Залах Творения, которые повреждены со времён катаклизма. Многие мечтают восстановить их до первозданного функционала.
+        </p>
+        <p style="color:#e2b97a; line-height:1.7; margin-top:1rem;">
+            <b>Долгосрочная цель:</b> восстановить Залы Творения, вернуть утраченные знания Древних и распространить Закон и Истину по Астралу.
+        </p>
+    </div>
+
+    <div style="text-align:center; padding:2rem 0; color:#888; font-size:0.9rem;">
+        ◆ ◆ ◆ Заявка составлена по правилам «Вдохновение Астрала». Мир Кованных ждёт своего часа в бескрайнем Астрале.
+    </div>
+
+    <a href="index.html" class="back-link">← Назад к правилам</a>
+
+</div>
+
+</body>
+</html>

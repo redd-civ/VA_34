@@ -23,7 +23,7 @@
       .from('lords')
       .select('*')
       .eq('player_id', user.id)
-      .order('created_at', { ascending: true });
+      ;
 
     if (lordError) throw lordError;
     const lord = lords && lords.length ? lords[lords.length - 1] : null;
@@ -31,10 +31,10 @@
 
     lordId = lord.id;
     const [shards, heroes, troops, tech] = await Promise.all([
-      client.from('shards').select('*').eq('lord_id', lord.id).order('created_at', { ascending: true }),
-      client.from('heroes').select('*').eq('lord_id', lord.id).order('created_at', { ascending: true }),
-      client.from('troops').select('*').eq('lord_id', lord.id).order('created_at', { ascending: true }),
-      client.from('developments').select('*').eq('lord_id', lord.id).order('created_at', { ascending: true })
+      client.from('shards').select('*').eq('lord_id', lord.id),
+      client.from('heroes').select('*').eq('lord_id', lord.id),
+      client.from('troops').select('*').eq('lord_id', lord.id),
+      client.from('developments').select('*').eq('lord_id', lord.id)
     ]);
 
     for (const result of [shards, heroes, troops, tech]) if (result.error) throw result.error;

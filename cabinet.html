@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Личный кабинет — Вдохновение Астрала</title>
+<link rel="stylesheet" href="cabinet.css">
+</head>
+<body>
+<header class="topbar">
+  <div>
+    <div class="eyebrow">✦ ВДОХНОВЕНИЕ АСТРАЛА</div>
+    <h1>Личный кабинет</h1>
+    <p>Карточки Владыки, мира и игровых сущностей</p>
+  </div>
+  <a class="back" href="index.html">← Правила</a>
+</header>
+
+<main class="layout">
+  <aside class="sidebar">
+    <button class="nav active" data-tab="overview">🏰 Обзор</button>
+    <button class="nav" data-tab="lord">👑 Владыка</button>
+    <button class="nav" data-tab="world">🌍 Мир</button>
+    <button class="nav" data-tab="heroes">🎭 Герои</button>
+    <button class="nav" data-tab="troops">⚔️ Войска</button>
+    <button class="nav" data-tab="tech">⚙️ Технологии</button>
+    <button class="nav" data-tab="data">💾 Данные</button>
+  </aside>
+
+  <section class="content">
+    <div id="overview" class="tab active">
+      <div class="hero-panel">
+        <div>
+          <span class="badge">ПРОТОТИП ЛИЧНОГО КАБИНЕТА</span>
+          <h2 id="overviewTitle">Новый Владыка</h2>
+          <p id="overviewRace">Раса не указана</p>
+        </div>
+        <div class="stats">
+          <div><strong id="statShards">0</strong><span>осколков</span></div>
+          <div><strong id="statSize">0</strong><span>размер мира</span></div>
+          <div><strong id="statIncome">0</strong><span>доход</span></div>
+          <div><strong id="statEnergy">20</strong><span>лимит запаса</span></div>
+        </div>
+      </div>
+      <div id="warnings" class="warnings"></div>
+      <div class="cards">
+        <article class="card"><h3>Мир</h3><p>Добавляйте родовой и обычные осколки. Размер, доход, здания, гарнизон и лимиты считаются автоматически.</p><button class="primary" data-go="world">Открыть мир</button></article>
+        <article class="card"><h3>Персонажи</h3><p>Храните героев, навыки, уровни, опыт, витязей и предметы.</p><button class="primary" data-go="heroes">Открыть героев</button></article>
+        <article class="card"><h3>Развитие</h3><p>Технологии и войска вынесены в отдельные справочники, чтобы их позже можно было связать с проверкой правил.</p><button class="primary" data-go="tech">Открыть развитие</button></article>
+      </div>
+    </div>
+
+    <div id="lord" class="tab">
+      <div class="section-head"><h2>👑 Владыка</h2><span class="muted">Личные данные</span></div>
+      <form id="lordForm" class="form-grid">
+        <label>Имя Владыки<input id="lordName" required></label>
+        <label>Раса<input id="lordRace"></label>
+        <label>Девиз<input id="lordMotto"></label>
+        <label>Начальная энергия<input id="lordEnergy" type="number" min="0" step="0.5" value="15"></label>
+        <label class="wide">Способность<textarea id="lordAbility" rows="4"></textarea></label>
+        <label class="wide">Особенности<textarea id="lordTraits" rows="5" placeholder="Положительные, нейтральные и отрицательные особенности"></textarea></label>
+        <button class="primary" type="submit">Сохранить Владыку</button>
+      </form>
+    </div>
+
+    <div id="world" class="tab">
+      <div class="section-head"><h2>🌍 Мир и осколки</h2><button class="primary" id="newShard">+ Добавить осколок</button></div>
+      <div id="worldSummary" class="summary"></div>
+      <div id="shardsList" class="entity-list"></div>
+    </div>
+
+    <div id="heroes" class="tab">
+      <div class="section-head"><h2>🎭 Герои</h2><button class="primary" id="newHero">+ Добавить героя</button></div>
+      <div id="heroesList" class="entity-list"></div>
+    </div>
+
+    <div id="troops" class="tab">
+      <div class="section-head"><h2>⚔️ Войска</h2><button class="primary" id="newTroop">+ Добавить род войск</button></div>
+      <div id="troopsList" class="entity-list"></div>
+    </div>
+
+    <div id="tech" class="tab">
+      <div class="section-head"><h2>⚙️ Технологии и магия</h2><button class="primary" id="newTech">+ Добавить развитие</button></div>
+      <div id="techList" class="entity-list"></div>
+    </div>
+
+    <div id="data" class="tab">
+      <div class="section-head"><h2>💾 Данные</h2><span class="muted">Сейчас хранение локальное</span></div>
+      <div class="data-actions">
+        <button class="primary" id="exportData">Экспорт JSON</button>
+        <label class="file-button">Импорт JSON<input id="importData" type="file" accept=".json" hidden></label>
+        <button class="danger" id="resetData">Сбросить данные</button>
+      </div>
+      <div class="notice"><strong>Важно:</strong> текущая версия — этап интерфейса и модели данных. Данные сохраняются в браузере. Настоящая регистрация с логином и паролем и синхронизация между устройствами подключаются следующим этапом к серверному API/БД.</div>
+      <pre id="jsonPreview"></pre>
+    </div>
+  </section>
+</main>
+<script src="cabinet.js"></script>
+</body>
+</html>

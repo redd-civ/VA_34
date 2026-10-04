@@ -167,8 +167,11 @@
       if (rows.length) {
         const { data, error } = await client.from(table).upsert(rows, { onConflict: 'id' }).select('id');
         if (error) throw error;
+        const source = table === 'shards' ? state.shards :
+          table === 'heroes' ? state.heroes :
+          table === 'troops' ? state.troops : state.tech;
         rows.forEach((row, i) => {
-          if (!row.id && data && data[i]) row.__newId = data[i].id;
+          if (!row.id && data && data[i] && source[i]) source[i].id = data[i].id;
         });
       }
     }

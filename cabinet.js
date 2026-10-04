@@ -41,12 +41,22 @@ function hasLocalData(){
     state.shards.length || state.heroes.length || state.troops.length || state.tech.length
   );
 }
+function withTimeout(promise,ms=10000){
+  let timer;
+  return Promise.race([
+    promise,
+    new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('Таймаут подключения к Supabase (10 сек).')),ms)})
+  ]).finally(()=>clearTimeout(timer));
+}
 async function initCloud(){
+  if(cloudInitStarted) return;
+  cloudInitStarted=true;
+  setCloudStatus('Облако: проверка…','checking');
   try{
-    const info=await VA34_CLOUD.init();
+    const info=await withTimeout(VA34_CLOUD.init());
     if(!info.configured){setCloudStatus('Локально: Supabase не настроен');return}
     if(!info.authenticated){setCloudStatus('Локально: войдите в аккаунт');return}
-    const remote=await VA34_CLOUD.getState();
+    const remote=await withTimeout(VA34_CLOUD.getState());
     if(remote){
       state=remote;
       localStorage.setItem(KEY,JSON.stringify(state));
@@ -57,7 +67,7 @@ async function initCloud(){
     }
     if(hasLocalData()){
       cloudReady=true;
-      await VA34_CLOUD.saveState(state);
+      await withTimeout(VA34_CLOUD.saveState(state));
       setCloudStatus('Облако: локальные данные перенесены','cloud');
     }else{
       cloudReady=true;
@@ -67,7 +77,9 @@ async function initCloud(){
     render();
   }catch(err){
     cloudReady=false;
-    setCloudStatus('Ошибка облака: '+(err.message||'неизвестная ошибка'),'error');
+    console.error('VA34 cloud init failed',err);
+    const detail=[err.message,err.code,err.details,err.hint].filter(Boolean).join(' | ');
+    setCloudStatus('Ошибка облака: '+(detail||'неизвестная ошибка'),'error');
   }
 }
 function esc(v=''){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
@@ -211,3 +223,4 @@ importData.onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const x
 resetData.onclick=()=>{if(confirm('Удалить все локальные данные?')){state=structuredClone(emptyState);save()}}
 const warningsEl=document.getElementById('warnings');
 render();
+initCloud();

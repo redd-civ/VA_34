@@ -1,7 +1,7 @@
 const KEY='va34_cabinet_v1';
 const RULES=window.VA34_RULES;
 const emptyState={lord:{name:'',race:'',motto:'',energy:15,status:'Владыка',ability:'',traits:'',items:'',resources:''},shards:[],heroes:[],troops:[],tech:[],meta:{version:3}};
-let state=load();
+let state=load();\nlet cloudReady=false;\nlet cloudBusy=false;
 
 function load(){
   try{
@@ -16,7 +16,60 @@ function load(){
     };
   }catch(e){return structuredClone(emptyState)}
 }
-function save(){localStorage.setItem(KEY,JSON.stringify(state));render()}
+function save(){
+  localStorage.setItem(KEY,JSON.stringify(state));
+  render();\ninitCloud();
+  if(cloudReady && !cloudBusy){
+    cloudBusy=true;
+    VA34_CLOUD.saveState(state)
+      .then(result=>{
+        if(result && result.saved) setCloudStatus('Облако: сохранено','cloud');
+      })
+      .catch(err=>setCloudStatus('Ошибка облака: '+(err.message||'неизвестная ошибка'),'error'))
+      .finally(()=>{cloudBusy=false});
+  }
+}
+function setCloudStatus(text,kind='local'){
+  const el=document.getElementById('cloudStatus');
+  const mode=document.getElementById('storageMode');
+  if(el){el.textContent=text;el.className='badge '+kind}
+  if(mode) mode.textContent=text;
+}
+function hasLocalData(){
+  return Boolean(
+    state.lord.name || state.lord.race || state.lord.motto || state.lord.ability ||
+    state.shards.length || state.heroes.length || state.troops.length || state.tech.length
+  );
+}
+async function initCloud(){
+  try{
+    const info=await VA34_CLOUD.init();
+    if(!info.configured){setCloudStatus('Локально: Supabase не настроен');return}
+    if(!info.authenticated){setCloudStatus('Локально: войдите в аккаунт');return}
+    const remote=await VA34_CLOUD.getState();
+    if(remote){
+      state=remote;
+      localStorage.setItem(KEY,JSON.stringify(state));
+      cloudReady=true;
+      render();
+      setCloudStatus('Облако: синхронизировано','cloud');
+      return;
+    }
+    if(hasLocalData()){
+      cloudReady=true;
+      await VA34_CLOUD.saveState(state);
+      setCloudStatus('Облако: локальные данные перенесены','cloud');
+    }else{
+      cloudReady=true;
+      await VA34_CLOUD.saveState(state);
+      setCloudStatus('Облако: готово','cloud');
+    }
+    render();
+  }catch(err){
+    cloudReady=false;
+    setCloudStatus('Ошибка облака: '+(err.message||'неизвестная ошибка'),'error');
+  }
+}
 function esc(v=''){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function id(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
 function options(items,current='',valueFn=x=>x,labelFn=x=>x){

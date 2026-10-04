@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Вход — Вдохновение Астрала</title><link rel="stylesheet" href="cabinet.css"></head>
+<body><header class="topbar"><div><div class="eyebrow">✦ ВДОХНОВЕНИЕ АСТРАЛА</div><h1>Аккаунт игрока</h1><p>Регистрация и вход</p></div><a class="back" href="index.html">← Правила</a></header>
+<main class="content" style="max-width:760px;margin:40px auto">
+<section class="card">
+<div class="section-head"><h2 id="authTitle">Вход</h2><span class="muted" id="authState">Supabase не настроен</span></div>
+<form id="authForm" class="form-grid">
+<label class="wide">Email<input id="email" type="email" required autocomplete="email"></label>
+<label class="wide">Пароль<input id="password" type="password" minlength="6" required autocomplete="current-password"></label>
+<div><button class="primary" type="submit" id="submitAuth">Войти</button>
+<button type="button" id="toggleMode">Создать аккаунт</button></div>
+</form>
+<div id="message" class="notice">Для включения настоящих аккаунтов нужно один раз указать URL проекта Supabase и publishable key в <code>supabase-config.js</code>.</div>
+<div id="logged" style="display:none"><p>Вы вошли как <strong id="userEmail"></strong>.</p><button class="danger" id="logout">Выйти</button> <a class="primary" href="cabinet.html">Открыть кабинет</a></div>
+</section></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script><script src="auth.js"></script></body></html>

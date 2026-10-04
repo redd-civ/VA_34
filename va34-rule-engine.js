@@ -2,10 +2,11 @@
 window.VA34_RULE_ENGINE={
   list(v){return String(v||'').split(String.fromCharCode(10)).flatMap(x=>x.split(',')).map(x=>x.trim()).filter(Boolean)},
   parseTech(x){
-    const m=String(x||'').trim().match(/^(.+?)(?:\s+(базовый|продвинутый|экспертный|мастерский|грандмастерский|эпичный|\+{1,6}))?$/i);
-    const level=(m&&m[2])||'базовый';
-    const map={'базовый':1,'+':1,'продвинутый':2,'++':2,'экспертный':3,'+++':3,'мастерский':4,'++++':4,'грандмастерский':5,'+++++':5,'эпичный':6,'++++++':6};
-    return {name:(m?m[1]:String(x)).trim(),level:map[level.toLowerCase()]||1};
+    const raw=String(x||'').trim();
+    const m=raw.match(/^(.+?)(?:\s+(базовый|продвинутый|экспертный|мастерский|грандмастерский|эпичный|\+{1,6}|I{1,3}|[1-6]))?$/i);
+    const levelRaw=(m&&m[2])||'базовый';
+    const map={'базовый':1,'+':1,'i':1,'1':1,'продвинутый':2,'++':2,'ii':2,'2':2,'экспертный':3,'+++':3,'iii':3,'3':3,'мастерский':4,'++++':4,'iv':4,'4':4,'грандмастерский':5,'+++++':5,'v':5,'5':5,'эпичный':6,'++++++':6,'vi':6,'6':6};
+    return {name:(m?m[1]:raw).trim(),level:map[String(levelRaw).toLowerCase()]||1};
   },
   validateStarter(lord){
     const R=window.VA34_RULES,out=[];
@@ -20,14 +21,15 @@ window.VA34_RULE_ENGINE={
     let techLevels=0;
     parsedTech.forEach(t=>{
       techLevels+=t.level;
-      if(!R.technologies.some(y=>String(y).toLowerCase()===t.name.toLowerCase())&&!R.magicSchools.some(y=>String(y).toLowerCase()===t.name.toLowerCase()))
-        out.push({level:'master',code:'unknown_tech',text:'Развитие «'+t.name+'» отсутствует в справочнике — требуется решение Мастера.'});
-      if(t.level>3)out.push({level:'error',code:'starter_tech_level',text:'Одна технология/школа не может быть выше III уровня: «'+t.name+'».'});
+      if(!R.technologies.some(y=>String(y).toLowerCase()===t.name.toLowerCase()))
+        out.push({level:'master',code:'unknown_tech',text:'Технология «'+t.name+'» отсутствует в справочнике — требуется решение Мастера.'});
+      if(t.level>3)out.push({level:'error',code:'starter_tech_level',text:'Одна технология не может быть выше III уровня на старте: «'+t.name+'».'});
     });
     const magicLevels=magic.length;
     const totalDevelopment=techLevels+magicLevels;
-    if(totalDevelopment<4||totalDevelopment>7)out.push({level:'error',code:'starter_development_total',text:'Стартовый пул развития должен составлять 4–7 уровней: 4–5 базовых уровней технологий плюс до 2 уровней магии.'});
-    if(totalDevelopment>5)out.push({level:'master',code:'starter_development_over_5',text:'Более 5 суммарных уровней развития требует разрешения Мастера.'});
+    if(totalDevelopment<4)out.push({level:'error',code:'starter_development_total',text:'Стартовый пул развития должен составлять не менее 4 уровней.'});
+    if(totalDevelopment>7)out.push({level:'error',code:'starter_development_total',text:'Стартовый пул развития не может превышать 7 уровней.'});
+    if(totalDevelopment>5)out.push({level:'master',code:'starter_development_over_5',text:'6–7 суммарных уровней развития на старте требуют разрешения Мастера.'});
     magic.forEach(x=>{if(!R.magicSchools.some(y=>y.toLowerCase()===x.toLowerCase()))out.push({level:'master',code:'unknown_magic',text:'Школа магии «'+x+'» отсутствует в справочнике — требуется решение Мастера.'})});
     troops.forEach(x=>{if(!R.troopTypes.some(y=>y.toLowerCase()===x.toLowerCase()))out.push({level:'master',code:'unknown_troop',text:'Род войск «'+x+'» отсутствует в справочнике — требуется решение Мастера.'})});
     if(lord.ancestralRace&&!R.races.some(x=>x.name===lord.ancestralRace))out.push({level:'master',code:'unknown_race',text:'Раса «'+lord.ancestralRace+'» отсутствует в справочнике — требуется решение Мастера.'});

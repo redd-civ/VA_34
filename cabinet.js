@@ -59,6 +59,15 @@ async function initCloud(){
     const info=await withTimeout(VA34_CLOUD.init());
     if(!info.configured){setCloudStatus('Локально: Supabase не настроен');return}
     if(!info.authenticated){setCloudStatus('Локально: войдите в аккаунт');return}
+    const games=await withTimeout(VA34_CLOUD.getGameContext());
+    const selector=document.getElementById('gameSelector');
+    if(selector){
+      selector.innerHTML=games.length?games.map(g=>`<option value="${esc(g.id)}" ${localStorage.getItem('va34_current_game_id')===g.id?'selected':''}>${esc(g.name)}</option>`).join(''):'<option value="">Нет доступных игр</option>';
+      if(games.length && !localStorage.getItem('va34_current_game_id')) await VA34_CLOUD.setGame(games[0].id);
+      if(games.length) selector.value=localStorage.getItem('va34_current_game_id')||games[0].id;
+      selector.onchange=async()=>{await VA34_CLOUD.setGame(selector.value);location.reload()};
+    }
+    if(!games.length){cloudReady=false;setCloudStatus('Облако: вступите в игру','checking');render();return;}
     const remote=await withTimeout(VA34_CLOUD.getState());
     if(remote){
       state=remote;

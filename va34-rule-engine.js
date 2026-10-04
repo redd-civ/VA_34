@@ -4,12 +4,26 @@ window.VA34_RULE_ENGINE={
   levelNames:['базовый','продвинутый','экспертный','мастерский','грандмастерский','эпичный'],
   levelRoman:['I','II','III','IV','V','VI'],
   levelText(n){return this.levelNames[(+n||1)-1]||'базовый'},
+  specialTZList(){return Array.isArray(window.VA34_SPECIAL_TZ)?window.VA34_SPECIAL_TZ:[]},
+  findSpecialTZ(idOrName){
+    const q=String(idOrName||'').trim().toLowerCase();
+    if(!q)return null;
+    return this.specialTZList().find(x=>String(x.id).toLowerCase()===q||String(x.name).toLowerCase()===q)||null;
+  },
+  validateSpecialTZ(value){
+    if(value===true)return {allowed:true,level:'ok',code:'tz_approved',text:'Специальное ТЗ подтверждено.'};
+    const tz=typeof value==='object'&&value?value:this.findSpecialTZ(value);
+    if(!tz)return {allowed:false,level:'master',code:'unknown_special_tz',text:'Специальное ТЗ отсутствует в каталоге правил — требуется решение Мастера.'};
+    return {allowed:true,level:'ok',code:'tz_catalogued',text:'Специальное ТЗ найдено в каталоге правил.',tz};
+  },
   levelAccess(n,context={}){
     const level=+n||1;
     if(level<1||level>6)return {allowed:false,level:'error',code:'invalid_tech_level',text:'Неизвестный уровень развития.'};
-    if(level===6&&!context.specialTZ&&!context.masterDecision)return {allowed:false,level:'master',code:'epic_requires_tz_or_master',text:'Эпичный уровень недоступен по умолчанию. Необходимо специальное ТЗ или решение Мастера.'};
+    let tzApproved=!!context.specialTZ;
+    if(typeof context.specialTZ==='string')tzApproved=!!this.findSpecialTZ(context.specialTZ);
+    if(level===6&&!tzApproved&&!context.masterDecision)return {allowed:false,level:'master',code:'epic_requires_tz_or_master',text:'Эпичный уровень недоступен по умолчанию. Необходимо специальное ТЗ или решение Мастера.'};
     if(level===6&&context.masterDecision)return {allowed:true,level:'ok',code:'epic_master_approved',text:'Эпичный уровень разрешён решением Мастера.'};
-    if(level===6&&context.specialTZ)return {allowed:true,level:'ok',code:'epic_tz_approved',text:'Эпичный уровень разрешён специальным ТЗ.'};
+    if(level===6&&tzApproved)return {allowed:true,level:'ok',code:'epic_tz_approved',text:'Эпичный уровень разрешён специальным ТЗ.'};
     return {allowed:true,level:'ok',code:'level_available',text:'Уровень доступен.'};
   },
   parseTech(x){

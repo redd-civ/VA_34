@@ -13,7 +13,7 @@
     <h1>Личный кабинет</h1>
     <p>Карточки Владыки, мира и игровых сущностей</p>
   </div>
-  <a class="back" href="index.html">← Правила</a>
+  <div class="top-actions"><a class="back" href="index.html">← Правила</a></div>
 </header>
 
 <main class="layout">
@@ -57,8 +57,11 @@
         <label>Раса<input id="lordRace"></label>
         <label>Девиз<input id="lordMotto"></label>
         <label>Начальная энергия<input id="lordEnergy" type="number" min="0" step="0.5" value="15"></label>
+        <label>Уровень/статус<input id="lordStatus" placeholder="Владыка"></label>
         <label class="wide">Способность<textarea id="lordAbility" rows="4"></textarea></label>
         <label class="wide">Особенности<textarea id="lordTraits" rows="5" placeholder="Положительные, нейтральные и отрицательные особенности"></textarea></label>
+        <label class="wide">Артефакты / реликвии / предметы<textarea id="lordItems" rows="4"></textarea></label>
+        <label class="wide">Ресурсы и постоянные источники дохода<textarea id="lordResources" rows="4"></textarea></label>
         <button class="primary" type="submit">Сохранить Владыку</button>
       </form>
     </div>

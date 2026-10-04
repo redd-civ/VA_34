@@ -37,7 +37,7 @@
       const count=counts[g.id]||0, app=apps[g.id], full=count>=g.max_players;
       let action='';
       if(g.master_id===user.id) action='<span class="notice">Вы мастер этой игры</span>';
-      else if(app) action='<span class="notice">'+esc(roleText[app]||app)+'</span>';
+      else if(app==='accepted') action='<a class="primary" href="cabinet.html?game='+encodeURIComponent(g.id)+'" data-game-open="'+g.id+'">Открыть кабинет игры</a>'; else if(app) action='<span class="notice">'+esc(roleText[app]||app)+'</span>';
       else if(g.status==='open'&&!full) action='<button class="primary" data-apply="'+g.id+'">Подать заявку</button>';
       else if(full) action='<span class="notice">Мест нет</span>';
       else action='<span class="notice">Приём заявок закрыт</span>';

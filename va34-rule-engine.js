@@ -4,6 +4,12 @@ window.VA34_RULE_ENGINE={
   levelNames:['базовый','продвинутый','экспертный','мастерский','грандмастерский','эпичный'],
   levelRoman:['I','II','III','IV','V','VI'],
   levelText(n){return this.levelNames[(+n||1)-1]||'базовый'},
+  levelAccess(n,context={}){
+    const level=+n||1;
+    if(level<1||level>6)return {allowed:false,level:'error',code:'invalid_tech_level',text:'Неизвестный уровень развития.'};
+    if(level===6&&!context.specialTZ)return {allowed:false,level:'master',code:'epic_requires_special_tz',text:'Эпичный уровень недоступен по умолчанию. Для его получения необходимо специальное ТЗ.'};
+    return {allowed:true,level:'ok',code:'level_available',text:'Уровень доступен.'};
+  },
   parseTech(x){
     const raw=String(x||'').trim();
     const m=raw.match(/^(.+?)(?:\s+(базовый|продвинутый|экспертный|мастерский|грандмастерский|эпичный|\+{1,6}|I{1,3}|[1-6]))?$/i);

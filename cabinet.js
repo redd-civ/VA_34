@@ -1,7 +1,10 @@
 const KEY='va34_cabinet_v1';
 const RULES=window.VA34_RULES;
 const emptyState={lord:{name:'',race:'',motto:'',energy:15,status:'Владыка',ability:'',traits:'',items:'',resources:''},shards:[],heroes:[],troops:[],tech:[],meta:{version:3}};
-let state=load();\nlet cloudReady=false;\nlet cloudBusy=false;
+let state=load();
+let cloudReady=false;
+let cloudBusy=false;
+let cloudInitStarted=false;
 
 function load(){
   try{
@@ -18,7 +21,7 @@ function load(){
 }
 function save(){
   localStorage.setItem(KEY,JSON.stringify(state));
-  render();\ninitCloud();
+  render();
   if(cloudReady && !cloudBusy){
     cloudBusy=true;
     VA34_CLOUD.saveState(state)

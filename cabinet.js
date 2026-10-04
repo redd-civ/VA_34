@@ -139,6 +139,43 @@ function fillLordRace(){
   }
   if(state.lord.race==='custom') lordRace.value='custom';
 }
+function parseStarterTechRows(){
+  return starterList(state.lord.startingTech).map(raw=>VA34_RULE_ENGINE.parseTech(raw));
+}
+function syncStarterTech(){
+  const rows=[...document.querySelectorAll('[data-starter-tech]')].map(row=>{
+    const name=row.querySelector('[data-tech-name]').value;
+    const level=+row.querySelector('[data-tech-level]').value||1;
+    return name ? name+' '+level : '';
+  }).filter(Boolean);
+  startingTech.value=rows.join(', ');
+  state.lord.startingTech=startingTech.value;
+  renderStarterTechBuilder(false);
+  renderStarterValidation(validateStarter());
+}
+function renderStarterTechBuilder(fromState=true){
+  const box=document.getElementById('starterTechBuilder'); if(!box)return;
+  if(fromState){
+    const rows=parseStarterTechRows();
+    box.innerHTML=rows.map((t,i)=>starterTechRow(t,i)).join('');
+  }
+  box.querySelectorAll('[data-starter-tech]').forEach(row=>{
+    row.querySelector('[data-tech-name]').onchange=syncStarterTech;
+    row.querySelector('[data-tech-level]').onchange=syncStarterTech;
+    const del=row.querySelector('[data-remove-tech]');
+    if(del)del.onclick=()=>{row.remove();syncStarterTech()};
+  });
+}
+function starterTechRow(t={},i=0){
+  const arr=[...RULES.technologies.map(x=>({v:x,l:'⚙ '+x})),...RULES.magicSchools.map(x=>({v:x,l:'🔮 '+x}))];
+  return '<div class="entity" data-starter-tech><label>Развитие #'+(i+1)+'<select data-tech-name><option value="">— выбрать —</option>'+arr.map(x=>'<option value="'+esc(x.v)+'" '+(x.v===t.name?'selected':'')+'>'+esc(x.l)+'</option>').join('')+'</select></label><label>Уровень<select data-tech-level>'+[1,2,3].map(n=>'<option value="'+n+'" '+(n===t.level?'selected':'')+'>'+['I','II','III'][n-1]+'</option>').join('')+'</select></label><button type="button" data-remove-tech class="danger">Удалить</button></div>';
+}
+document.getElementById('addStarterTech').onclick=()=>{
+  const box=document.getElementById('starterTechBuilder');
+  if(box.querySelectorAll('[data-starter-tech]').length>=7)return;
+  box.insertAdjacentHTML('beforeend',starterTechRow({level:1},box.children.length));
+  renderStarterTechBuilder(false);
+};
 lordForm.onsubmit=e=>{
   e.preventDefault();
   state.lord={...state.lord,name:lordName.value.trim(),race:lordRace.value,motto:lordMotto.value,energy:+lordEnergy.value||0,ability:lordAbility.value,traits:lordTraits.value,items:lordItems.value,resources:lordResources.value,status:lordStatus.value||'Владыка',ancestralName:ancestralName.value.trim(),ancestralRace:ancestralRace.value,ancestralTerrain:ancestralTerrain.value,ancestralIncome:+ancestralIncome.value||0,ancestralGarrison:+ancestralGarrison.value||0,startingTroops:startingTroops.value,startingMagic:startingMagic.value,startingTech:startingTech.value};

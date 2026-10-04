@@ -27,6 +27,7 @@
     <button class="nav" data-tab="heroes">🎭 Герои</button>
     <button class="nav" data-tab="troops">⚔️ Войска</button>
     <button class="nav" data-tab="tech">⚙️ Технологии</button>
+    <button class="nav" data-tab="turn">📜 Ход</button>
     <button class="nav" data-tab="data">💾 Данные</button>
   </aside>
 
@@ -90,6 +91,10 @@
       <div id="techList" class="entity-list"></div>
     </div>
 
+    <div id="turn" class="tab">
+      <div id="turnPanel"></div>
+    </div>
+
     <div id="data" class="tab">
       <div class="section-head"><h2>💾 Данные</h2><span id="storageMode" class="muted">Локальное хранение</span></div>
       <div class="data-actions">
@@ -104,5 +109,6 @@
 </main>
 <script src="rules-data.js"></script>
 <script src="cabinet.js"></script>
+<script src="turn-engine.js"></script>
 </body>
 </html>

@@ -7,7 +7,9 @@ window.VA34_RULE_ENGINE={
   levelAccess(n,context={}){
     const level=+n||1;
     if(level<1||level>6)return {allowed:false,level:'error',code:'invalid_tech_level',text:'Неизвестный уровень развития.'};
-    if(level===6&&!context.specialTZ)return {allowed:false,level:'master',code:'epic_requires_special_tz',text:'Эпичный уровень недоступен по умолчанию. Для его получения необходимо специальное ТЗ.'};
+    if(level===6&&!context.specialTZ&&!context.masterDecision)return {allowed:false,level:'master',code:'epic_requires_tz_or_master',text:'Эпичный уровень недоступен по умолчанию. Необходимо специальное ТЗ или решение Мастера.'};
+    if(level===6&&context.masterDecision)return {allowed:true,level:'ok',code:'epic_master_approved',text:'Эпичный уровень разрешён решением Мастера.'};
+    if(level===6&&context.specialTZ)return {allowed:true,level:'ok',code:'epic_tz_approved',text:'Эпичный уровень разрешён специальным ТЗ.'};
     return {allowed:true,level:'ok',code:'level_available',text:'Уровень доступен.'};
   },
   parseTech(x){
@@ -50,46 +52,13 @@ window.VA34_RULE_ENGINE={
   const names=['Базовый','Продвинутый','Экспертный','Мастерский','Грандмастерский','Эпичный'];
   const roman=['I','II','III','IV','V','VI'];
   function syncMagic(){
-    const rows=[...document.querySelectorAll('[data-starter-magic]')].map(row=>{
-      const name=row.querySelector('[data-magic-name]').value;
-      const level=+(row.querySelector('[data-magic-level]')||{}).value||1;
-      return name ? name+' '+level : '';
-    }).filter(Boolean);
-    startingMagic.value=rows.join(', ');
-    state.lord.startingMagic=startingMagic.value;
-    renderStarterMagicBuilder(false);
-    renderStarterValidation(starterIssues());
+    const rows=[...document.querySelectorAll('[data-starter-magic]')].map(row=>{const name=row.querySelector('[data-magic-name]').value;const level=+(row.querySelector('[data-magic-level]')||{}).value||1;return name?name+' '+level:''}).filter(Boolean);
+    startingMagic.value=rows.join(', ');state.lord.startingMagic=startingMagic.value;renderStarterMagicBuilder(false);renderStarterValidation(starterIssues());
   }
   function decorate(){
-    document.querySelectorAll('#starterTechBuilder [data-tech-level]').forEach(select=>{
-      for(let i=0;i<names.length;i++){
-        let option=select.querySelector('option[value="'+(i+1)+'"]');
-        if(!option){option=document.createElement('option');option.value=String(i+1);select.appendChild(option)}
-        option.textContent=names[i]+' ('+roman[i]+')';
-      }
-    });
-    document.querySelectorAll('#starterMagicBuilder [data-starter-magic]').forEach(row=>{
-      let select=row.querySelector('[data-magic-level]');
-      if(!select){
-        select=document.createElement('select');select.setAttribute('data-magic-level','');
-        names.forEach((name,i)=>{const o=document.createElement('option');o.value=String(i+1);o.textContent=name+' ('+roman[i]+')';select.appendChild(o)});
-        const old=row.querySelector('.muted');
-        if(old)old.replaceWith(select);else row.insertBefore(select,row.querySelector('[data-remove-magic]'));
-      }
-      const parsed=window.VA34_RULE_ENGINE.parseTech((window.starterList?starterList(state.lord.startingMagic):state.lord.startingMagic).split(',')[Array.from(document.querySelectorAll('[data-starter-magic]')).indexOf(row)]||'');
-      select.value=String(parsed.level||1);
-      select.onchange=syncMagic;
-      row.querySelector('[data-magic-name]').onchange=syncMagic;
-    });
+    document.querySelectorAll('#starterTechBuilder [data-tech-level]').forEach(select=>{for(let i=0;i<names.length;i++){let option=select.querySelector('option[value="'+(i+1)+'"]');if(!option){option=document.createElement('option');option.value=String(i+1);select.appendChild(option)}option.textContent=names[i]+' ('+roman[i]+')'}});
+    document.querySelectorAll('#starterMagicBuilder [data-starter-magic]').forEach(row=>{let select=row.querySelector('[data-magic-level]');if(!select){select=document.createElement('select');select.setAttribute('data-magic-level','');names.forEach((name,i)=>{const o=document.createElement('option');o.value=String(i+1);o.textContent=name+' ('+roman[i]+')';select.appendChild(o)});const old=row.querySelector('.muted');if(old)old.replaceWith(select);else row.insertBefore(select,row.querySelector('[data-remove-magic]'))}const parsed=window.VA34_RULE_ENGINE.parseTech((window.starterList?starterList(state.lord.startingMagic):state.lord.startingMagic).split(',')[Array.from(document.querySelectorAll('[data-starter-magic]')).indexOf(row)]||'');select.value=String(parsed.level||1);select.onchange=syncMagic;row.querySelector('[data-magic-name]').onchange=syncMagic});
   }
-  function watch(){
-    decorate();
-    const techBox=document.getElementById('starterTechBuilder'),magicBox=document.getElementById('starterMagicBuilder');
-    if(!techBox&&!magicBox)return false;
-    const observer=new MutationObserver(decorate);
-    if(techBox)observer.observe(techBox,{childList:true,subtree:true});
-    if(magicBox)observer.observe(magicBox,{childList:true,subtree:true});
-    return true;
-  }
+  function watch(){decorate();const techBox=document.getElementById('starterTechBuilder'),magicBox=document.getElementById('starterMagicBuilder');if(!techBox&&!magicBox)return false;const observer=new MutationObserver(decorate);if(techBox)observer.observe(techBox,{childList:true,subtree:true});if(magicBox)observer.observe(magicBox,{childList:true,subtree:true});return true}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(watch,0));else setTimeout(watch,0);
 })();

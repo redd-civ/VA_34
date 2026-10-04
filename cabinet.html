@@ -66,6 +66,16 @@
         <label class="wide">Особенности<textarea id="lordTraits" rows="5" placeholder="Положительные, нейтральные и отрицательные особенности"></textarea></label>
         <label class="wide">Артефакты / реликвии / предметы<textarea id="lordItems" rows="4"></textarea></label>
         <label class="wide">Ресурсы и постоянные источники дохода<textarea id="lordResources" rows="4"></textarea></label>
+        <div class="wide"><h3>Стартовая заявка по правилам VA-34</h3><p class="muted">После выбора игры эти поля образуют стартовую заявку Владыки. Проверка использует только внесённые в справочник правила; спорные/неописанные правила остаются на усмотрение Мастера.</p></div>
+        <label>Родовой осколок<input id="ancestralName" placeholder="Название"></label>
+        <label>Раса родового осколка<select id="ancestralRace"><option value="">— выбрать —</option></select></label>
+        <label>Ландшафт родового осколка<select id="ancestralTerrain"><option value="">— выбрать —</option></select></label>
+        <label>Доход родового осколка<input id="ancestralIncome" type="number" min="0" step=".5" value="0"></label>
+        <label>Гарнизон родового осколка<input id="ancestralGarrison" type="number" min="0" step=".5" value="0"></label>
+        <label class="wide">Стартовые роды войск<textarea id="startingTroops" rows="3" placeholder="До 4 типов, по одному в строке или через запятую"></textarea></label>
+        <label class="wide">Стартовые школы магии<textarea id="startingMagic" rows="3" placeholder="До 2 школ, по одной в строке или через запятую"></textarea></label>
+        <label class="wide">Стартовые технологии<textarea id="startingTech" rows="4" placeholder="Например: Инженерное дело 1, Военное дело 1, Магия 1, Логистика 1"></textarea></label>
+        <div id="lordValidation" class="wide warnings"></div>
         <button class="primary" type="submit">Сохранить Владыку</button>
       </form>
     </div>

@@ -113,6 +113,7 @@ document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go)
 
 function starterList(v){return String(v||'').split(String.fromCharCode(10)).flatMap(x=>x.split(',')).map(x=>x.trim()).filter(Boolean)}
 function validateStarter(){
+  if(window.VA34_RULE_ENGINE) return VA34_RULE_ENGINE.validateStarter(state.lord).filter(x=>x.level==='error'||x.level==='master').map(x=>x.text);
   const out=[];
   if(!state.lord.name) out.push('Укажите имя Владыки.');
   if(!state.lord.ancestralName) out.push('Укажите название родового осколка.');
@@ -142,7 +143,8 @@ lordForm.onsubmit=e=>{
   e.preventDefault();
   state.lord={...state.lord,name:lordName.value.trim(),race:lordRace.value,motto:lordMotto.value,energy:+lordEnergy.value||0,ability:lordAbility.value,traits:lordTraits.value,items:lordItems.value,resources:lordResources.value,status:lordStatus.value||'Владыка',ancestralName:ancestralName.value.trim(),ancestralRace:ancestralRace.value,ancestralTerrain:ancestralTerrain.value,ancestralIncome:+ancestralIncome.value||0,ancestralGarrison:+ancestralGarrison.value||0,startingTroops:startingTroops.value,startingMagic:startingMagic.value,startingTech:startingTech.value};
   const issues=validateStarter();
-  if(issues.length){renderStarterValidation(issues);go('lord');return}
+  renderStarterValidation(issues);
+  if(issues.some(x=>x.startsWith('Не ')||x.includes('не больше')||x.includes('должно быть'))) {go('lord');return}
   save();go('overview')
   save();go('overview')
 };

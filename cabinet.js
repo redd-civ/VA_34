@@ -59,6 +59,8 @@ async function initCloud(){
     const info=await withTimeout(VA34_CLOUD.init());
     if(!info.configured){setCloudStatus('Локально: Supabase не настроен');return}
     if(!info.authenticated){setCloudStatus('Локально: войдите в аккаунт');return}
+    const requestedGame=new URLSearchParams(location.search).get('game');
+    if(requestedGame) await VA34_CLOUD.setGame(requestedGame);
     const games=await withTimeout(VA34_CLOUD.getGameContext());
     const selector=document.getElementById('gameSelector');
     if(selector){

@@ -14,13 +14,13 @@ window.VA34_RULE_ENGINE={
     if(value===true)return {allowed:true,level:'ok',code:'tz_approved',text:'Специальное ТЗ подтверждено.'};
     const tz=typeof value==='object'&&value?value:this.findSpecialTZ(value);
     if(!tz)return {allowed:false,level:'master',code:'unknown_special_tz',text:'Специальное ТЗ отсутствует в каталоге правил — требуется решение Мастера.'};
-    return {allowed:true,level:'ok',code:'tz_catalogued',text:'Специальное ТЗ найдено в каталоге правил.',tz};
+    if(typeof value==='object'&&value.approved===true)return {allowed:true,level:'ok',code:'tz_approved',text:'Специальное ТЗ одобрено Мастером.',tz};
+    return {allowed:false,level:'master',code:'tz_requires_approval',text:'Специальное ТЗ найдено в каталоге, но ещё не подтверждено Мастером.',tz};
   },
   levelAccess(n,context={}){
     const level=+n||1;
     if(level<1||level>6)return {allowed:false,level:'error',code:'invalid_tech_level',text:'Неизвестный уровень развития.'};
-    let tzApproved=!!context.specialTZ;
-    if(typeof context.specialTZ==='string')tzApproved=!!this.findSpecialTZ(context.specialTZ);
+    const tzApproved=context.specialTZ===true||(context.specialTZ&&context.specialTZ.approved===true);
     if(level===6&&!tzApproved&&!context.masterDecision)return {allowed:false,level:'master',code:'epic_requires_tz_or_master',text:'Эпичный уровень недоступен по умолчанию. Необходимо специальное ТЗ или решение Мастера.'};
     if(level===6&&context.masterDecision)return {allowed:true,level:'ok',code:'epic_master_approved',text:'Эпичный уровень разрешён решением Мастера.'};
     if(level===6&&tzApproved)return {allowed:true,level:'ok',code:'epic_tz_approved',text:'Эпичный уровень разрешён специальным ТЗ.'};
@@ -32,6 +32,23 @@ window.VA34_RULE_ENGINE={
     const levelRaw=(m&&m[2])||'базовый';
     const map={'базовый':1,'+':1,'i':1,'1':1,'продвинутый':2,'++':2,'ii':2,'2':2,'экспертный':3,'+++':3,'iii':3,'3':3,'мастерский':4,'++++':4,'iv':4,'4':4,'грандмастерский':5,'+++++':5,'v':5,'5':5,'эпичный':6,'++++++':6,'vi':6,'6':6};
     return {name:(m?m[1]:raw).trim(),level:map[String(levelRaw).toLowerCase()]||1};
+  },
+  developmentTotals(lord={}){
+    const tech=this.list(lord.startingTech).map(x=>this.parseTech(x));
+    const magic=this.list(lord.startingMagic).map(x=>this.parseTech(x));
+    const technologyLevels=tech.reduce((s,x)=>s+x.level,0);
+    const magicLevels=magic.reduce((s,x)=>s+x.level,0);
+    return {technologyLevels,magicLevels,total:technologyLevels+magicLevels};
+  },
+  technologyCost(technology,level,profile='profile'){
+    const n=String(technology||'');const l=Math.max(1,Math.min(6,+level||1));
+    const costs=window.VA34_RULES&&window.VA34_RULES.technologyCosts;
+    if(!costs||!costs[profile])return {allowed:false,level:'master',code:'unknown_tech_cost_profile',text:'Профиль стоимости технологии не определён в правилах.'};
+    const key=['basic','advanced','expert','master','grandmaster','epic'][l-1];
+    const raw=costs[profile][key];
+    if(raw==null)return {allowed:false,level:'master',code:'unknown_tech_cost',text:'Стоимость этого уровня технологии не определена.'};
+    const discountFloor=costs.minimumAfterDiscount??0.5;
+    return {allowed:true,level:'ok',technology:n,techLevel:l,profile,cost:raw,discountFloor};
   },
   validateStarter(lord){
     const R=window.VA34_RULES,out=[];

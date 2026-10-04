@@ -4,6 +4,7 @@
   let client = null;
   let user = null;
   let lordId = null;
+  let gameId = localStorage.getItem('va34_current_game_id') || null;
 
   if (configured) client = window.supabase.createClient(cfg.url, cfg.publishableKey);
 
@@ -23,7 +24,7 @@
       .from('lords')
       .select('*')
       .eq('player_id', user.id)
-      ;
+      .eq('game_id', gameId || '00000000-0000-0000-0000-000000000000');
 
     if (lordError) throw lordError;
     const lord = lords && lords.length ? lords[lords.length - 1] : null;
@@ -86,9 +87,11 @@
 
   async function ensureLord() {
     if (!client || !user) throw new Error('Нет авторизованного пользователя.');
+    if (!gameId) throw new Error('Сначала выберите игру.');
     if (lordId) return lordId;
     const { data, error } = await client.from('lords').insert({
       player_id: user.id,
+      game_id: gameId,
       name: '',
       race: '',
       motto: '',
@@ -182,6 +185,7 @@
 
   async function getTurn(turnNumber) {
     if (!client || !user) return null;
+    if (!gameId) throw new Error('Сначала выберите игру.');
     const id = await ensureLord();
     let query = client.from('turns').select('*').eq('lord_id', id);
     if (Number.isFinite(Number(turnNumber))) query = query.eq('turn_number', Number(turnNumber));
@@ -273,6 +277,22 @@
     return saveTurn(turn);
   }
 
+  async function setGame(id) {
+    gameId = id || null;
+    if (gameId) localStorage.setItem('va34_current_game_id', gameId); else localStorage.removeItem('va34_current_game_id');
+    lordId = null;
+    return gameId;
+  }
+  async function getGameContext() {
+    if (!client || !user) return null;
+    const { data, error } = await client.from('game_members').select('game_id,role').eq('player_id', user.id);
+    if (error) throw error;
+    const ids=(data||[]).map(x=>x.game_id);
+    if (!ids.length) return [];
+    const { data: games, error: ge } = await client.from('games').select('*').in('id',ids).order('created_at',{ascending:false});
+    if (ge) throw ge;
+    return games||[];
+  }
   async function listTurns(status) {
     if (!client || !user) return [];
     const { data, error } = await client.from('turns').select('*').order('updated_at', { ascending: false });
@@ -311,6 +331,8 @@
     listTurns,
     getTurnDetails,
     updateTurnStatus,
+    setGame,
+    getGameContext,
     get user() { return user; }
   };
 })();

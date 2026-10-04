@@ -1,0 +1,43 @@
+const KEY='va34_cabinet_v1';
+const emptyState={lord:{name:'',race:'',motto:'',energy:15,ability:'',traits:''},shards:[],heroes:[],troops:[],tech:[]};
+let state=load();
+function load(){try{return {...emptyState,...JSON.parse(localStorage.getItem(KEY)||'{}')}}catch(e){return structuredClone(emptyState)}}
+function save(){localStorage.setItem(KEY,JSON.stringify(state));render()}
+function esc(v=''){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function id(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function go(tab){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.id===tab));document.querySelectorAll('.nav').forEach(x=>x.classList.toggle('active',x.dataset.tab===tab))}
+document.querySelectorAll('.nav').forEach(b=>b.onclick=()=>go(b.dataset.tab));
+document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
+
+document.getElementById('lordForm').onsubmit=e=>{e.preventDefault();state.lord={name:lordName.value,race:lordRace.value,motto:lordMotto.value,energy:+lordEnergy.value||0,ability:lordAbility.value,traits:lordTraits.value};save();go('overview')};
+
+function shardForm(s={}){return `<form class="form-grid" id="shardForm">
+<label>Название<input name="name" value="${esc(s.name)}" required></label>
+<label>Тип<select name="type"><option ${s.type==='ancestral'?'selected':''} value="ancestral">Родовой</option><option ${s.type==='ordinary'?'selected':''} value="ordinary">Обычный</option><option ${s.type==='source'?'selected':''} value="source">Источник</option></select></label>
+<label>Размер<select name="size"><option value=".5">Крохотный — 0.5</option><option value="1">Маленький — 1</option><option value="1.5">Небольшой — 1.5</option><option value="2">Средний — 2</option><option value="3">Большой — 3</option><option value="4">Огромный — 4</option><option value="5">Гигантский — 5</option><option value="7">Гаргантюозный — 7</option></select></label>
+<label>Доход<input name="income" type="number" min="0" step=".5" value="${s.income??0}"></label>
+<label>Раса<input name="race" value="${esc(s.race)}"></label>
+<label>Население<input name="population" value="${esc(s.population)}"></label>
+<label>Настроение<select name="mood"><option>Спокойное</option><option>Довольное</option><option>Счастливое</option><option>Недовольное</option><option>В ярости</option></select></label>
+<label>Гарнизон<input name="garrison" type="number" min="0" step=".5" value="${s.garrison??0}"></label>
+<label>Снабжение<input name="supply" type="number" min="0" step=".5" value="${s.supply??0}"></label>
+<label>Ландшафт<input name="terrain" value="${esc(s.terrain)}"></label>
+<label>Здания<input name="buildings" type="number" min="0" value="${s.buildings??0}"></label>
+<label class="wide">Ресурсы / трофеи<textarea name="resources">${esc(s.resources)}</textarea></label>
+<label class="wide">Описание<textarea name="description">${esc(s.description)}</textarea></label>
+<div><button class="primary" type="submit">Сохранить</button> <button type="button" class="danger" id="cancelShard">Отмена</button></div></form>`}
+function editShard(s){const wrap=document.getElementById('shardsList');wrap.innerHTML=shardForm(s);const f=wrap.querySelector('form');f.querySelector('[name=size]').value=s.size??1;f.querySelector('[name=mood]').value=s.mood||'Спокойное';f.onsubmit=e=>{e.preventDefault();const x=Object.fromEntries(new FormData(f));Object.assign(s,x,{size:+x.size,income:+x.income||0,garrison:+x.garrison||0,supply:+x.supply||0,buildings:+x.buildings||0});save()};document.getElementById('cancelShard').onclick=render}
+document.getElementById('newShard').onclick=()=>{const s={id:id(),type:'ordinary',size:1,income:0,garrison:0,supply:0,buildings:0};state.shards.push(s);editShard(s)};
+function simpleAdd(kind,label,fields){const list=state[kind];const obj={id:id()};fields.forEach(x=>obj[x]='');list.push(obj);save();editSimple(kind,obj,label)}
+function editSimple(kind,obj,label){const box=document.getElementById(kind+'List');box.innerHTML=`<form class="form-grid" id="simpleForm"><h3 class="wide">${label}</h3>${(kind==='heroes'?['name','race','level','xp','skills','perks','description']:kind==='troops'?['name','type','tier','quantity','traits','description']:['name','kind','level','description']).map(k=>`<label>${k}<input name="${k}" value="${esc(obj[k])}"></label>`).join('')}<div><button class="primary" type="submit">Сохранить</button></div></form>`;const f=document.getElementById('simpleForm');f.onsubmit=e=>{e.preventDefault();Object.assign(obj,Object.fromEntries(new FormData(f)));save()}}
+document.getElementById('newHero').onclick=()=>simpleAdd('heroes','Новый герой',['name','race','level','xp','skills','perks','description']);
+document.getElementById('newTroop').onclick=()=>simpleAdd('troops','Новый род войск',['name','type','tier','quantity','traits','description']);
+document.getElementById('newTech').onclick=()=>simpleAdd('tech','Новое развитие',['name','kind','level','description']);
+
+function renderList(kind,el,formatter){const arr=state[kind];el.innerHTML=arr.length?arr.map(x=>`<article class="entity"><h3>${esc(x.name||'Без названия')}</h3><div class="meta">${formatter(x)}</div><div class="entity-actions"><button data-edit="${x.id}">Изменить</button><button data-del="${x.id}">Удалить</button></div></article>`).join(''):'<div class="notice">Пока ничего нет.</div>';el.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{const x=arr.find(x=>x.id===b.dataset.edit);kind==='shards'?editShard(x):editSimple(kind,x,kind==='heroes'?'Герой':kind==='troops'?'Род войск':'Развитие')});el.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{state[kind]=arr.filter(x=>x.id!==b.dataset.del);save()})}
+function render(){lordName.value=state.lord.name;lordRace.value=state.lord.race;lordMotto.value=state.lord.motto;lordEnergy.value=state.lord.energy;lordAbility.value=state.lord.ability;lordTraits.value=state.lord.traits;overviewTitle.textContent=state.lord.name||'Новый Владыка';overviewRace.textContent=state.lord.race||'Раса не указана';const size=state.shards.reduce((a,s)=>a+(+s.size||0),0),income=state.shards.reduce((a,s)=>a+(+s.income||0),0),limit=20+10*state.shards.length;statShards.textContent=state.shards.length;statSize.textContent=size;statIncome.textContent=income;statEnergy.textContent=limit;worldSummary.innerHTML=`<span><strong>${state.shards.length}</strong> осколков</span><span><strong>${size}</strong> размер</span><span><strong>${income}</strong> доход</span><span><strong>${state.shards.filter(s=>s.type==='ancestral').length}</strong> родовых</span>`;const warnings=[];if(state.shards.filter(s=>s.type==='ancestral').length!==1)warnings.push('Должен быть ровно один родовой осколок.');state.shards.forEach(s=>{const max=s.type==='ancestral'?4:Math.floor(+s.size||0);if((+s.buildings||0)>max)warnings.push(`Осколок «${s.name||'без названия'}»: зданий ${s.buildings}, допустимо ${max}.`);if((+s.garrison||0)>(+s.supply||0))warnings.push(`Осколок «${s.name||'без названия'}»: гарнизон превышает снабжение.`)});warningsEl.innerHTML=warnings.length?warnings.map(x=>`<div class="warning">⚠️ ${esc(x)}</div>`).join(''):'<div class="ok">✓ Основные проверяемые ограничения сейчас соблюдены.</div>';renderList('shards',shardsList,s=>`тип: ${s.type}; размер: ${s.size}; доход: ${s.income}; гарнизон: ${s.garrison}/${s.supply}; зданий: ${s.buildings}`);renderList('heroes',heroesList,s=>`уровень: ${s.level||0}; навыки: ${s.skills||'—'}`);renderList('troops',troopsList,s=>`тип: ${s.type||'—'}; уровень: ${s.tier||'—'}; количество: ${s.quantity||'—'}`);renderList('tech',techList,s=>`тип: ${s.kind||'технология'}; уровень: ${s.level||0}`);jsonPreview.textContent=JSON.stringify(state,null,2)}
+exportData.onclick=()=>{const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='va34-data.json';a.click();URL.revokeObjectURL(a.href)}
+importData.onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const x=JSON.parse(await f.text());state={...emptyState,...x};save();alert('Данные импортированы.')}catch(err){alert('Не удалось прочитать JSON.')}e.target.value=''}
+resetData.onclick=()=>{if(confirm('Удалить все локальные данные?')){state=structuredClone(emptyState);save()}}
+const warningsEl=document.getElementById('warnings');
+render();

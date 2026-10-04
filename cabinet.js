@@ -112,23 +112,23 @@ document.querySelectorAll('.nav').forEach(b=>b.onclick=()=>go(b.dataset.tab));
 document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
 
 function starterList(v){return String(v||'').split(String.fromCharCode(10)).flatMap(x=>x.split(',')).map(x=>x.trim()).filter(Boolean)}
+function starterIssues(){
+  return window.VA34_RULE_ENGINE ? VA34_RULE_ENGINE.validateStarter(state.lord) : [];
+}
 function validateStarter(){
-  if(window.VA34_RULE_ENGINE) return VA34_RULE_ENGINE.validateStarter(state.lord).filter(x=>x.level==='error'||x.level==='master').map(x=>x.text);
-  const out=[];
-  if(!state.lord.name) out.push('Укажите имя Владыки.');
-  if(!state.lord.ancestralName) out.push('Укажите название родового осколка.');
-  if(!state.lord.ancestralRace) out.push('Укажите расу родового осколка.');
-  if(!state.lord.ancestralTerrain) out.push('Укажите ландшафт родового осколка.');
-  const troops=starterList(state.lord.startingTroops), magic=starterList(state.lord.startingMagic);
-  if(troops.length>RULES.constants.maxStartingTroopTypes) out.push('Стартовых родов войск не больше 4.');
-  if(magic.length>RULES.constants.maxStartingMagicSchools) out.push('Стартовых школ магии не больше 2.');
-  const tech=starterList(state.lord.startingTech);
-  if(tech.length<RULES.constants.startingTechLevelsMin || tech.length>RULES.constants.startingTechLevelsMax) out.push('Стартовых уровней технологий должно быть 4–5.');
-  return out;
+  return starterIssues();
 }
 function renderStarterValidation(items){
   const el=document.getElementById('lordValidation'); if(!el)return;
-  el.innerHTML=items.length?'<strong>Нужно исправить:</strong><ul>'+items.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>':'<span class="badge cloud">Заявка соответствует базовым стартовым ограничениям.</span>';
+  const errors=items.filter(x=>x.level==='error');
+  const masters=items.filter(x=>x.level==='master');
+  const warnings=items.filter(x=>x.level==='warning');
+  let html='';
+  if(errors.length) html+='<div class="warning"><strong>Нужно исправить:</strong><ul>'+errors.map(x=>'<li>'+esc(x.text)+'</li>').join('')+'</ul></div>';
+  if(masters.length) html+='<div class="notice"><strong>Требуется решение Мастера:</strong><ul>'+masters.map(x=>'<li>'+esc(x.text)+'</li>').join('')+'</ul></div>';
+  if(warnings.length) html+='<div class="warning"><strong>Предупреждения:</strong><ul>'+warnings.map(x=>'<li>'+esc(x.text)+'</li>').join('')+'</ul></div>';
+  if(!html) html='<span class="badge cloud">Заявка соответствует базовым стартовым ограничениям.</span>';
+  el.innerHTML=html;
 }
 function fillLordRace(){
   lordRace.innerHTML='<option value="">— не указана —</option><option value="custom">Другая / пока не внесена в справочник</option>';
@@ -151,7 +151,7 @@ function syncStarterTech(){
   startingTech.value=rows.join(', ');
   state.lord.startingTech=startingTech.value;
   renderStarterTechBuilder(false);
-  renderStarterValidation(validateStarter());
+  renderStarterValidation(starterIssues());
 }
 function renderStarterTechBuilder(fromState=true){
   const box=document.getElementById('starterTechBuilder'); if(!box)return;
@@ -167,8 +167,36 @@ function renderStarterTechBuilder(fromState=true){
   });
 }
 function starterTechRow(t={},i=0){
-  const arr=[...RULES.technologies.map(x=>({v:x,l:'⚙ '+x})),...RULES.magicSchools.map(x=>({v:x,l:'🔮 '+x}))];
-  return '<div class="entity" data-starter-tech><label>Развитие #'+(i+1)+'<select data-tech-name><option value="">— выбрать —</option>'+arr.map(x=>'<option value="'+esc(x.v)+'" '+(x.v===t.name?'selected':'')+'>'+esc(x.l)+'</option>').join('')+'</select></label><label>Уровень<select data-tech-level>'+[1,2,3].map(n=>'<option value="'+n+'" '+(n===t.level?'selected':'')+'>'+['I','II','III'][n-1]+'</option>').join('')+'</select></label><button type="button" data-remove-tech class="danger">Удалить</button></div>';
+  const arr=RULES.technologies.map(x=>({v:x,l:'⚙ '+x}));
+  return '<div class="entity" data-starter-tech><label>Технология #'+(i+1)+'<select data-tech-name><option value="">— выбрать —</option>'+arr.map(x=>'<option value="'+esc(x.v)+'" '+(x.v===t.name?'selected':'')+'>'+esc(x.l)+'</option>').join('')+'</select></label><label>Уровень<select data-tech-level>'+[1,2,3].map(n=>'<option value="'+n+'" '+(n===t.level?'selected':'')+'>'+['I','II','III'][n-1]+'</option>').join('')+'</select></label><button type="button" data-remove-tech class="danger">Удалить</button></div>';
+}
+function parseStarterMagicRows(){
+  return starterList(state.lord.startingMagic).map(name=>({name,level:1}));
+}
+function syncStarterMagic(){
+  const rows=[...document.querySelectorAll('[data-starter-magic]')].map(row=>{
+    const name=row.querySelector('[data-magic-name]').value;
+    return name ? name : '';
+  }).filter(Boolean);
+  startingMagic.value=rows.join(', ');
+  state.lord.startingMagic=startingMagic.value;
+  renderStarterMagicBuilder(false);
+  renderStarterValidation(starterIssues());
+}
+function renderStarterMagicBuilder(fromState=true){
+  const box=document.getElementById('starterMagicBuilder'); if(!box)return;
+  if(fromState){
+    box.innerHTML=parseStarterMagicRows().map((m,i)=>starterMagicRow(m,i)).join('');
+  }
+  box.querySelectorAll('[data-starter-magic]').forEach(row=>{
+    row.querySelector('[data-magic-name]').onchange=syncStarterMagic;
+    const del=row.querySelector('[data-remove-magic]');
+    if(del)del.onclick=()=>{row.remove();syncStarterMagic()};
+  });
+}
+function starterMagicRow(m={},i=0){
+  const arr=RULES.magicSchools.map(x=>({v:x,l:'🔮 '+x}));
+  return '<div class="entity" data-starter-magic><label>Школа #'+(i+1)+'<select data-magic-name><option value="">— выбрать —</option>'+arr.map(x=>'<option value="'+esc(x.v)+'" '+(x.v===m.name?'selected':'')+'>'+esc(x.l)+'</option>').join('')+'</select></label><span class="muted">I уровень</span><button type="button" data-remove-magic class="danger">Удалить</button></div>';
 }
 document.getElementById('addStarterTech').onclick=()=>{
   const box=document.getElementById('starterTechBuilder');
@@ -176,13 +204,18 @@ document.getElementById('addStarterTech').onclick=()=>{
   box.insertAdjacentHTML('beforeend',starterTechRow({level:1},box.children.length));
   renderStarterTechBuilder(false);
 };
+document.getElementById('addStarterMagic').onclick=()=>{
+  const box=document.getElementById('starterMagicBuilder');
+  if(box.querySelectorAll('[data-starter-magic]').length>=2)return;
+  box.insertAdjacentHTML('beforeend',starterMagicRow({},box.children.length));
+  renderStarterMagicBuilder(false);
+};
 lordForm.onsubmit=e=>{
   e.preventDefault();
   state.lord={...state.lord,name:lordName.value.trim(),race:lordRace.value,motto:lordMotto.value,energy:+lordEnergy.value||0,ability:lordAbility.value,traits:lordTraits.value,items:lordItems.value,resources:lordResources.value,status:lordStatus.value||'Владыка',ancestralName:ancestralName.value.trim(),ancestralRace:ancestralRace.value,ancestralTerrain:ancestralTerrain.value,ancestralIncome:+ancestralIncome.value||0,ancestralGarrison:+ancestralGarrison.value||0,startingTroops:startingTroops.value,startingMagic:startingMagic.value,startingTech:startingTech.value};
-  const issues=validateStarter();
+  const issues=starterIssues();
   renderStarterValidation(issues);
-  if(issues.some(x=>x.startsWith('Не ')||x.includes('не больше')||x.includes('должно быть'))) {go('lord');return}
-  save();go('overview')
+  if(issues.some(x=>x.level==='error')) {go('lord');return}
   save();go('overview')
 };
 
@@ -267,7 +300,7 @@ function render(){
   fillLordRace();
   lordName.value=state.lord.name;lordMotto.value=state.lord.motto;lordEnergy.value=state.lord.energy;lordAbility.value=state.lord.ability;lordTraits.value=state.lord.traits;lordItems.value=state.lord.items||'';lordResources.value=state.lord.resources||'';lordStatus.value=state.lord.status||'Владыка';
   ancestralName.value=state.lord.ancestralName||''; ancestralIncome.value=state.lord.ancestralIncome||0; ancestralGarrison.value=state.lord.ancestralGarrison||0;
-  startingTroops.value=state.lord.startingTroops||''; startingMagic.value=state.lord.startingMagic||''; startingTech.value=state.lord.startingTech||''; renderStarterTechBuilder(true);
+  startingTroops.value=state.lord.startingTroops||''; startingMagic.value=state.lord.startingMagic||''; startingTech.value=state.lord.startingTech||''; renderStarterTechBuilder(true); renderStarterMagicBuilder(true); renderStarterValidation(starterIssues());
   ancestralRace.innerHTML='<option value="">— выбрать —</option>'+RULES.races.map(x=>'<option value="'+esc(x.name)+'">'+esc(x.name)+'</option>').join(''); ancestralRace.value=state.lord.ancestralRace||'';
   ancestralTerrain.innerHTML='<option value="">— выбрать —</option>'+options(RULES.terrains,state.lord.ancestralTerrain);
   overviewTitle.textContent=state.lord.name||'Новый Владыка';overviewRace.textContent=state.lord.race&&state.lord.race!=='custom'?state.lord.race:'Раса не указана';

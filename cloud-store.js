@@ -179,11 +179,138 @@
     return { saved: true };
   }
 
+
+  async function getTurn(turnNumber) {
+    if (!client || !user) return null;
+    const id = await ensureLord();
+    let query = client.from('turns').select('*').eq('lord_id', id);
+    if (Number.isFinite(Number(turnNumber))) query = query.eq('turn_number', Number(turnNumber));
+    const { data, error } = await query.order('turn_number', { ascending: false }).limit(1);
+    if (error) throw error;
+    const row = data && data[0];
+    if (!row) return null;
+    const { data: actions, error: actionError } = await client.from('turn_actions')
+      .select('*').eq('turn_id', row.id).order('action_order', { ascending: true });
+    if (actionError) throw actionError;
+    return {
+      id: row.id,
+      number: Number(row.turn_number || 1),
+      status: row.status || 'draft',
+      submittedAt: row.submitted_at || null,
+      actions: (actions || []).map(a => ({
+        id: a.id,
+        kind: a.action_kind,
+        cost: Number(a.energy_cost || 0),
+        title: a.title || '',
+        description: a.description || '',
+        status: a.status || 'pending',
+        validation: a.validation || {}
+      }))
+    };
+  }
+
+  async function saveTurn(turn) {
+    if (!client || !user) return { saved: false, turn };
+    const id = await ensureLord();
+    let turnId = isUUID(turn.id) ? turn.id : null;
+    if (!turnId) {
+      const existing = await getTurn(turn.number);
+      turnId = existing && existing.id ? existing.id : null;
+    }
+    const payload = {
+      lord_id: id,
+      turn_number: Number(turn.number || 1),
+      status: turn.status || 'draft',
+      submitted_at: turn.submittedAt || null,
+      updated_at: new Date().toISOString()
+    };
+    let row;
+    if (turnId) {
+      const { data, error } = await client.from('turns').update(payload).eq('id', turnId).select('*').single();
+      if (error) throw error;
+      row = data;
+    } else {
+      const { data, error } = await client.from('turns').insert(payload).select('*').single();
+      if (error) throw error;
+      row = data;
+    }
+
+    const incoming = (turn.actions || []).map((a, i) => ({
+      ...(isUUID(a.id) ? { id: a.id } : {}),
+      turn_id: row.id,
+      action_order: i + 1,
+      action_kind: a.kind === 'main' ? 'main' : 'extra',
+      title: String(a.title || ''),
+      description: String(a.description || ''),
+      energy_cost: Number(a.cost || 0),
+      status: a.status || 'pending',
+      validation: a.validation || {}
+    }));
+    const { data: existingActions, error: existingError } = await client.from('turn_actions').select('id').eq('turn_id', row.id);
+    if (existingError) throw existingError;
+    const ids = new Set(incoming.filter(a => a.id).map(a => a.id));
+    const stale = (existingActions || []).map(a => a.id).filter(x => !ids.has(x));
+    if (stale.length) {
+      const { error } = await client.from('turn_actions').delete().in('id', stale);
+      if (error) throw error;
+    }
+    if (incoming.length) {
+      const { data: savedActions, error } = await client.from('turn_actions')
+        .upsert(incoming, { onConflict: 'id' }).select('id');
+      if (error) throw error;
+      incoming.forEach((a, i) => {
+        if (!a.id && savedActions && savedActions[i]) turn.actions[i].id = savedActions[i].id;
+      });
+    }
+    turn.id = row.id;
+    turn.actions = turn.actions || [];
+    return { saved: true, turn };
+  }
+
+  async function submitTurn(turn) {
+    turn.status = 'submitted';
+    turn.submittedAt = new Date().toISOString();
+    return saveTurn(turn);
+  }
+
+  async function listTurns(status) {
+    if (!client || !user) return [];
+    const { data, error } = await client.from('turns').select('*').order('updated_at', { ascending: false });
+    if (error) throw error;
+    return (data || []).filter(x => !status || x.status === status);
+  }
+
+  async function getTurnDetails(turnId) {
+    if (!client || !user) return null;
+    const { data: turn, error } = await client.from('turns').select('*').eq('id', turnId).single();
+    if (error) throw error;
+    const { data: actions, error: actionError } = await client.from('turn_actions')
+      .select('*').eq('turn_id', turnId).order('action_order', { ascending: true });
+    if (actionError) throw actionError;
+    return { turn, actions: actions || [] };
+  }
+
+  async function updateTurnStatus(turnId, status) {
+    if (!client || !user) return { saved: false };
+    const { data, error } = await client.from('turns').update({
+      status,
+      updated_at: new Date().toISOString()
+    }).eq('id', turnId).select('*').single();
+    if (error) throw error;
+    return data;
+  }
+
   window.VA34_CLOUD = {
     configured,
     init,
     getState,
     saveState,
+    getTurn,
+    saveTurn,
+    submitTurn,
+    listTurns,
+    getTurnDetails,
+    updateTurnStatus,
     get user() { return user; }
   };
 })();

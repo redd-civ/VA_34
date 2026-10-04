@@ -1,6 +1,6 @@
 const KEY='va34_cabinet_v1';
 const RULES=window.VA34_RULES;
-const emptyState={lord:{name:'',race:'',motto:'',energy:15,status:'Владыка',ability:'',traits:'',items:'',resources:''},shards:[],heroes:[],troops:[],tech:[],meta:{version:3}};
+const emptyState={lord:{name:'',race:'',motto:'',energy:15,status:'Владыка',ability:'',traits:'',items:'',resources:'',ancestralName:'',ancestralRace:'',ancestralTerrain:'',ancestralIncome:0,ancestralGarrison:0,startingTroops:'',startingMagic:'',startingTech:''},shards:[],heroes:[],troops:[],tech:[],meta:{version:3}};
 let state=load();
 let cloudReady=false;
 let cloudBusy=false;
@@ -111,6 +111,24 @@ function go(tab){
 document.querySelectorAll('.nav').forEach(b=>b.onclick=()=>go(b.dataset.tab));
 document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
 
+function starterList(v){return String(v||'').split(/[\\n,]+/).map(x=>x.trim()).filter(Boolean)}
+function validateStarter(){
+  const out=[];
+  if(!state.lord.name) out.push('Укажите имя Владыки.');
+  if(!state.lord.ancestralName) out.push('Укажите название родового осколка.');
+  if(!state.lord.ancestralRace) out.push('Укажите расу родового осколка.');
+  if(!state.lord.ancestralTerrain) out.push('Укажите ландшафт родового осколка.');
+  const troops=starterList(state.lord.startingTroops), magic=starterList(state.lord.startingMagic);
+  if(troops.length>RULES.constants.maxStartingTroopTypes) out.push('Стартовых родов войск не больше 4.');
+  if(magic.length>RULES.constants.maxStartingMagicSchools) out.push('Стартовых школ магии не больше 2.');
+  const tech=starterList(state.lord.startingTech);
+  if(tech.length<RULES.constants.startingTechLevelsMin || tech.length>RULES.constants.startingTechLevelsMax) out.push('Стартовых уровней технологий должно быть 4–5.');
+  return out;
+}
+function renderStarterValidation(items){
+  const el=document.getElementById('lordValidation'); if(!el)return;
+  el.innerHTML=items.length?'<strong>Нужно исправить:</strong><ul>'+items.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>':'<span class="badge cloud">Заявка соответствует базовым стартовым ограничениям.</span>';
+}
 function fillLordRace(){
   lordRace.innerHTML='<option value="">— не указана —</option><option value="custom">Другая / пока не внесена в справочник</option>';
   // The current rules page names the race system but does not enumerate races.
@@ -122,7 +140,10 @@ function fillLordRace(){
 }
 lordForm.onsubmit=e=>{
   e.preventDefault();
-  state.lord={name:lordName.value.trim(),race:lordRace.value,motto:lordMotto.value,energy:+lordEnergy.value||0,ability:lordAbility.value,traits:lordTraits.value,items:lordItems.value,resources:lordResources.value,status:lordStatus.value||'Владыка'};
+  state.lord={...state.lord,name:lordName.value.trim(),race:lordRace.value,motto:lordMotto.value,energy:+lordEnergy.value||0,ability:lordAbility.value,traits:lordTraits.value,items:lordItems.value,resources:lordResources.value,status:lordStatus.value||'Владыка',ancestralName:ancestralName.value.trim(),ancestralRace:ancestralRace.value,ancestralTerrain:ancestralTerrain.value,ancestralIncome:+ancestralIncome.value||0,ancestralGarrison:+ancestralGarrison.value||0,startingTroops:startingTroops.value,startingMagic:startingMagic.value,startingTech:startingTech.value};
+  const issues=validateStarter();
+  if(issues.length){renderStarterValidation(issues);go('lord');return}
+  save();go('overview')
   save();go('overview')
 };
 
@@ -206,6 +227,10 @@ function commaCount(v){return String(v||'').split(',').map(x=>x.trim()).filter(B
 function render(){
   fillLordRace();
   lordName.value=state.lord.name;lordMotto.value=state.lord.motto;lordEnergy.value=state.lord.energy;lordAbility.value=state.lord.ability;lordTraits.value=state.lord.traits;lordItems.value=state.lord.items||'';lordResources.value=state.lord.resources||'';lordStatus.value=state.lord.status||'Владыка';
+  ancestralName.value=state.lord.ancestralName||''; ancestralIncome.value=state.lord.ancestralIncome||0; ancestralGarrison.value=state.lord.ancestralGarrison||0;
+  startingTroops.value=state.lord.startingTroops||''; startingMagic.value=state.lord.startingMagic||''; startingTech.value=state.lord.startingTech||'';
+  ancestralRace.innerHTML='<option value="">— выбрать —</option>'+RULES.races.map(x=>'<option value="'+esc(x.name)+'">'+esc(x.name)+'</option>').join(''); ancestralRace.value=state.lord.ancestralRace||'';
+  ancestralTerrain.innerHTML='<option value="">— выбрать —</option>'+options(RULES.terrains,state.lord.ancestralTerrain);
   overviewTitle.textContent=state.lord.name||'Новый Владыка';overviewRace.textContent=state.lord.race&&state.lord.race!=='custom'?state.lord.race:'Раса не указана';
   const size=state.shards.reduce((a,s)=>a+(+s.size||0),0),income=state.shards.reduce((a,s)=>a+(+s.income||0),0),limit=RULES.constants.defaultEnergyStorage+RULES.constants.energyStoragePerShard*state.shards.length;
   statShards.textContent=state.shards.length;statSize.textContent=size;statIncome.textContent=income;statEnergy.textContent=limit;

@@ -16,7 +16,7 @@ window.VA34_RULE_ENGINE={
     if(!lord.ancestralTerrain)out.push({level:'error',code:'ancestral_terrain',text:'Не указан ландшафт родового осколка.'});
     if(troops.length>R.constants.maxStartingTroopTypes)out.push({level:'error',code:'troop_limit',text:'Стартовых родов войск не больше 4.'});
     if(magic.length>R.constants.maxStartingMagicSchools)out.push({level:'error',code:'magic_limit',text:'Стартовых школ магии не больше 2.'});
-    if(tech.length<4||tech.length>7)out.push({level:'error',code:'tech_count',text:'В стартовой заявке может быть от 4 до 7 технологий/уровней.'});
+    if(tech.length<4||tech.length>7)out.push({level:'error',code:'tech_count',text:'В заявке должно быть 4–5 технологий без переноса очков магии; при полном отказе от магии — до 6 технологий, а 7-я только с разрешения Мастера.'});
     let total=0;
     tech.forEach(raw=>{
       const t=this.parseTech(raw), known=R.technologies.some(y=>String(y).toLowerCase()===t.name.toLowerCase());
@@ -24,7 +24,7 @@ window.VA34_RULE_ENGINE={
       if(!known)out.push({level:'master',code:'unknown_tech',text:'Технология «'+raw+'» отсутствует в справочнике — требуется решение Мастера.'});
       if(t.level>3)out.push({level:'error',code:'starter_tech_level',text:'В стартовой заявке одна технология не может быть выше 3 уровня: «'+raw+'».'});
     });
-    if(total<4||total>5)out.push({level:'error',code:'starter_tech_total',text:'Суммарно стартовые технологии должны давать 4–5 уровней.'});
+    const magicPoints=magic.length; const techSlots=tech.length; if(magicPoints>2)out.push({level:'error',code:'magic_points',text:'Базово доступно до 2 школ магии.'}); if(magicPoints===0&&techSlots>6)out.push({level:'master',code:'extra_tech_slot',text:'7-я технология при полном отказе от магии требует разрешения Мастера.'}); if(magicPoints===0&&techSlots>6)return out; if(total<4||total>5)out.push({level:'error',code:'starter_tech_total',text:'Базовый пул стартового развития — 4–5 уровней технологий плюс до 2 уровней магии; неиспользованные очки магии можно переносить в технологии.'});
     magic.forEach(x=>{if(!R.magicSchools.some(y=>y.toLowerCase()===x.toLowerCase()))out.push({level:'master',code:'unknown_magic',text:'Школа магии «'+x+'» отсутствует в справочнике — требуется решение Мастера.'})});
     troops.forEach(x=>{if(!R.troopTypes.some(y=>y.toLowerCase()===x.toLowerCase()))out.push({level:'master',code:'unknown_troop',text:'Род войск «'+x+'» отсутствует в справочнике — требуется решение Мастера.'})});
     if(lord.ancestralRace&&!R.races.some(x=>x.name===lord.ancestralRace))out.push({level:'master',code:'unknown_race',text:'Раса «'+lord.ancestralRace+'» отсутствует в справочнике — требуется решение Мастера.'});

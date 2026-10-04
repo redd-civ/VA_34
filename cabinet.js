@@ -111,7 +111,7 @@ function go(tab){
 document.querySelectorAll('.nav').forEach(b=>b.onclick=()=>go(b.dataset.tab));
 document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
 
-function starterList(v){return String(v||'').split(/[\\n,]+/).map(x=>x.trim()).filter(Boolean)}
+function starterList(v){return String(v||'').split(String.fromCharCode(10)).flatMap(x=>x.split(',')).map(x=>x.trim()).filter(Boolean)}
 function validateStarter(){
   const out=[];
   if(!state.lord.name) out.push('Укажите имя Владыки.');

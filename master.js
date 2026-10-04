@@ -1,0 +1,96 @@
+(()=> {
+  let db=null,user=null;
+
+  const esc=v=>String(v??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+  const statusText={open:'Открыта',running:'Идёт',closed:'Закрыта',finished:'Завершена'};
+  const turnText={draft:'Черновик',submitted:'Отправлен',approved:'Принят',rejected:'Отклонён',resolved:'Разрешён'};
+
+  async function init(){
+    const info=await VA34_CLOUD.init();
+    if(!info.authenticated){location.href='auth.html';return;}
+    user=info.user;
+    db=window.supabase.createClient(VA34_SUPABASE.url,VA34_SUPABASE.publishableKey);
+    const me=await db.from('players').select('display_name,is_master').eq('id',user.id).single();
+    if(me.error)throw me.error;
+    if(!me.data?.is_master){document.getElementById('status').textContent='Доступ только для пользователей с ролью мастера.';return;}
+    document.getElementById('status').textContent='Мастер: '+(me.data.display_name||user.email||user.id);
+    await loadGames();
+  }
+
+  async function loadGames(){
+    document.getElementById('turnSection').style.display='none';
+    document.getElementById('detailSection').style.display='none';
+    const sec=document.getElementById('gamesSection');sec.style.display='block';
+    const {data,error}=await db.from('games').select('*').eq('master_id',user.id).order('created_at',{ascending:false});
+    if(error)throw error;
+    if(!data?.length){sec.innerHTML='<div class="notice">У вас пока нет игр. Создайте игру в разделе <a href="games.html">Игры</a>.</div>';return;}
+    const ids=data.map(g=>g.id);
+    const members=await db.from('game_members').select('game_id,player_id,role').in('game_id',ids);
+    const counts={};(members.data||[]).forEach(m=>{if(m.role==='player')counts[m.game_id]=(counts[m.game_id]||0)+1;});
+    sec.innerHTML='<h2>Мои игры</h2>'+data.map(g=>'<article class="entity"><h3>'+esc(g.name)+'</h3><p>'+esc(g.description||'')+'</p><p>Игроков: '+(counts[g.id]||0)+' / '+g.max_players+' · '+esc(statusText[g.status]||g.status)+'</p><button class="primary" data-game="'+g.id+'">Открыть управление</button></article>').join('');
+    sec.querySelectorAll('[data-game]').forEach(b=>b.onclick=()=>openGame(b.dataset.game));
+  }
+
+  async function openGame(gameId){
+    const g=await db.from('games').select('*').eq('id',gameId).eq('master_id',user.id).single();
+    if(g.error)throw g.error;
+    document.getElementById('gamesSection').style.display='none';
+    document.getElementById('turnSection').style.display='block';
+    document.getElementById('detailSection').style.display='none';
+    const box=document.getElementById('turns');
+    const {data:members}=await db.from('game_members').select('player_id,role').eq('game_id',gameId);
+    const players=(members?.data||[]).filter(m=>m.role==='player').map(m=>m.player_id);
+    if(!players.length){box.innerHTML='<div class="notice">В игре пока нет принятых игроков.</div>';return;}
+    const lords=await db.from('lords').select('id,player_id,name').in('player_id',players).eq('game_id',gameId);
+    if(lords.error)throw lords.error;
+    const lordIds=(lords.data||[]).map(l=>l.id);
+    if(!lordIds.length){box.innerHTML='<div class="notice">Игроки ещё не создали Владык для этой игры.</div>';return;}
+    const turns=await db.from('turns').select('*').in('lord_id',lordIds).order('updated_at',{ascending:false});
+    if(turns.error)throw turns.error;
+    const people=await db.from('players').select('id,display_name').in('id',players);
+    const names={};(people.data||[]).forEach(p=>names[p.id]=p.display_name||p.id);
+    const lordMap={};(lords.data||[]).forEach(l=>lordMap[l.id]=l);
+    box.innerHTML='<div class="section-head"><h2>'+esc(g.data.name)+'</h2><button id="backGames">← К играм</button></div>'+
+      ((turns.data||[]).length?(turns.data||[]).map(t=>{const l=lordMap[t.lord_id]||{};return '<article class="entity"><h3>Ход №'+t.turn_number+' — '+esc(l.name||'Владыка')+'</h3><p>Игрок: '+esc(names[l.player_id]||l.player_id||'—')+' · '+esc(turnText[t.status]||t.status)+'</p><p>Изменён: '+esc(new Date(t.updated_at).toLocaleString())+'</p><button data-turn="'+t.id+'">Открыть ход</button></article>';}).join(''):'<div class="notice">Ходов пока нет.</div>');
+    const back=document.getElementById('backGames');if(back)back.onclick=loadGames;
+    box.querySelectorAll('[data-turn]').forEach(b=>b.onclick=()=>openTurn(b.dataset.turn,g.data.name));
+  }
+
+  async function openTurn(turnId,gameName){
+    const {data:t,error}=await db.from('turns').select('*').eq('id',turnId).single();
+    if(error)throw error;
+    const acts=await db.from('turn_actions').select('*').eq('turn_id',turnId).order('action_order',{ascending:true});
+    if(acts.error)throw acts.error;
+    const lord=await db.from('lords').select('name,player_id').eq('id',t.lord_id).single();
+    const person=lord.data?await db.from('players').select('display_name').eq('id',lord.data.player_id).single():{data:null};
+    document.getElementById('turnSection').style.display='none';
+    document.getElementById('detailSection').style.display='block';
+    document.getElementById('detailTitle').textContent=gameName+' — ход №'+t.turn_number;
+    const v=acts.data||[];
+    document.getElementById('turnDetail').innerHTML='<div class="hero-panel"><div><span class="badge">'+esc(turnText[t.status]||t.status)+'</span><h2>'+esc(lord.data?.name||'Владыка')+'</h2><p>Игрок: '+esc(person.data?.display_name||lord.data?.player_id||'—')+'</p></div></div>'+
+      (v.length?'<div class="entity-list">'+v.map((a,i)=>'<article class="entity"><h3>'+(i+1)+'. '+esc(a.title)+'</h3><p>'+esc(a.action_kind==='main'?'Основное':'Дополнительное')+' · '+Number(a.energy_cost||0)+' энергии</p><p>'+esc(a.description||'')+'</p><p>Статус: '+esc(a.status||'pending')+'</p></article>').join('')+'</div>':'<div class="notice">Действий нет.</div>')+
+      '<div class="data-actions">'+
+      '<button class="primary" data-status="approved" '+(t.status==='submitted'?'':'disabled')+'>Принять ход</button>'+
+      '<button data-status="rejected" '+(t.status==='submitted'?'':'disabled')+'>Отклонить</button>'+
+      '<button data-status="resolved" '+(t.status==='approved'?'':'disabled')+'>Отметить разрешённым</button></div>';
+    document.querySelectorAll('[data-status]').forEach(b=>b.onclick=()=>setTurnStatus(t.id,b.dataset.status));
+    document.getElementById('backTurns').onclick=()=>openGameByLord(t.lord_id);
+  }
+
+  async function openGameByLord(lordId){
+    const l=await db.from('lords').select('game_id').eq('id',lordId).single();
+    if(l.error)throw l.error;
+    const g=await db.from('games').select('name').eq('id',l.data.game_id).single();
+    await openGame(l.data.game_id);
+  }
+
+  async function setTurnStatus(turnId,status){
+    const label=status==='approved'?'принять':status==='rejected'?'отклонить':'отметить разрешённым';
+    if(!confirm('Вы уверены, что хотите '+label+' этот ход?'))return;
+    const {error}=await db.from('turns').update({status,updated_at:new Date().toISOString()}).eq('id',turnId);
+    if(error){alert(error.message);return;}
+    await openTurn(turnId,document.getElementById('detailTitle').textContent.split(' — ')[0]);
+  }
+
+  document.addEventListener('DOMContentLoaded',()=>init().catch(e=>document.getElementById('status').textContent='Ошибка: '+e.message));
+})();

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Личный кабинет — Вдохновение Астрала</title>
-<link rel="stylesheet" href="cabinet.css">
+<link rel="stylesheet" href="cabinet.css">\n<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>\n<script src="supabase-config.js"></script>\n<script src="cloud-store.js"></script>
 </head>
 <body>
 <header class="topbar">
@@ -13,7 +13,7 @@
     <h1>Личный кабинет</h1>
     <p>Карточки Владыки, мира и игровых сущностей</p>
   </div>
-  <div class="top-actions"><a class="back" href="auth.html">👤 Аккаунт</a> <a class="back" href="index.html">← Правила</a></div>
+  <div class="top-actions"><span id="cloudStatus" class="badge">Проверка облака…</span> <a class="back" href="auth.html">👤 Аккаунт</a> <a class="back" href="index.html">← Правила</a></div>
 </header>
 
 <main class="layout">
@@ -88,13 +88,13 @@
     </div>
 
     <div id="data" class="tab">
-      <div class="section-head"><h2>💾 Данные</h2><span class="muted">Сейчас хранение локальное</span></div>
+      <div class="section-head"><h2>💾 Данные</h2><span id="storageMode" class="muted">Локальное хранение</span></div>
       <div class="data-actions">
         <button class="primary" id="exportData">Экспорт JSON</button>
         <label class="file-button">Импорт JSON<input id="importData" type="file" accept=".json" hidden></label>
         <button class="danger" id="resetData">Сбросить данные</button>
       </div>
-      <div class="notice"><strong>Важно:</strong> текущая версия — этап интерфейса и модели данных. Данные сохраняются в браузере. Настоящая регистрация с логином и паролем и синхронизация между устройствами подключаются следующим этапом к серверному API/БД.</div>
+      <div class="notice"><strong>Хранение:</strong> без настройки Supabase кабинет работает локально. После входа в настроенный аккаунт данные загружаются из облака и сохраняются между устройствами. Локальные данные нового аккаунта автоматически переносятся в облако, если у аккаунта ещё нет Владыки.</div>
       <pre id="jsonPreview"></pre>
     </div>
   </section>

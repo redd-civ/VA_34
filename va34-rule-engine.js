@@ -27,23 +27,33 @@ window.VA34_RULE_ENGINE={
       if(!R.technologies.some(y=>String(y).toLowerCase()===t.name.toLowerCase()))out.push({level:'master',code:'unknown_tech',text:'Технология «'+t.name+'» отсутствует в справочнике — требуется решение Мастера.'});
       if(t.level>3)out.push({level:'error',code:'starter_tech_level',text:'Одна технология не может быть выше III уровня на старте: «'+t.name+'».'});
     });
-    const magicLevels=magic.length;
+    const parsedMagic=magic.map(x=>this.parseTech(x));
+    const magicLevels=parsedMagic.reduce((sum,m)=>sum+m.level,0);
     const totalDevelopment=techLevels+magicLevels;
     if(totalDevelopment<4)out.push({level:'error',code:'starter_development_total',text:'Стартовый пул развития должен составлять не менее 4 уровней.'});
     if(totalDevelopment>7)out.push({level:'error',code:'starter_development_total',text:'Стартовый пул развития не может превышать 7 уровней.'});
     if(totalDevelopment>5)out.push({level:'master',code:'starter_development_over_5',text:'6–7 суммарных уровней развития на старте требуют разрешения Мастера.'});
-    magic.forEach(x=>{const m=this.parseTech(x);if(!R.magicSchools.some(y=>y.toLowerCase()===m.name.toLowerCase()))out.push({level:'master',code:'unknown_magic',text:'Школа магии «'+m.name+'» отсутствует в справочнике — требуется решение Мастера.'});if(m.level>3)out.push({level:'error',code:'starter_magic_level',text:'Одна школа магии не может быть выше III уровня на старте: «'+m.name+'».'})});
+    parsedMagic.forEach(m=>{if(!R.magicSchools.some(y=>y.toLowerCase()===m.name.toLowerCase()))out.push({level:'master',code:'unknown_magic',text:'Школа магии «'+m.name+'» отсутствует в справочнике — требуется решение Мастера.'});if(m.level>3)out.push({level:'error',code:'starter_magic_level',text:'Одна школа магии не может быть выше III уровня на старте: «'+m.name+'».'})});
     troops.forEach(x=>{if(!R.troopTypes.some(y=>y.toLowerCase()===x.toLowerCase()))out.push({level:'master',code:'unknown_troop',text:'Род войск «'+x+'» отсутствует в справочнике — требуется решение Мастера.'})});
     if(lord.ancestralRace&&!R.races.some(x=>x.name===lord.ancestralRace))out.push({level:'master',code:'unknown_race',text:'Раса «'+lord.ancestralRace+'» отсутствует в справочнике — требуется решение Мастера.'});
     return out;
   }
 };
 
-/* The Lord constructor is loaded after this engine. Once its controls exist,
-   replace Roman numerals with the full VA-34 level names and expose all six levels. */
 (function installLevelDisplay(){
   const names=['Базовый','Продвинутый','Экспертный','Мастерский','Грандмастерский','Эпичный'];
   const roman=['I','II','III','IV','V','VI'];
+  function syncMagic(){
+    const rows=[...document.querySelectorAll('[data-starter-magic]')].map(row=>{
+      const name=row.querySelector('[data-magic-name]').value;
+      const level=+(row.querySelector('[data-magic-level]')||{}).value||1;
+      return name ? name+' '+level : '';
+    }).filter(Boolean);
+    startingMagic.value=rows.join(', ');
+    state.lord.startingMagic=startingMagic.value;
+    renderStarterMagicBuilder(false);
+    renderStarterValidation(starterIssues());
+  }
   function decorate(){
     document.querySelectorAll('#starterTechBuilder [data-tech-level]').forEach(select=>{
       for(let i=0;i<names.length;i++){
@@ -55,11 +65,15 @@ window.VA34_RULE_ENGINE={
     document.querySelectorAll('#starterMagicBuilder [data-starter-magic]').forEach(row=>{
       let select=row.querySelector('[data-magic-level]');
       if(!select){
-        const old=row.querySelector('.magic-level-label');
         select=document.createElement('select');select.setAttribute('data-magic-level','');
         names.forEach((name,i)=>{const o=document.createElement('option');o.value=String(i+1);o.textContent=name+' ('+roman[i]+')';select.appendChild(o)});
-        if(old){old.replaceWith(select)}else{const anchor=row.querySelector('[data-remove-magic]');anchor.parentNode.insertBefore(select,anchor)}
+        const old=row.querySelector('.muted');
+        if(old)old.replaceWith(select);else row.insertBefore(select,row.querySelector('[data-remove-magic]'));
       }
+      const parsed=window.VA34_RULE_ENGINE.parseTech((window.starterList?starterList(state.lord.startingMagic):state.lord.startingMagic).split(',')[Array.from(document.querySelectorAll('[data-starter-magic]')).indexOf(row)]||'');
+      select.value=String(parsed.level||1);
+      select.onchange=syncMagic;
+      row.querySelector('[data-magic-name]').onchange=syncMagic;
     });
   }
   function watch(){
@@ -71,5 +85,5 @@ window.VA34_RULE_ENGINE={
     if(magicBox)observer.observe(magicBox,{childList:true,subtree:true});
     return true;
   }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{setTimeout(watch,0)});else setTimeout(watch,0);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(watch,0));else setTimeout(watch,0);
 })();

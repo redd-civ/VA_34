@@ -267,7 +267,7 @@ function render(){
   fillLordRace();
   lordName.value=state.lord.name;lordMotto.value=state.lord.motto;lordEnergy.value=state.lord.energy;lordAbility.value=state.lord.ability;lordTraits.value=state.lord.traits;lordItems.value=state.lord.items||'';lordResources.value=state.lord.resources||'';lordStatus.value=state.lord.status||'Владыка';
   ancestralName.value=state.lord.ancestralName||''; ancestralIncome.value=state.lord.ancestralIncome||0; ancestralGarrison.value=state.lord.ancestralGarrison||0;
-  startingTroops.value=state.lord.startingTroops||''; startingMagic.value=state.lord.startingMagic||''; startingTech.value=state.lord.startingTech||'';
+  startingTroops.value=state.lord.startingTroops||''; startingMagic.value=state.lord.startingMagic||''; startingTech.value=state.lord.startingTech||''; renderStarterTechBuilder(true);
   ancestralRace.innerHTML='<option value="">— выбрать —</option>'+RULES.races.map(x=>'<option value="'+esc(x.name)+'">'+esc(x.name)+'</option>').join(''); ancestralRace.value=state.lord.ancestralRace||'';
   ancestralTerrain.innerHTML='<option value="">— выбрать —</option>'+options(RULES.terrains,state.lord.ancestralTerrain);
   overviewTitle.textContent=state.lord.name||'Новый Владыка';overviewRace.textContent=state.lord.race&&state.lord.race!=='custom'?state.lord.race:'Раса не указана';

@@ -73,12 +73,12 @@
       if(!isMagic){
         const key=name.toLowerCase();
         different.add(key);
-        levelTotal[key]=(levelTotal[key]||0)+1;
+        levelTotal[key]=(levelTotal[key]||0)+level;
         if((levelTotal[key])>3)errors.push(label+': одной технологии нельзя повышать более чем на 3 уровня за ход.');
       }
       levels+=level;
       const key=(isMagic?'magic:':'tech:')+name.toLowerCase();
-      byTech.set(key,(byTech.get(key)||0)+1);
+      byTech.set(key,(byTech.get(key)||0)+level);
       if(!isMagic && different.size>3)errors.push('За ход можно развивать не более 3 разных технологий.');
       if(!isMagic && level>3)errors.push(label+': за один ход нельзя развить одну технологию более чем на 3 уровня.');
       if(isMagic && level>3)errors.push(label+': за один ход нельзя развить одну школу магии более чем на 3 уровня.');

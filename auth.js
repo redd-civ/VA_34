@@ -4,7 +4,7 @@ const AUTH_REDIRECT=`${window.location.origin}${window.location.pathname.replace
 let client=null,signup=false;
 const $=id=>document.getElementById(id);
 function message(t,bad=false){$("message").textContent=t;$("message").className=bad?"notice warning":"notice"}
-function renderMode(){ $("authTitle").textContent=signup?"Регистрация":"Вход"; $("submitAuth").textContent=signup?"Создать аккаунт":"Войти"; $("toggleMode").textContent=signup?"У меня уже есть аккаунт":"Создать аккаунт"; $("password").autocomplete=signup?"new-password":"current-password"; }
+function renderMode(){ $("authTitle").textContent=signup?"Регистрация":"Вход"; $("playerName").required=signup; $("playerNameRow").style.display=signup?"":"none"; $("submitAuth").textContent=signup?"Создать аккаунт":"Войти"; $("toggleMode").textContent=signup?"У меня уже есть аккаунт":"Создать аккаунт"; $("password").autocomplete=signup?"new-password":"current-password"; }
 function withTimeout(promise,ms=8000){let timer;return Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('Таймаут подключения к Supabase (8 сек).')),ms)} )]).finally(()=>clearTimeout(timer))}
 async function refresh(){
   $("authState").textContent="Проверяем подключение к облаку…";
@@ -28,7 +28,7 @@ $("authForm").onsubmit=async e=>{
  $("submitAuth").disabled=true;
  try{
   let result;
-  if(signup) result=await withTimeout(client.auth.signUp({email:$("email").value.trim(),password:$("password").value,options:{emailRedirectTo:AUTH_REDIRECT}}));
+  if(signup) result=await withTimeout(client.auth.signUp({email:$("email").value.trim(),password:$("password").value,options:{emailRedirectTo:AUTH_REDIRECT,data:{player_name:$("playerName").value.trim(),display_name:$("playerName").value.trim()}}}));
   else result=await withTimeout(client.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value}));
   if(result.error) throw result.error;
   if(signup) message("Аккаунт создан. Проверьте почту для подтверждения.");

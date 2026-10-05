@@ -36,4 +36,13 @@
 
   const general = document.getElementById('general');
   if (general) general.innerHTML += '<h3>📚 Справочник данных</h3><p>Кабинет игрока использует те же справочники рас, родов войск, магии, ландшафтов, навыков, перков и технологий, что и эта страница. Неизвестные или индивидуальные элементы можно оставить на согласование Мастеру.</p>';
+
+  const special = document.getElementById('special-tz');
+  if (special && Array.isArray(window.VA34_SPECIAL_TZ)) special.innerHTML = '<h2>🧩 Специальные ТЗ</h2><p>Только ТЗ из исходного каталога проекта.</p><div class="catalog-grid">'+window.VA34_SPECIAL_TZ.map(t=>'<article class="catalog-card"><h3>'+esc(t.name)+'</h3><p><strong>Эффект:</strong> '+esc(t.effect)+'</p>'+(t.cost?'<p><strong>Стоимость:</strong> '+esc(JSON.stringify(t.cost))+'</p>':'')+'<p class="muted"><strong>Источник:</strong> '+esc(t.source||'исходные правила')+'</p></article>').join('')+'</div>';
+  const shard = document.getElementById('shard');
+  if (shard) shard.innerHTML = '<h2>🏝️ Осколок</h2><table><tr><th>Размер</th><th>Значение</th></tr>'+R.shardSizes.map(s=>'<tr><td>'+esc(s.name)+'</td><td>'+s.value+'</td></tr>').join('')+'</table><p><strong>Типы:</strong> '+R.shardTypes.map(s=>esc(s.name)).join(', ')+'.</p><p><strong>Настроения:</strong> '+R.moods.map(esc).join(', ')+'.</p><ul><li>Лимит зданий: floor(размер); родовой — 4.</li><li>Хранение энергии: 20 э + 10 э за осколок.</li><li>Новый контент начинает действовать со следующего хода.</li></ul>';
+  const source = document.getElementById('source');
+  if (source) source.innerHTML = '<h2>💠 Источник</h2><ul><li>Сохраняется после захвата и продолжает давать преимущества.</li><li>Сила определяется гарнизоном.</li><li>Гарнизон уменьшается на 1 каждый ход, минимум до 1.</li><li>Защита обычного мира на источник не распространяется.</li><li>Источник можно захватить или уничтожить.</li></ul>';
+  const victory = document.getElementById('victory');
+  if (victory) victory.innerHTML = '<h2>🏆 Критерий победы</h2><ul><li>Побеждает Владыка с наибольшим размером мира к концу игры.</li><li>Стандартная игра длится до конца 30-го хода включительно.</li></ul>';
 })();

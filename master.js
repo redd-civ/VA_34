@@ -149,8 +149,51 @@
     await openGame(l.data.game_id);
   }
 
+  function validateTurnForMaster(turn, actions){
+    const errors=[];
+    const main=actions.filter(a=>a.action_kind==='main').length;
+    const extra=actions.filter(a=>a.action_kind==='extra').length;
+    const total=main+extra;
+    if(total>5) errors.push('Более 5 действий за ход.');
+    if(main>2) errors.push('Более 2 основных действий.');
+    if(extra>5) errors.push('Более 5 дополнительных действий.');
+    if(total===5 && main>0) errors.push('При 5 действиях все они должны быть дополнительными.');
+    if(main===2 && extra>2) errors.push('При 2 основных действиях допускается не более 2 дополнительных.');
+    if(main===1 && extra>3) errors.push('При 1 основном действии допускается не более 3 дополнительных.');
+    let levels=0; const techLevels=new Map(); const techNames=new Set();
+    actions.forEach((a,i)=>{
+      const v=a.validation||{};
+      const level=Number(v.developmentLevel||0);
+      const isDev=v.actionType==='technology'||v.actionType==='magic'||v.actionType==='development';
+      if(isDev){
+        if(!Number.isFinite(level)||level<1||level>6) errors.push('Действие '+(i+1)+': неверный уровень развития.');
+        levels+=level||0;
+        if(v.actionType!=='magic'){
+          const name=String(v.developmentName||'').trim().toLowerCase();
+          if(!name) errors.push('Действие '+(i+1)+': не указана технология.');
+          else { techNames.add(name); techLevels.set(name,(techLevels.get(name)||0)+(level||0)); }
+        }
+        if(level>3) errors.push('Действие '+(i+1)+': за один ход нельзя развить одно развитие более чем на 3 уровня.');
+        if(level===6 && v.masterDecision!==true && !v.specialTZ) errors.push('Действие '+(i+1)+': Epic VI требует специального ТЗ или решения Мастера.');
+      }
+      if(Number(a.energy_cost||0)<0) errors.push('Действие '+(i+1)+': отрицательная стоимость энергии.');
+    });
+    techLevels.forEach((n,name)=>{if(n>3)errors.push('Технология «'+name+'» повышается более чем на 3 уровня за ход.');});
+    if(techNames.size>3)errors.push('За ход можно развивать не более 3 разных технологий.');
+    if(levels>6)errors.push('Суммарно развития за ход более 6 уровней.');
+    return errors;
+  }
+
   async function setTurnStatus(turnId,status){
     const label=status==='approved'?'принять':status==='rejected'?'отклонить':'отметить разрешённым';
+    const check=await db.from('turn_actions').select('*').eq('turn_id',turnId).order('action_order',{ascending:true});
+    if(check.error){alert(check.error.message);return;}
+    const turnRow=await db.from('turns').select('*').eq('id',turnId).single();
+    if(turnRow.error){alert(turnRow.error.message);return;}
+    if(status==='approved' && turnRow.data.status==='submitted'){
+      const errors=validateTurnForMaster(turnRow.data,check.data||[]);
+      if(errors.length){alert('Ход не прошёл повторную проверку Мастера:\\n\\n'+errors.join('\\n'));return;}
+    }
     if(!confirm('Вы уверены, что хотите '+label+' этот ход?'))return;
     const {error}=await db.from('turns').update({status,updated_at:new Date().toISOString()}).eq('id',turnId);
     if(error){alert(error.message);return;}

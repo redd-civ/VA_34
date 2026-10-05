@@ -15,6 +15,71 @@
     if(!me.data?.is_master){document.getElementById('status').textContent='Доступ только для пользователей с ролью мастера.';return;}
     document.getElementById('status').textContent='Мастер: '+(me.data.display_name||user.email||user.id);
     await loadGames();
+    await initFreeShards();
+  }
+
+
+  async function initFreeShards(){
+    const panel=document.getElementById('freeShardPanel');
+    const gameSelect=document.getElementById('freeShardGame');
+    if(!panel||!gameSelect)return;
+    const {data:games,error}=await db.from('games').select('*').eq('master_id',user.id).order('created_at',{ascending:false});
+    if(error){panel.style.display='block';document.getElementById('freeShardList').innerHTML='<div class="notice">'+esc(error.message)+'</div>';return;}
+    panel.style.display='block';
+    gameSelect.innerHTML=(games||[]).map(g=>'<option value="'+g.id+'">'+esc(g.name)+'</option>').join('');
+    const fill=(id,items,labelFn,valueFn)=>{const el=document.getElementById(id);el.innerHTML=items.map(x=>'<option value="'+esc(valueFn(x))+'">'+esc(labelFn(x))+'</option>').join('');};
+    fill('freeShardType',VA34_RULES.shardTypes,x=>x.name,x=>x.id);
+    fill('freeShardSize',VA34_RULES.shardSizes,x=>x.name+' — '+x.value,x=>x.value);
+    fill('freeShardMood',VA34_RULES.moods,x=>x,x=>x);
+    fill('freeShardTerrain',VA34_RULES.terrains,x=>x,x=>x);
+    gameSelect.onchange=()=>loadFreeShards(gameSelect.value);
+    const form=document.getElementById('freeShardForm');
+    form.onsubmit=async e=>{
+      e.preventDefault();
+      const f=new FormData(form),gameId=String(f.get('game'));
+      const payload={game_id:gameId,created_by:user.id,name:String(f.get('name')||'').trim(),type:String(f.get('type')||'ordinary'),size:Number(f.get('size')||1),income:Number(f.get('income')||0),race:String(f.get('race')||''),population:String(f.get('population')||''),mood:String(f.get('mood')||'Спокойное'),garrison:Number(f.get('garrison')||0),supply:Number(f.get('supply')||0),defense:Number(f.get('defense')||0),terrain:String(f.get('terrain')||''),description:String(f.get('description')||'')};
+      const {error}=await db.from('free_shards').insert(payload);
+      if(error){alert(error.message);return;}
+      form.reset(); gameSelect.value=gameId; await loadFreeShards(gameId);
+    };
+    if(games?.length) await loadFreeShards(games[0].id);
+    else document.getElementById('freeShardList').innerHTML='<div class="notice">Сначала создайте игру.</div>';
+  }
+
+  async function loadFreeShards(gameId){
+    if(!gameId)return;
+    const box=document.getElementById('freeShardList');
+    const {data:shards,error}=await db.from('free_shards').select('*').eq('game_id',gameId).order('created_at',{ascending:false});
+    if(error){box.innerHTML='<div class="notice">'+esc(error.message)+'</div>';return;}
+    const {data:members,error:me}=await db.from('game_members').select('player_id,role').eq('game_id',gameId);
+    if(me){box.innerHTML='<div class="notice">'+esc(me.message)+'</div>';return;}
+    const players=(members||[]).filter(x=>x.role==='player').map(x=>x.player_id);
+    const lords=players.length?await db.from('lords').select('id,name,player_id').in('player_id',players).eq('game_id',gameId):{data:[]};
+    const people=players.length?await db.from('players').select('id,display_name').in('id',players):{data:[]};
+    const names={};(people.data||[]).forEach(x=>names[x.id]=x.display_name||x.id);
+    const lordOptions=(lords.data||[]).map(l=>'<option value="'+l.id+'">'+esc(l.name||'Безымянный Владыка')+' — '+esc(names[l.player_id]||l.player_id)+'</option>').join('');
+    box.innerHTML=shards?.length?'<div class="entity-list">'+shards.map(s=>'<article class="entity"><h3>'+esc(s.name||'Без названия')+'</h3><p>'+esc(s.type)+' · размер '+s.size+' · доход '+s.income+' · '+esc(s.terrain||'ландшафт не указан')+'</p><p>'+esc(s.description||'')+'</p><p>Статус: '+(s.assigned_lord_id?'передан игроку':'свободен')+'</p>'+(s.assigned_lord_id?'':'<div class="data-actions"><select data-assign-select="'+s.id+'"><option value="">— выбрать Владыку —</option>'+lordOptions+'</select><button class="primary" data-assign="'+s.id+'">Передать</button><button class="danger" data-delete-free="'+s.id+'">Удалить</button></div>')+'</article>').join('')+'</div>':'<div class="notice">Свободных осколков пока нет.</div>';
+    box.querySelectorAll('[data-assign]').forEach(b=>b.onclick=()=>assignFreeShard(b.dataset.assign,box.querySelector('[data-assign-select="'+b.dataset.assign+'"]').value));
+    box.querySelectorAll('[data-delete-free]').forEach(b=>b.onclick=()=>deleteFreeShard(b.dataset.deleteFree));
+  }
+
+  async function assignFreeShard(id,lordId){
+    if(!lordId){alert('Выберите Владыку.');return;}
+    const {data:free,error}=await db.from('free_shards').select('*').eq('id',id).single();
+    if(error){alert(error.message);return;}
+    const {data:lord,error:le}=await db.from('lords').select('id,game_id').eq('id',lordId).single();
+    if(le){alert(le.message);return;}
+    const {data:created,error:ce}=await db.from('shards').insert({lord_id:lord.id,name:free.name,type:free.type,size:free.size,income:free.income,race:free.race,population:free.population,mood:free.mood,garrison:free.garrison,supply:free.supply,defense:free.defense,terrain:free.terrain,buildings:free.buildings||0,resources:free.resources||[],trophies:free.trophies||[],description:free.description}).select('id').single();
+    if(ce){alert(ce.message);return;}
+    const {error:ue}=await db.from('free_shards').update({assigned_lord_id:lord.id,assigned_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq('id',id);
+    if(ue){await db.from('shards').delete().eq('id',created.id);alert(ue.message);return;}
+    const gameId=document.getElementById('freeShardGame').value;await loadFreeShards(gameId);
+  }
+
+  async function deleteFreeShard(id){
+    if(!confirm('Удалить этот свободный осколок?'))return;
+    const {error}=await db.from('free_shards').delete().eq('id',id);
+    if(error)alert(error.message);else await loadFreeShards(document.getElementById('freeShardGame').value);
   }
 
   async function loadGames(){

@@ -31,14 +31,15 @@
     if (!lord) return null;
 
     lordId = lord.id;
-    const [shards, heroes, troops, tech] = await Promise.all([
+    const [shards, heroes, troops, tech, ledger] = await Promise.all([
       client.from('shards').select('*').eq('lord_id', lord.id),
       client.from('heroes').select('*').eq('lord_id', lord.id),
       client.from('troops').select('*').eq('lord_id', lord.id),
-      client.from('developments').select('*').eq('lord_id', lord.id)
+      client.from('developments').select('*').eq('lord_id', lord.id),
+      client.from('ledger_entries').select('*').eq('lord_id', lord.id).order('turn_number',{ascending:false}).order('created_at',{ascending:true})
     ]);
 
-    for (const result of [shards, heroes, troops, tech]) if (result.error) throw result.error;
+    for (const result of [shards, heroes, troops, tech, ledger]) if (result.error) throw result.error;
 
     return {
       lord: {
@@ -80,6 +81,10 @@
       tech: (tech.data || []).map(x => ({
         id: x.id, name: x.name || '', kind: x.kind || 'technology',
         level: Number(x.level || 0), cost: Number(x.cost || 0), description: x.description || ''
+      })),
+      ledger: (ledger.data || []).map(x => ({
+        id: x.id, turn: Number(x.turn_number || 1), kind: x.kind || 'adjustment',
+        amount: Number(x.amount || 0), category: x.category || 'Прочее', description: x.description || '', createdAt: x.created_at || null
       })),
       meta: { version: 4, source: 'supabase' }
     };
@@ -157,6 +162,29 @@
         level: Number(x.level || 0), cost: Number(x.cost || 0), description: x.description || ''
       }))]
     ];
+    const ledgerRows = (state.ledger || []).map(x => ({
+      ...(isUUID(x.id) ? { id: x.id } : {}),
+      game_id: gameId,
+      lord_id: id,
+      turn_number: Number(x.turn || 1),
+      kind: x.kind || 'adjustment',
+      amount: Number(x.amount || 0),
+      category: x.category || 'Прочее',
+      description: x.description || ''
+    }));
+    const { data: existingLedger, error: ledgerReadError } = await client.from('ledger_entries').select('id').eq('lord_id', id);
+    if (ledgerReadError) throw ledgerReadError;
+    const ledgerIds = new Set(ledgerRows.filter(x => x.id).map(x => x.id));
+    const staleLedger = (existingLedger || []).map(x => x.id).filter(x => !ledgerIds.has(x));
+    if (staleLedger.length) {
+      const { error } = await client.from('ledger_entries').delete().in('id', staleLedger);
+      if (error) throw error;
+    }
+    if (ledgerRows.length) {
+      const { data: savedLedger, error } = await client.from('ledger_entries').upsert(ledgerRows,{onConflict:'id'}).select('id');
+      if (error) throw error;
+      ledgerRows.forEach((row,i)=>{ if(!row.id && savedLedger && savedLedger[i] && state.ledger[i]) state.ledger[i].id=savedLedger[i].id; });
+    }
 
     for (const [table, rows] of tables) {
       const { data: existing, error: readError } = await client.from(table).select('id').eq('lord_id', id);

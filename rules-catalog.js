@@ -43,6 +43,35 @@
   if (shard) shard.innerHTML = '<h2>🏝️ Осколок</h2><table><tr><th>Размер</th><th>Значение</th></tr>'+R.shardSizes.map(s=>'<tr><td>'+esc(s.name)+'</td><td>'+s.value+'</td></tr>').join('')+'</table><p><strong>Типы:</strong> '+R.shardTypes.map(s=>esc(s.name)).join(', ')+'.</p><p><strong>Настроения:</strong> '+R.moods.map(esc).join(', ')+'.</p><ul><li>Лимит зданий: floor(размер); родовой — 4.</li><li>Хранение энергии: 20 э + 10 э за осколок.</li><li>Новый контент начинает действовать со следующего хода.</li></ul>';
   const source = document.getElementById('source');
   if (source) source.innerHTML = '<h2>💠 Источник</h2><ul><li>Сохраняется после захвата и продолжает давать преимущества.</li><li>Сила определяется гарнизоном.</li><li>Гарнизон уменьшается на 1 каждый ход, минимум до 1.</li><li>Защита обычного мира на источник не распространяется.</li><li>Источник можно захватить или уничтожить.</li></ul>';
+  const mechanics = document.getElementById('mechanics');
+  if (mechanics) {
+    const fmt = v => esc(typeof v === 'object' ? JSON.stringify(v) : v);
+    const techRows = R.technologyCosts ? [
+      ['Профильная', R.technologyCosts.profile],
+      ['Непрофильная', R.technologyCosts.nonProfile],
+      ['Очень непрофильная', R.technologyCosts.veryNonProfile]
+    ].map(([name,c]) => '<tr><td>'+esc(name)+'</td><td>'+fmt(c.basic)+'</td><td>'+fmt(c.advanced)+'</td><td>'+fmt(c.expert)+'</td><td>'+fmt(c.master)+'</td><td>'+fmt(c.grandmaster)+'</td><td>'+fmt(c.epic)+'</td></tr>').join('') : '';
+    mechanics.innerHTML += '<h3>📐 Структурированный справочник механик</h3>' +
+      '<table><tr><th>Параметр</th><th>Значение</th></tr>' +
+      '<tr><td>Базовый запас энергии</td><td>'+fmt(R.constants?.defaultEnergyStorage)+'</td></tr>' +
+      '<tr><td>Прирост хранения за осколок</td><td>'+fmt(R.constants?.energyStoragePerShard)+'</td></tr>' +
+      '<tr><td>Минимум после скидки</td><td>'+fmt(R.technologyCosts?.minimumAfterDiscount)+'</td></tr>' +
+      '<tr><td>Макс. родов войск на старте</td><td>'+fmt(R.constants?.maxStartingTroopTypes)+'</td></tr>' +
+      '<tr><td>Макс. школ магии на старте</td><td>'+fmt(R.constants?.maxStartingMagicSchools)+'</td></tr>' +
+      '<tr><td>Стартовое развитие</td><td>'+fmt(R.constants?.startingTechLevelsMin)+'–'+fmt(R.constants?.startingTechLevelsMax)+' уровней</td></tr>' +
+      '<tr><td>Макс. героев</td><td>'+fmt(R.heroRules?.maxHeroes)+'</td></tr>' +
+      '<tr><td>Макс. навыков героя</td><td>'+fmt(R.constants?.maxHeroSkills)+'</td></tr>' +
+      '<tr><td>Бонус отказа от рода войск</td><td>до +'+fmt(R.refusalBonuses?.maxIncomeBonusPerTroopRefusal)+' дохода за отказ; учитывается до +'+fmt(R.refusalBonuses?.maxIncomeBonusFromTroopRefusals)+' от отказов</td></tr>' +
+      '<tr><td>Общий максимум бонуса отказа</td><td>до +'+fmt(R.refusalBonuses?.maxIncomeBonus)+' дохода</td></tr>' +
+      '<tr><td>Защита мира (структурированный источник)</td><td>'+fmt(R.worldRules?.defenseEnergyRatio)+'</td></tr>' +
+      '<tr><td>Колонизация маленького осколка</td><td>'+fmt(R.worldRules?.colonization?.small)+'</td></tr>' +
+      '<tr><td>Каждый следующий размер колонизации</td><td>+'+fmt(R.worldRules?.colonization?.perSizeAfterSmall)+'</td></tr>' +
+      '</table>' +
+      '<h3>⚙️ Стоимость развития по структурированному справочнику</h3>' +
+      '<table><tr><th>Профиль</th><th>I</th><th>II</th><th>III</th><th>IV</th><th>V</th><th>VI</th></tr>'+techRows+'</table>' +
+      '<div class="notice"><strong>Расхождения источников сохраняются:</strong> старый текст правил и структурированный справочник имеют разные значения для стоимости технологий, логистики, призыва героев и защиты мира. Каталог не подменяет решение Мастера.</div>';
+  }
+
   const victory = document.getElementById('victory');
   if (victory) victory.innerHTML = '<h2>🏆 Критерий победы</h2><ul><li>Побеждает Владыка с наибольшим размером мира к концу игры.</li><li>Стандартная игра длится до конца 30-го хода включительно.</li></ul>';
 })();

@@ -73,3 +73,5 @@ drop policy if exists "masters manage shards" on public.shards;
 create policy "masters manage shards" on public.shards for all to authenticated
 using (exists(select 1 from public.players p where p.id=auth.uid() and p.is_master=true))
 with check (exists(select 1 from public.players p where p.id=auth.uid() and p.is_master=true));
+
+alter table public.lords add column if not exists world_name text not null default '';

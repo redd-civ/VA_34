@@ -11,6 +11,19 @@ alter table public.players
 
 alter table public.players enable row level security;
 
+create or replace function public.va34_is_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $
+  select exists(select 1 from public.players where id=auth.uid() and is_admin=true);
+$;
+
+revoke all on function public.va34_is_admin() from public;
+grant execute on function public.va34_is_admin() to authenticated;
+
 -- Ordinary players may read/update their own profile, but role flags are protected
 -- by the trigger below. Administrators get a separate SELECT policy.
 drop policy if exists "players own row" on public.players;
@@ -22,12 +35,7 @@ with check (id=auth.uid());
 drop policy if exists "administrators read players" on public.players;
 create policy "administrators read players" on public.players
 for select to authenticated
-using (
-  exists (
-    select 1 from public.players me
-    where me.id=auth.uid() and me.is_admin=true
-  )
-);
+using (public.va34_is_admin());
 
 -- Only an administrator may change is_master/is_admin.
 create or replace function public.va34_protect_role_flags()
@@ -86,10 +94,7 @@ as $$
 declare
   target public.players;
 begin
-  if not exists (
-    select 1 from public.players
-    where id=auth.uid() and is_admin=true
-  ) then
+  if not public.va34_is_admin() then
     raise exception 'Требуются права администратора';
   end if;
 

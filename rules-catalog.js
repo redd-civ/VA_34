@@ -61,6 +61,19 @@
       '<tr><td>Стартовое развитие</td><td>'+fmt(R.constants?.startingTechLevelsMin)+'–'+fmt(R.constants?.startingTechLevelsMax)+' уровней</td></tr>' +
       '<tr><td>Макс. героев</td><td>'+fmt(R.heroRules?.maxHeroes)+'</td></tr>' +
       '<tr><td>Макс. навыков героя</td><td>'+fmt(R.constants?.maxHeroSkills)+'</td></tr>' +
+      '<tr><td>Действий по умолчанию</td><td>'+fmt(R.constants?.defaultActions)+'</td></tr>' +
+      '<tr><td>Макс. уровней одной технологии за ход</td><td>'+fmt(R.constants?.maxTechLevelsPerTurn)+'</td></tr>' +
+      '<tr><td>Макс. разных технологий за ход</td><td>'+fmt(R.constants?.maxDifferentTechsPerTurn)+'</td></tr>' +
+      '<tr><td>Макс. уровней развития за ход</td><td>'+fmt(R.constants?.maxTotalTechLevelsPerTurn)+'</td></tr>' +
+      '<tr><td>Макс. стартовых осколков</td><td>'+fmt(R.constants?.maxStartingShards)+'</td></tr>' +
+      '<tr><td>Макс. стартовых героев</td><td>'+fmt(R.constants?.maxStartingHeroes)+'</td></tr>' +
+      '<tr><td>Эффективный лимит энергии магии</td><td>'+fmt(R.constants?.effectiveMagicEnergyCap)+'</td></tr>' +
+      '<tr><td>Большая логистика: первое действие</td><td>'+fmt(R.logistics?.large?.firstCost)+' э</td></tr>' +
+      '<tr><td>Большая логистика: рост цены</td><td>+'+fmt(R.logistics?.large?.nextIncrease)+' э</td></tr>' +
+      '<tr><td>Малая логистика: первое действие</td><td>'+fmt(R.logistics?.small?.firstCost)+' э</td></tr>' +
+      '<tr><td>Малая логистика: рост цены</td><td>+'+fmt(R.logistics?.small?.nextIncrease)+' э</td></tr>' +
+      '<tr><td>Логистика: технический максимум основных</td><td>'+fmt(R.actionRules?.logisticsMainMax)+'</td></tr>' +
+      '<tr><td>Логистика: технический максимум дополнительных</td><td>'+fmt(R.actionRules?.logisticsExtraMax)+'</td></tr>' +
       '<tr><td>Бонус отказа от рода войск</td><td>до +'+fmt(R.refusalBonuses?.maxIncomeBonusPerTroopRefusal)+' дохода за отказ; учитывается до +'+fmt(R.refusalBonuses?.maxIncomeBonusFromTroopRefusals)+' от отказов</td></tr>' +
       '<tr><td>Общий максимум бонуса отказа</td><td>до +'+fmt(R.refusalBonuses?.maxIncomeBonus)+' дохода</td></tr>' +
       '<tr><td>Защита мира (структурированный источник)</td><td>'+fmt(R.worldRules?.defenseEnergyRatio)+'</td></tr>' +

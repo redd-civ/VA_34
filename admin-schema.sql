@@ -17,9 +17,9 @@ language sql
 stable
 security definer
 set search_path = public
-as $
+as $$
   select exists(select 1 from public.players where id=auth.uid() and is_admin=true);
-$;
+$$;
 
 revoke all on function public.va34_is_admin() from public;
 grant execute on function public.va34_is_admin() to authenticated;

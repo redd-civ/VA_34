@@ -121,7 +121,7 @@
     if (!client || !user) return { saved: false };
 
     const id = await ensureLord();
-    const { error: lordError } = await client.from('lords').update({
+    const lordPayload = {
       name: state.lord.name || '',
       race: state.lord.race || '',
       motto: state.lord.motto || '',
@@ -133,7 +133,12 @@
       items: state.lord.items || '',
       resources: state.lord.resources || '',
       updated_at: new Date().toISOString()
-    }).eq('id', id);
+    };
+    let { error: lordError } = await client.from('lords').update(lordPayload).eq('id', id);
+    if (lordError && lordError.code === 'PGRST204') {
+      delete lordPayload.world_name;
+      ({ error: lordError } = await client.from('lords').update(lordPayload).eq('id', id));
+    }
     if (lordError) throw lordError;
 
     const tables = [

@@ -67,6 +67,10 @@
       '<tr><td>Макс. уровней развития за ход</td><td>'+fmt(R.constants?.maxTotalTechLevelsPerTurn)+'</td></tr>' +
       '<tr><td>Макс. стартовых осколков</td><td>'+fmt(R.constants?.maxStartingShards)+'</td></tr>' +
       '<tr><td>Макс. стартовых героев</td><td>'+fmt(R.constants?.maxStartingHeroes)+'</td></tr>' +
+      '<tr><td>Стартовых родовых осколков</td><td>ровно 1</td></tr>' +
+      '<tr><td>Гарнизон осколка</td><td>не выше снабжения</td></tr>' +
+      '<tr><td>Лимит зданий обычного осколка</td><td>floor(размер)</td></tr>' +
+      '<tr><td>Лимит зданий родового осколка</td><td>'+fmt(R.constants?.ancestralBuildingLimit)+'</td></tr>' +
       '<tr><td>Эффективный лимит энергии магии</td><td>'+fmt(R.constants?.effectiveMagicEnergyCap)+'</td></tr>' +
       '<tr><td>Большая логистика: первое действие</td><td>'+fmt(R.logistics?.large?.firstCost)+' э</td></tr>' +
       '<tr><td>Большая логистика: рост цены</td><td>+'+fmt(R.logistics?.large?.nextIncrease)+' э</td></tr>' +

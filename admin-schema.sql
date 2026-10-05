@@ -37,6 +37,10 @@ security definer
 set search_path = public
 as $$
 begin
+  if new.is_admin=true and new.is_master=true then
+    raise exception 'Администратор не может одновременно иметь статус Мастера';
+  end if;
+
   if auth.uid() is null then
     return new;
   end if;
@@ -87,6 +91,11 @@ begin
     where id=auth.uid() and is_admin=true
   ) then
     raise exception 'Требуются права администратора';
+  end if;
+
+  select is_admin into target from public.players where id=target_player_id;
+  if grant_master and coalesce(target.is_admin,false) then
+    raise exception 'Администратор не может получить статус Мастера';
   end if;
 
   update public.players

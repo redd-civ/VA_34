@@ -67,3 +67,9 @@ using (exists(select 1 from public.lords l where l.id=assigned_lord_id and l.pla
 
 -- Рекомендуется: назначение осколка игроку выполняется Мастером через кабинет,
 -- который создаёт обычную запись shards, связанную с выбранным Владыкой.
+
+
+drop policy if exists "masters manage shards" on public.shards;
+create policy "masters manage shards" on public.shards for all to authenticated
+using (exists(select 1 from public.players p where p.id=auth.uid() and p.is_master=true))
+with check (exists(select 1 from public.players p where p.id=auth.uid() and p.is_master=true));

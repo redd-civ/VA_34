@@ -39,7 +39,8 @@
       client.from('ledger_entries').select('*').eq('lord_id', lord.id).order('turn_number',{ascending:false}).order('created_at',{ascending:true})
     ]);
 
-    for (const result of [shards, heroes, troops, tech, ledger]) if (result.error) throw result.error;
+    for (const result of [shards, heroes, troops, tech]) if (result.error) throw result.error;
+    if (ledger.error && ledger.error.code !== 'PGRST205') throw ledger.error;
 
     return {
       lord: {
@@ -82,7 +83,7 @@
         id: x.id, name: x.name || '', kind: x.kind || 'technology',
         level: Number(x.level || 0), cost: Number(x.cost || 0), description: x.description || ''
       })),
-      ledger: (ledger.data || []).map(x => ({
+      ledger: (ledger.error && ledger.error.code === 'PGRST205' ? [] : (ledger.data || [])).map(x => ({
         id: x.id, turn: Number(x.turn_number || 1), kind: x.kind || 'adjustment',
         amount: Number(x.amount || 0), category: x.category || 'Прочее', description: x.description || '', createdAt: x.created_at || null
       })),
@@ -173,14 +174,14 @@
       description: x.description || ''
     }));
     const { data: existingLedger, error: ledgerReadError } = await client.from('ledger_entries').select('id').eq('lord_id', id);
-    if (ledgerReadError) throw ledgerReadError;
+    if (ledgerReadError && ledgerReadError.code !== 'PGRST205') throw ledgerReadError;
     const ledgerIds = new Set(ledgerRows.filter(x => x.id).map(x => x.id));
     const staleLedger = (existingLedger || []).map(x => x.id).filter(x => !ledgerIds.has(x));
-    if (staleLedger.length) {
+    if (!ledgerReadError && staleLedger.length) {
       const { error } = await client.from('ledger_entries').delete().in('id', staleLedger);
       if (error) throw error;
     }
-    if (ledgerRows.length) {
+    if (!ledgerReadError && ledgerRows.length) {
       const { data: savedLedger, error } = await client.from('ledger_entries').upsert(ledgerRows,{onConflict:'id'}).select('id');
       if (error) throw error;
       ledgerRows.forEach((row,i)=>{ if(!row.id && savedLedger && savedLedger[i] && state.ledger[i]) state.ledger[i].id=savedLedger[i].id; });

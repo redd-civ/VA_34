@@ -499,3 +499,12 @@ tr:nth-child(even) td {
   font-weight: 700;
   color: var(--heading);
 }
+
+
+/* ===== Справочники правил ===== */
+.catalog-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:14px 0}
+.catalog-grid.compact{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+.catalog-card{background:#faf6ee;border:1px solid var(--border);border-radius:6px;padding:12px}
+.catalog-card h3{margin:0 0 8px;color:var(--heading)}
+.catalog-card p{font-size:14px}
+.catalog-card ul{font-size:14px}

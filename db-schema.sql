@@ -121,7 +121,7 @@ create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path=''
 as $$
 begin
-  insert into public.players(id,display_name) values(new.id,coalesce(new.raw_user_meta_data ->> 'display_name',''))
+  insert into public.players(id,display_name,player_name) values(new.id,coalesce(new.raw_user_meta_data ->> 'display_name',''),coalesce(new.raw_user_meta_data ->> 'player_name',new.raw_user_meta_data ->> 'display_name',''))
   on conflict (id) do nothing;
   return new;
 end; $$;

@@ -1,15 +1,11 @@
-/* VA-34 compatibility layer: expose cabinet form elements explicitly before cabinet.js. */
+/* VA-34 compatibility layer: restore legacy id-as-global DOM behavior explicitly. */
 (function(){
-  const ids = [
-    'lordForm','lordName','lordRace','lordMotto','lordEnergy','lordStatus','lordAbility','lordTraits',
-    'lordItems','lordResources','ancestralName','ancestralRace','ancestralTerrain','ancestralIncome',
-    'ancestralGarrison','startingTroops','startingMagic','startingTech','addStarterTech','addStarterMagic',
-    'starterTechBuilder','starterMagicBuilder','shardsList','heroesList','troopsList','techList',
-    'newShard','newHero','newTroop','newTech','exportData','importData','resetData','jsonPreview'
-  ];
-  ids.forEach(function(id){
-    if(!Object.prototype.hasOwnProperty.call(window,id)){
-      window[id]=document.getElementById(id);
-    }
+  document.querySelectorAll('[id]').forEach(function(el){
+    const id=el.id;
+    if(!/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(id)) return;
+    /* Always bind the actual element. Some browsers expose named elements
+       on Window without hasOwnProperty(), which made the previous guard
+       leave startingMagic unresolved. */
+    window[id]=el;
   });
 })();

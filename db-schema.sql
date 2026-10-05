@@ -1,5 +1,6 @@
 -- VA-34 / Supabase database schema
 -- Выполнять в SQL Editor проекта Supabase.
+-- Схема безопасна для повторного запуска: существующие таблицы/политики не ломают миграцию.
 -- Все игровые данные принадлежат auth.users через player_id.
 create table if not exists public.players (
   id uuid primary key references auth.users(id) on delete cascade,
@@ -87,22 +88,28 @@ alter table public.heroes enable row level security;
 alter table public.troops enable row level security;
 alter table public.developments enable row level security;
 
+drop policy if exists "players own row" on public.players;
 create policy "players own row" on public.players for all using (id=auth.uid()) with check (id=auth.uid());
 
+drop policy if exists "lords owned" on public.lords;
 create policy "lords owned" on public.lords for all using (player_id=auth.uid()) with check (player_id=auth.uid());
 
+drop policy if exists "shards through own lord" on public.shards;
 create policy "shards through own lord" on public.shards for all
 using (exists(select 1 from public.lords l where l.id=lord_id and l.player_id=auth.uid()))
 with check (exists(select 1 from public.lords l where l.id=lord_id and l.player_id=auth.uid()));
 
+drop policy if exists "heroes through own lord" on public.heroes;
 create policy "heroes through own lord" on public.heroes for all
 using (exists(select 1 from public.lords l where l.id=lord_id and l.player_id=auth.uid()))
 with check (exists(select 1 from public.lords l where l.id=lord_id and l.player_id=auth.uid()));
 
+drop policy if exists "troops through own lord" on public.troops;
 create policy "troops through own lord" on public.troops for all
 using (exists(select 1 from public.lords l where l.id=lord_id and l.player_id=auth.uid()))
 with check (exists(select 1 from public.lords l where l.id=lord_id and l.player_id=auth.uid()));
 
+drop policy if exists "developments through own lord" on public.developments;
 create policy "developments through own lord" on public.developments for all
 using (exists(select 1 from public.lords l where l.id=lord_id and l.player_id=auth.uid()))
 with check (exists(select 1 from public.lords l where l.id=lord_id and l.player_id=auth.uid()));
@@ -111,7 +118,8 @@ create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path=''
 as $$
 begin
-  insert into public.players(id,display_name) values(new.id,coalesce(new.raw_user_meta_data ->> 'display_name',''));
+  insert into public.players(id,display_name) values(new.id,coalesce(new.raw_user_meta_data ->> 'display_name',''))
+  on conflict (id) do nothing;
   return new;
 end; $$;
 

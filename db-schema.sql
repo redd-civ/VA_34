@@ -1,10 +1,13 @@
 -- VA-34 / Supabase database schema
 -- Выполнять в SQL Editor проекта Supabase.
 -- Схема безопасна для повторного запуска: существующие таблицы/политики не ломают миграцию.
+-- Миграция существующих инсталляций: добавляет player_name без пересоздания players.
+alter table public.players add column if not exists player_name text;
 -- Все игровые данные принадлежат auth.users через player_id.
 create table if not exists public.players (
   id uuid primary key references auth.users(id) on delete cascade,
   display_name text,
+  player_name text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

@@ -287,8 +287,15 @@
       description: String(a.description || ''),
       energy_cost: Number(a.cost || 0),
       status: a.status || 'pending',
-      validation: a.validation || {}
-    }));
+      validation: a.validation || {},
+        actionType: a.validation?.actionType || 'normal',
+        developmentName: a.validation?.developmentName || '',
+        developmentLevel: Number(a.validation?.developmentLevel || 0),
+        costProfile: a.validation?.costProfile || 'profile',
+        discountPercent: Number(a.validation?.discountPercent || 0),
+        specialTZ: a.validation?.specialTZ || '',
+        masterDecision: a.validation?.masterDecision === true
+      }));
     const { data: existingActions, error: existingError } = await client.from('turn_actions').select('id').eq('turn_id', row.id);
     if (existingError) throw existingError;
     const ids = new Set(incoming.filter(a => a.id).map(a => a.id));

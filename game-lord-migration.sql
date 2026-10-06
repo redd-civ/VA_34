@@ -11,6 +11,11 @@ set game_id = (select id from public.games order by created_at asc limit 1)
 where game_id is null;
 
 alter table public.lords
+  add column if not exists world_name text default '',
+  add column if not exists player_name text default '',
+  add column if not exists starting_tech text default '',
+  add column if not exists starting_magic text default '',
+  add column if not exists starting_troops text default '',
   add column if not exists ancestral_name text default '',
   add column if not exists ancestral_race text default '',
   add column if not exists ancestral_terrain text default '',

@@ -1,23 +1,61 @@
 (()=>{
-  // При сохранении Владыки родовой осколок является частью его стартовой заявки
-  // и не должен требовать отдельного создания в разделе «Мир».
   function ensureAncestralShard(){
     if(typeof state==='undefined'||!state.lord) return;
     const lord=state.lord;
     let shard=state.shards.find(x=>x.type==='ancestral');
     if(!shard){
-      shard={id:typeof id==='function'?id():Date.now().toString(36),type:'ancestral',size:1,income:0,garrison:0,supply:0,defense:0,buildings:0,resources:'',description:''};
+      shard={id:typeof id==='function'?id():Date.now().toString(36),type:'ancestral',size:Number(lord.ancestralSize||1),income:0,garrison:0,supply:0,defense:0,buildings:0,resources:'',description:''};
       state.shards.unshift(shard);
     }
     shard.name=lord.ancestralName||shard.name||'';
     shard.race=lord.ancestralRace||shard.race||'';
     shard.terrain=lord.ancestralTerrain||shard.terrain||'';
+    shard.size=Number(lord.ancestralSize||shard.size||1);
     shard.income=Number(lord.ancestralIncome||0);
     shard.garrison=Number(lord.ancestralGarrison||0);
-    // В форме родового осколка отдельного поля снабжения нет; сохраняем
-    // как минимум снабжение, достаточное для указанного стартового гарнизона.
     shard.supply=Math.max(Number(shard.supply||0),shard.garrison);
     shard.buildings=Number(shard.buildings||0);
+  }
+
+  function addAncestralSizeField(){
+    const anchor=document.getElementById('ancestralName');
+    if(!anchor||document.getElementById('ancestralSize')) return;
+    const label=document.createElement('label');
+    label.innerHTML='Размер родового осколка<select id="ancestralSize"></select>';
+    anchor.closest('label')?.after(label);
+    const select=document.getElementById('ancestralSize');
+    const sizes=window.VA34_RULES?.shardSizes||[];
+    select.innerHTML=sizes.map(x=>`<option value="${String(x.value)}">${String(x.name)} — ${String(x.value)}</option>`).join('');
+    select.value=String(state?.lord?.ancestralSize||1);
+    if(![...select.options].some(x=>x.value===select.value) && select.options.length)select.selectedIndex=0;
+  }
+
+  function localizeAncestralTypeText(){
+    const root=document.getElementById('shardsList');
+    if(!root) return;
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+    const nodes=[];
+    while(walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(node=>{
+      if(node.nodeValue.trim()==='ancestral') node.nodeValue='Родовой';
+    });
+  }
+
+  addAncestralSizeField();
+  localizeAncestralTypeText();
+  const world=document.getElementById('shardsList');
+  if(world) new MutationObserver(localizeAncestralTypeText).observe(world,{childList:true,subtree:true});
+
+  if(typeof save==='function'){
+    const originalSave=save;
+    save=function(){
+      const size=document.getElementById('ancestralSize');
+      if(typeof state!=='undefined'&&state.lord&&size) state.lord.ancestralSize=Number(size.value||1);
+      ensureAncestralShard();
+      const result=originalSave.apply(this,arguments);
+      persistApplicationFields();
+      return result;
+    };
   }
 
   async function persistApplicationFields(){
@@ -33,33 +71,10 @@
       const found=await q.maybeSingle();
       if(found.error||!found.data)return;
       const lord=state.lord;
-      await client.from('lords').update({
-        world_name:lord.worldName||'',
-        player_name:lord.playerName||'',
-        starting_tech:lord.startingTech||'',
-        starting_magic:lord.startingMagic||'',
-        starting_troops:lord.startingTroops||'',
-        updated_at:new Date().toISOString()
-      }).eq('id',found.data.id);
-    }catch(e){
-      // Основное сохранение не блокируем, если миграция дополнительных полей
-      // ещё не выполнена в Supabase.
-      console.warn('VA34 application fields were not persisted:',e);
-    }
+      await client.from('lords').update({world_name:lord.worldName||'',player_name:lord.playerName||'',starting_tech:lord.startingTech||'',starting_magic:lord.startingMagic||'',starting_troops:lord.startingTroops||'',updated_at:new Date().toISOString()}).eq('id',found.data.id);
+    }catch(e){console.warn('VA34 application fields were not persisted:',e)}
   }
 
-  if(typeof save==='function'){
-    const originalSave=save;
-    save=function(){
-      ensureAncestralShard();
-      const result=originalSave.apply(this,arguments);
-      persistApplicationFields();
-      return result;
-    };
-  }
-
-  // После загрузки облачного состояния переносим данные родового осколка
-  // обратно в поля Владыки, чтобы форма не теряла их при перезагрузке.
   if(window.VA34_CLOUD&&typeof VA34_CLOUD.getState==='function'){
     const originalGetState=VA34_CLOUD.getState;
     VA34_CLOUD.getState=async function(){
@@ -70,6 +85,7 @@
           result.lord.ancestralName=ancestral.name||'';
           result.lord.ancestralRace=ancestral.race||'';
           result.lord.ancestralTerrain=ancestral.terrain||'';
+          result.lord.ancestralSize=Number(ancestral.size||1);
           result.lord.ancestralIncome=Number(ancestral.income||0);
           result.lord.ancestralGarrison=Number(ancestral.garrison||0);
         }

@@ -104,8 +104,10 @@
     let lordIds=[];
     try{lordIds=(await findLordId(playerId)).ids;}catch(e){target.innerHTML='<div class="warning">Не удалось найти Владыку: '+esc(e.message)+'</div>';return;}
     const playerRes=await db.from('players').select('display_name,player_name').eq('id',playerId).maybeSingle();
-    let lordRes=await db.from('lords').select('*').eq('game_id',game.id).eq('player_id',playerId).order('created_at',{ascending:false}).limit(1).maybeSingle();
-    if((lordRes.error && ['42703','PGRST204','PGRST205'].includes(lordRes.error.code)) || (!lordRes.error && !lordRes.data)){
+    let lordRes=lordIds.length
+      ? await db.from('lords').select('*').eq('id',lordIds[0]).maybeSingle()
+      : {data:null,error:null};
+    if(lordRes.error && ['42703','PGRST204','PGRST205'].includes(lordRes.error.code)){
       lordRes=await db.from('lords').select('*').eq('player_id',playerId).order('created_at',{ascending:false}).limit(1).maybeSingle();
     }
     const [shardRes,devRes,heroRes,troopRes]=await Promise.all([
@@ -119,10 +121,14 @@
 
     const lord=lordRes.data||null, shards=shardRes.data||[], developments=devRes.data||[], heroes=heroRes.data||[], troops=troopRes.data||[];
     const player=playerRes.data||{};
+    const starterTechRows=developments.filter(x=>x.kind==='starting_technology');
+    const starterMagicRows=developments.filter(x=>x.kind==='starting_magic');
+    const starterTech=lord?.starting_tech || starterTechRows.map(x=>x.name+' '+Number(x.level||1)).join(', ');
+    const starterMagic=lord?.starting_magic || starterMagicRows.map(x=>x.name+' '+Number(x.level||1)).join(', ');
     let html='';
     if(!lord)html='<div class="warning">Карточка Владыки ещё не создана.</div>';
     else{
-      html+=section('👑 Владыка',row('Имя',lord.name)+row('Игрок',lord.player_name||player.player_name||player.display_name||'—')+row('Раса',lord.race)+row('Мир',lord.world_name||lord.worldName)+row('Статус',lord.status)+row('Начальная энергия',lord.energy)+row('Девиз',lord.motto)+row('Способность',lord.ability)+row('Особенности',lord.traits)+row('Артефакты / предметы',lord.items)+row('Ресурсы и постоянные источники дохода',lord.resources)+row('Стартовые рода войск',lord.starting_troops)+row('Стартовые технологии',lord.starting_tech)+row('Стартовые школы магии',lord.starting_magic));
+      html+=section('👑 Владыка',row('Имя',lord.name)+row('Игрок',lord.player_name||player.player_name||player.display_name||'—')+row('Раса',lord.race)+row('Мир',lord.world_name||lord.worldName)+row('Статус',lord.status)+row('Начальная энергия',lord.energy)+row('Девиз',lord.motto)+row('Способность',lord.ability)+row('Особенности',lord.traits)+row('Артефакты / предметы',lord.items)+row('Ресурсы и постоянные источники дохода',lord.resources)+row('Стартовые рода войск',lord.starting_troops)+row('Стартовые технологии',starterTech)+row('Стартовые школы магии',starterMagic));
     }
 
     const ancestral=shards.find(x=>x.type==='ancestral'), ordinary=shards.filter(x=>x.type!=='ancestral');
@@ -146,16 +152,9 @@
     const people=await db.from('players').select('id,display_name,player_name').in('id',ids);
     const names={};(people.data||[]).forEach(p=>names[p.id]=p.player_name||p.display_name||'Игрок');
     if(people.error){console.warn('Не удалось загрузить имена игроков:',people.error.message);}
-    let lords=await db.from('lords').select('id,player_id,name,game_id,created_at').eq('game_id',game.id).in('player_id',ids);
-    // Совместимость со старыми Владыками: если game_id ещё не заполнен,
-    // дополнительно ищем запись по player_id.
-    if(!lords.error){
-      const found=new Set((lords.data||[]).map(l=>l.player_id));
-      const missing=ids.filter(id=>!found.has(id));
-      if(missing.length){
-        const legacy=await db.from('lords').select('id,player_id,name,game_id,created_at').in('player_id',missing).order('created_at',{ascending:false});
-        if(!legacy.error) lords={data:[...(lords.data||[]),...(legacy.data||[])],error:null};
-      }
+    let lords=await db.from('lords').select('id,player_id,name,game_id,created_at').in('player_id',ids).order('created_at',{ascending:false});
+    if(lords.error && ['42703','PGRST204','PGRST205'].includes(lords.error.code)){
+      lords=await db.from('lords').select('id,player_id,name,created_at').in('player_id',ids).order('created_at',{ascending:false});
     }
     const lordNames={};(lords.data||[]).forEach(l=>{
       if(!lordNames[l.player_id] || l.game_id===game.id) lordNames[l.player_id]=l.name||'Безымянный Владыка';

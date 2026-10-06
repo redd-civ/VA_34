@@ -1,0 +1,32 @@
+name: Build VA-34 source data
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'source/компиляция ВА34.pdf'
+      - 'tools/build-rules-source.py'
+
+permissions:
+  contents: write
+
+jobs:
+  build-source:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pdftotext
+        run: sudo apt-get update && sudo apt-get install -y poppler-utils
+
+      - name: Rebuild source data
+        run: python3 tools/build-rules-source.py 'source/компиляция ВА34.pdf'
+
+      - name: Commit generated source
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add rules-source-data.js
+          git diff --cached --quiet || git commit -m 'Build full VA-34 source data'
+          git push

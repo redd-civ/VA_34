@@ -273,15 +273,6 @@ window.VA34_SPECIAL_TZ = [
     source:"Прочее — ТЗ воды"
   },
   {
-    id:"shadow-light-drain",
-    name:"Вытягивание света",
-    category:"special",
-    school:"Магия теней",
-    effect:"+4 э за осколок; ухудшает боеспособность не видящих в темноте.",
-    cost:{perShard:4},
-    source:"Прочее — ТЗ магии теней"
-  },
-  {
     id:"artifact-mini-art",
     name:"Мини-артефакты",
     category:"special",

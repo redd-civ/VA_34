@@ -348,35 +348,22 @@
   async function getGameContext() {
     if (!client || !user) return null;
 
-    // Игрок должен иметь возможность сохранять заявку и созданного Владыку
-    // ещё ДО принятия в игру. Поэтому учитываем не только game_members,
-    // но и собственные заявки в game_applications.
-    const memberRes = await client.from('game_members').select('game_id,role').eq('player_id', user.id);
-    if (memberRes.error) throw memberRes.error;
-
-    const applicationRes = await client
-      .from('game_applications')
-      .select('game_id,status')
-      .eq('player_id', user.id);
-
-    // Если таблица заявок ещё не создана/миграция не применена, сохраняем
-    // прежнее поведение через game_members.
-    if (applicationRes.error && applicationRes.error.code !== 'PGRST205') {
-      throw applicationRes.error;
-    }
-
-    const ids=[...(memberRes.data||[]).map(x=>x.game_id), ...(applicationRes.data||[]).map(x=>x.game_id)]
-      .filter(Boolean);
-    const uniqueIds=[...new Set(ids)];
-    if (!uniqueIds.length) return [];
-
-    const { data: games, error: ge } = await client
+    // В VA-34 сейчас существует одна общая игра. Поэтому кабинет не должен
+    // зависеть от game_members: игрок может сначала заполнить Владыку и
+    // подать заявку, а Мастер примет её позже.
+    const gamesRes = await client
       .from('games')
       .select('*')
-      .in('id',uniqueIds)
-      .order('created_at',{ascending:false});
-    if (ge) throw ge;
-    return games||[];
+      .order('created_at',{ascending:true})
+      .limit(1);
+
+    if (gamesRes.error) throw gamesRes.error;
+    const games = gamesRes.data || [];
+    if (!games.length) return [];
+
+    // Если игрок уже состоит в игре или имеет заявку, всё равно возвращаем
+    // ту же единственную игру. Это сохраняет единый game_id для кабинета.
+    return games;
   }
   async function listTurns(status) {
     if (!client || !user) return [];

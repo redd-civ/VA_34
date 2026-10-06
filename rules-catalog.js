@@ -61,9 +61,14 @@
      * если для технологии ТЗ пока не перенесено, явно показываем это.
      */
     const levelNames = {1:'Базовый',2:'Продвинутый',3:'Экспертный',4:'Мастерский',5:'Грандмастерский',6:'Эпичный'};
-    const technologyTZ = Array.isArray(window.VA34_SPECIAL_TZ)
+    const legacyTechnologyTZ = Array.isArray(window.VA34_SPECIAL_TZ)
       ? window.VA34_SPECIAL_TZ.filter(t => t && t.technology)
       : [];
+    const structuredTechnologyTZ = Array.isArray(R.technologyTZ) ? R.technologyTZ : [];
+    const structuredNames = new Set(structuredTechnologyTZ.map(t => String(t.technology)));
+    const technologyTZ = structuredTechnologyTZ.concat(
+      legacyTechnologyTZ.filter(t => !structuredNames.has(String(t.technology)))
+    );
     const byTechnology = {};
     technologyTZ.forEach(t => {
       const key = String(t.technology);
@@ -72,16 +77,17 @@
     const tzHtml = name => {
       const rows = byTechnology[name] || [];
       if (!rows.length) {
-        return '<details class="tech-tz"><summary>ТЗ технологии</summary><div class="notice">В текущем перенесённом каталоге отдельные ТЗ для этой технологии пока не заданы. Новые правила не добавляются предположительно.</div></details>';
+        return '<details class="tech-tz"><summary>ТЗ технологии</summary><div class="notice">В источнике для этой технологии отдельные ТЗ не заданы. Пассивные бонусы могут существовать независимо от ТЗ.</div></details>';
       }
       const body = rows.map(t => {
         const level = Number(t.requiredLevel);
         const levelLabel = levelNames[level] || (t.requiredLevel ? String(t.requiredLevel) : 'Без уровня');
+        const req = t.requirement ? '<p><strong>Требование:</strong> '+esc(t.requirement)+'</p>' : '';
         const cost = t.cost ? '<p><strong>Стоимость:</strong> '+esc(JSON.stringify(t.cost))+'</p>' : '';
         const roman = level >= 1 && level <= 6 ? ['I','II','III','IV','V','VI'][level-1] : '';
-        return '<article class="catalog-card"><h4>'+esc(t.name)+'</h4><p><strong>Уровень:</strong> '+esc(levelLabel)+(roman ? ' ('+roman+')' : '')+'</p><p><strong>Эффект:</strong> '+esc(t.effect||'—')+'</p>'+cost+'<p class="muted"><strong>Источник:</strong> '+esc(t.source||'исходные правила')+'</p></article>';
+        return '<article class="catalog-card"><h4>'+esc(t.name)+'</h4><p><strong>Уровень:</strong> '+esc(levelLabel)+(roman ? ' ('+roman+')' : '')+'</p>'+req+'<p><strong>Эффект:</strong> '+esc(t.effect||'—')+'</p>'+cost+'<p class="muted"><strong>Источник:</strong> '+esc(t.source||'исходные правила')+'</p></article>';
       }).join('');
-      return '<details class="tech-tz"><summary>ТЗ технологии ('+rows.length+')</summary><div class="catalog-grid compact">'+body+'</div></details>';
+      return '<details class="tech-tz" open><summary>ТЗ технологии ('+rows.length+')</summary><div class="catalog-grid compact">'+body+'</div></details>';
     };
     tech.innerHTML = '<h2>⚙️ Технологии</h2><p>Ниже перенесены технологии из исходного файла. Для каждой показывается базовое описание, а доступные уровни ТЗ будут добавляться из структурированного каталога. Незаполненные уровни не заменяются предположениями.</p><div class="catalog-grid">'+R.technologies.map(x=>'<article class="catalog-card"><h3>⚙ '+esc(x)+'</h3><p>'+esc((R.technologySourceNotes&&R.technologySourceNotes[x]) || R.technologyNotes[x] || 'Описание в источнике не задано.')+'</p>'+tzHtml(x)+'</article>').join('')+'</div>';
   }

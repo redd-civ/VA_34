@@ -89,10 +89,12 @@
         traits: Array.isArray(x.traits) ? x.traits.join(', ') : (x.traits || ''),
         description: x.description || ''
       })),
-      tech: (tech.data || []).map(x => ({
-        id: x.id, name: x.name || '', kind: x.kind || 'technology',
-        level: Number(x.level || 0), cost: Number(x.cost || 0), description: x.description || ''
-      })),
+      tech: (tech.data || [])
+        .filter(x => !['starting_technology','starting_magic'].includes(x.kind))
+        .map(x => ({
+          id: x.id, name: x.name || '', kind: x.kind || 'technology',
+          level: Number(x.level || 0), cost: Number(x.cost || 0), description: x.description || ''
+        })),
       ledger: (ledger.error && ledger.error.code === 'PGRST205' ? [] : (ledger.data || [])).map(x => ({
         id: x.id, turn: Number(x.turn_number || 1), kind: x.kind || 'adjustment',
         amount: Number(x.amount || 0), category: x.category || 'Прочее', description: x.description || '', createdAt: x.created_at || null
@@ -177,6 +179,59 @@
     }
     if (lordError) throw lordError;
 
+    // Стартовые технологии и школы магии храним в developments специальным kind.
+    // Они синхронизируются вместе с обычными развитииями, поэтому общий sync ниже
+    // больше не удаляет их сразу после вставки.
+    const parseStarterRows = (value, kind) => String(value || '')
+      .split(/[\n,]/)
+      .map(s => s.trim())
+      .filter(Boolean)
+      .map(raw => {
+        const m = raw.match(/^(.*?)(?:\s+([1-6]))?$/);
+        return { name: (m?.[1] || raw).trim(), level: Number(m?.[2] || 1), kind };
+      });
+
+    const starterRowsRaw = [
+      ...parseStarterRows(state.lord.startingTech, 'starting_technology'),
+      ...parseStarterRows(state.lord.startingMagic, 'starting_magic')
+    ];
+
+    const { data: existingStarter, error: starterReadError } = await client
+      .from('developments')
+      .select('id,name,kind,level')
+      .eq('lord_id', id)
+      .in('kind', ['starting_technology','starting_magic']);
+    if (starterReadError) throw starterReadError;
+
+    const usedStarterIds = new Set();
+    const starterRows = starterRowsRaw.map(x => {
+      const match = (existingStarter || []).find(row =>
+        !usedStarterIds.has(row.id) &&
+        row.kind === x.kind &&
+        String(row.name || '') === String(x.name || '') &&
+        Number(row.level || 0) === Number(x.level || 0)
+      );
+      if (match) usedStarterIds.add(match.id);
+      return {
+        ...(match ? { id: match.id } : {}),
+        lord_id: id,
+        name: x.name,
+        kind: x.kind,
+        level: x.level,
+        cost: 0,
+        description: ''
+      };
+    });
+
+    const developmentRows = [
+      ...state.tech.map(x => ({
+        ...(isUUID(x.id) ? { id: x.id } : {}),
+        lord_id: id, name: x.name || '', kind: x.kind || 'technology',
+        level: Number(x.level || 0), cost: Number(x.cost || 0), description: x.description || ''
+      })),
+      ...starterRows
+    ];
+
     const tables = [
       ['shards', state.shards.map(x => ({
         ...(isUUID(x.id) ? { id: x.id } : {}),
@@ -201,33 +256,8 @@
         tier: Number.isFinite(Number(x.tier)) ? Number(x.tier) : 1, quantity: Number.isFinite(Number(x.quantity)) ? Number(x.quantity) : 0,
         traits: csv(x.traits), description: x.description || ''
       }))],
-      ['developments', state.tech.map(x => ({
-        ...(isUUID(x.id) ? { id: x.id } : {}),
-        lord_id: id, name: x.name || '', kind: x.kind || 'technology',
-        level: Number(x.level || 0), cost: Number(x.cost || 0), description: x.description || ''
-      }))]
+      ['developments', developmentRows]
     ];
-    // Стартовые технологии и школы магии дублируем в developments специальным kind.
-    // Это позволяет Мастеру видеть выбор даже в старой БД, где в lords ещё нет
-    // колонок starting_tech / starting_magic.
-    const parseStarterRows = (value, kind) => String(value || '').split(/[\\n,]/).map(s => s.trim()).filter(Boolean).map(raw => {
-      const m = raw.match(/^(.*?)(?:\\s+([1-6]))?$/);
-      return { name: (m?.[1] || raw).trim(), level: Number(m?.[2] || 1), kind };
-    });
-    const starterRows = [
-      ...parseStarterRows(state.lord.startingTech, 'starting_technology'),
-      ...parseStarterRows(state.lord.startingMagic, 'starting_magic')
-    ].map(x => ({ lord_id: id, name: x.name, kind: x.kind, level: x.level, cost: 0, description: '' }));
-    const { data: existingStarter, error: starterReadError } = await client.from('developments').select('id,kind').eq('lord_id', id).in('kind',['starting_technology','starting_magic']);
-    if (starterReadError) throw starterReadError;
-    if ((existingStarter || []).length) {
-      const { error } = await client.from('developments').delete().in('id',(existingStarter || []).map(x => x.id));
-      if (error) throw error;
-    }
-    if (starterRows.length) {
-      const { error } = await client.from('developments').insert(starterRows);
-      if (error) throw error;
-    }
 
     const ledgerRows = (state.ledger || []).map(x => ({
       ...(isUUID(x.id) ? { id: x.id } : {}),
@@ -269,7 +299,9 @@
           table === 'heroes' ? state.heroes :
           table === 'troops' ? state.troops : state.tech;
         rows.forEach((row, i) => {
-          if (!row.id && data && data[i] && source[i]) source[i].id = data[i].id;
+          const isStarter = table === 'developments' &&
+            ['starting_technology','starting_magic'].includes(row.kind);
+          if (!row.id && !isStarter && data && data[i] && source[i]) source[i].id = data[i].id;
         });
       }
     }

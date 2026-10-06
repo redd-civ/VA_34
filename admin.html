@@ -2,23 +2,37 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>VA-34 — Администрирование</title>
+<title>VA-34 — Управление игроками</title>
 <link rel="stylesheet" href="cabinet.css">
+<style>
+.admin-toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:18px 0}
+.admin-toolbar input{flex:1;min-width:240px}
+.user-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+.user-card{padding:18px;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(255,255,255,.03)}
+.user-card h3{margin:0 0 6px}.role-badges{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}.role-badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:.8rem;border:1px solid rgba(255,255,255,.15)}
+.role-admin{font-weight:700}.role-master{font-weight:700}.role-player{opacity:.75}.user-meta{font-size:.9rem;line-height:1.6}.user-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+</style>
 </head>
 <body>
 <header class="topbar">
-  <div><div class="eyebrow">✦ ВДОХНОВЕНИЕ АСТРАЛА</div><h1>Администрирование</h1><p>Управление системными статусами пользователей</p></div>
-  <div class="top-actions"><a class="back" href="cabinet.html">👑 Кабинет игрока</a><a class="back" href="auth.html">Выйти / аккаунт</a></div>
+  <div><div class="eyebrow">✦ ВДОХНОВЕНИЕ АСТРАЛА</div><h1>Управление игроками</h1><p>Системные роли и доступ к Мастеру</p></div>
+  <div class="top-actions"><a class="back" href="master.html">👑 Кабинет Мастера</a><a class="back" href="games.html">🎲 Игра</a><a class="back" href="cabinet.html">👤 Кабинет игрока</a><a class="back" href="auth.html">Выйти / аккаунт</a></div>
 </header>
-<main class="content" style="max-width:1100px;margin:30px auto">
+<main class="content" style="max-width:1200px;margin:30px auto">
   <p id="status">Проверка доступа…</p>
   <section id="adminPanel" class="entity" style="display:none">
-    <div class="section-head"><h2>Пользователи</h2><span class="muted">Администратор может назначать и снимать статус Мастера</span></div>
-    <div id="users"></div>
+    <div class="section-head"><div><h2>Игроки</h2><p class="muted">Администратор управляет статусом Мастера. Статус администратора назначается отдельно и не превращает пользователя в Мастера.</p></div></div>
+    <div class="admin-toolbar">
+      <input id="search" type="search" placeholder="Поиск по имени игрока…" autocomplete="off">
+      <select id="roleFilter"><option value="all">Все игроки</option><option value="player">Обычные игроки</option><option value="master">Мастера</option><option value="admin">Администраторы</option></select>
+      <button id="refresh" type="button">↻ Обновить</button>
+    </div>
+    <div id="summary" class="summary"></div>
+    <div id="users" class="user-grid"></div>
   </section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js"></script>
-<script src="admin.js?v=20261006a"></script>
+<script src="supabase-config.js?v=20261006b"></script>
+<script src="admin.js?v=20261006b"></script>
 </body>
 </html>

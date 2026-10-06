@@ -508,3 +508,202 @@ tr:nth-child(even) td {
 .catalog-card h3{margin:0 0 8px;color:var(--heading)}
 .catalog-card p{font-size:14px}
 .catalog-card ul{font-size:14px}
+
+
+/* ===== Энциклопедия: обновлённая навигация ===== */
+.nav-panel {
+  width: 280px;
+  padding: 16px 14px 24px;
+  box-shadow: 3px 0 14px rgba(42,37,32,.06);
+}
+.main-content {
+  margin-left: 300px;
+  max-width: 1180px;
+  padding: 24px 34px 40px;
+}
+.nav-brand {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--heading);
+  letter-spacing: .04em;
+  padding: 4px 8px 14px;
+}
+.nav-action {
+  display: block;
+  padding: 9px 11px !important;
+  margin: 5px 0;
+  background: #eee6d7;
+  border: 1px solid var(--border) !important;
+  border-radius: 7px;
+  font-weight: 600;
+}
+.nav-action-primary {
+  background: var(--accent-light) !important;
+}
+.nav-search {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 14px 0 10px;
+  padding: 7px 9px;
+  background: #fffdf8;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+}
+.nav-search input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+}
+.nav-search-empty {
+  display: none;
+  padding: 4px 8px 8px;
+  color: var(--neutral);
+  font-size: 12px;
+}
+.nav-group {
+  margin: 9px 0;
+  border: 1px solid #ddd3bd;
+  border-radius: 7px;
+  background: rgba(250,246,238,.65);
+  overflow: hidden;
+}
+.nav-group summary {
+  cursor: pointer;
+  padding: 8px 10px;
+  font-weight: 700;
+  color: var(--heading);
+  list-style: none;
+}
+.nav-group summary::-webkit-details-marker { display: none; }
+.nav-group summary::after {
+  content: "▾";
+  float: right;
+  color: var(--neutral);
+}
+.nav-group:not([open]) summary::after { content: "▸"; }
+.nav-group a {
+  padding: 5px 10px !important;
+  margin: 1px 4px;
+  border-radius: 5px;
+}
+.nav-group a:hover {
+  background: var(--accent-light);
+}
+.header-block {
+  margin-bottom: 12px;
+  box-shadow: 0 5px 18px rgba(42,37,32,.08);
+}
+.quick-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 18px;
+  padding: 10px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.quick-nav a {
+  display: inline-block;
+  padding: 7px 11px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #fffdf8;
+  text-decoration: none;
+  font-weight: 600;
+}
+.quick-nav a:hover {
+  background: var(--accent-light);
+}
+.section {
+  padding: 18px 22px;
+  margin: 14px 0;
+  box-shadow: 0 2px 8px rgba(42,37,32,.035);
+}
+.section > h2:first-child {
+  margin-top: 0;
+}
+.catalog-grid {
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+.catalog-card {
+  transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+.catalog-card:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent);
+  box-shadow: 0 4px 12px rgba(42,37,32,.07);
+}
+.catalog-card details {
+  margin-top: 8px;
+}
+.catalog-card summary {
+  cursor: pointer;
+  color: var(--link);
+  font-weight: 600;
+}
+.notice {
+  background: #f5efe2;
+  border-left: 4px solid var(--accent);
+  border-radius: 0 5px 5px 0;
+  padding: 9px 12px;
+  margin: 10px 0;
+}
+.source-link-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 15px;
+  background: #f5efe2;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.source-link-card strong,
+.source-link-card span {
+  display: block;
+}
+.source-link-card span {
+  color: var(--neutral);
+  font-size: 14px;
+  margin-top: 4px;
+}
+.source-link-card .back-btn {
+  white-space: nowrap;
+  margin: 0;
+}
+.source-main {
+  max-width: 1250px;
+}
+.source-intro {
+  border-left: 4px solid var(--accent);
+}
+.rule-source {
+  max-height: none;
+  overflow: visible;
+}
+.rule-source pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 0;
+  padding: 18px;
+  background: #fffdf8;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font: 13px/1.55 Consolas, "Courier New", monospace;
+  color: #39332c;
+}
+.source-nav .nav-title {
+  margin-top: 16px;
+}
+
+/* Упрощаем якорные переходы: заголовки не прячутся под фиксированной панелью */
+[id] {
+  scroll-margin-top: 16px;
+}

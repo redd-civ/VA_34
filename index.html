@@ -3,52 +3,70 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Вдохновение Астрала — Правила</title>
+<title>ВА-34 — Энциклопедия и правила</title>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
 <!-- НАВИГАЦИЯ -->
-<nav class="nav-panel">\n  <a href="auth.html" style="background:#f0c060;font-weight:700;margin-bottom:8px;">👤 Вход / регистрация</a>\n  <a href="cabinet.html" style="background:#e7d6a0;font-weight:700;margin-bottom:8px;">🧭 Личный кабинет</a>
-  <div class="nav-title">✦ Содержание</div>
-  <a href="#reminder">📌 Напоминание о заявке</a>
-  <a href="#example">📜 Пример заявки на ход</a>
-  <a href="#intro">🌌 Вдохновение Астрала</a>
-  <a href="#concepts">📖 Основные понятия</a>
-  <a href="#lord">👑 Владыка</a>
-  <a href="#world">🌍 Мир</a>
-  <a href="#shard">🏝️ Осколок</a>
-  <a href="#ancestral">🏰 Родовой</a>
-  <a href="#source">💠 Источник</a>
-  <a href="#victory">🏆 Критерии победы</a>
-  <a href="#techlevels">📊 Уровни технологий</a>
-  <a href="#actions">⚔️ Действия</a>
-  <a href="#mainactions">🔱 Основные</a>
-  <a href="#extraactions">🔧 Дополнительные</a>
-  <a href="#heroes">🎭 Герои и витязи</a>
-  <a href="#loners">🐺 Одинокие герои</a>
-  <a href="#diplo">🤝 Переговоры и обмен</a>
-  <a href="#general">📋 Общие установки</a>
-  <a href="#order">🔄 Порядок хода</a>
-  <a href="#record">📝 Для записи</a>
-  <a href="#lordapp">👑 Заявка Владыки</a>
-  <a href="#lonerapp">🐾 Одинокие</a>
-  <a href="#lonerform">🦁 Заявка одиночки</a>
-  <a href="#examples2">🗒️ Примеры ходов</a>
-  <a href="#races">🧬 Расы</a>
-  <a href="#troops">🛡️ Рода войск</a>
-  <a href="#resources">💎 Ресурсы</a>
-  <a href="#magic">🔮 Школы магии</a>
-  <a href="#terrain">🌲 Ландшафт</a>
-  <a href="#skills">⚡ Навыки героев</a>
-  <a href="#perks">✨ Перки героев</a>
-  <a href="#tech">⚙️ Технологии</a>
-  <a href="#special-tz">🧩 Специальные ТЗ</a>
-  <a href="#source-rules">📚 Полный источник</a>
-  <a href="#coverage">📚 Аудит полноты правил</a>
-  <a href="#mechanics">🧮 Механика и ограничения</a>
-  <a href="#lords-pages">👑 Страницы Владык</a>
-  <a href="#turns-pages">📋 Ход ИС</a>
+<nav class="nav-panel">
+  <div class="nav-brand">✦ ВА-34</div>
+  <a class="nav-action nav-action-primary" href="auth.html">👤 Вход / регистрация</a>
+  <a class="nav-action" href="cabinet.html">🧭 Личный кабинет</a>
+
+  <label class="nav-search">
+    <span>🔎</span>
+    <input id="navSearch" type="search" placeholder="Поиск по разделам…" autocomplete="off">
+  </label>
+  <div id="navSearchEmpty" class="nav-search-empty">Ничего не найдено</div>
+
+  <details class="nav-group" open>
+    <summary>📖 Основы</summary>
+    <a href="#reminder">📌 Заявка на ход</a>
+    <a href="#example">📜 Пример заявки</a>
+    <a href="#intro">🌌 Вдохновение Астрала</a>
+    <a href="#concepts">📖 Основные понятия</a>
+    <a href="#victory">🏆 Победа</a>
+  </details>
+
+  <details class="nav-group" open>
+    <summary>⚔️ Игровая система</summary>
+    <a href="#techlevels">📊 Уровни развития</a>
+    <a href="#actions">⚔️ Действия</a>
+    <a href="#mainactions">🔱 Основные действия</a>
+    <a href="#extraactions">🔧 Дополнительные действия</a>
+    <a href="#heroes">🎭 Герои и витязи</a>
+    <a href="#loners">🐺 Одинокие герои</a>
+    <a href="#diplo">🤝 Переговоры и обмен</a>
+    <a href="#general">📋 Общие установки</a>
+    <a href="#order">🔄 Порядок хода</a>
+  </details>
+
+  <details class="nav-group" open>
+    <summary>🧬 Справочники</summary>
+    <a href="#races">🧬 Расы</a>
+    <a href="#troops">🛡️ Рода войск</a>
+    <a href="#resources">💎 Ресурсы</a>
+    <a href="#magic">🔮 Школы магии</a>
+    <a href="#terrain">🌲 Ландшафт</a>
+    <a href="#skills">⚡ Навыки героев</a>
+    <a href="#perks">✨ Перки героев</a>
+    <a href="#tech">⚙️ Технологии</a>
+    <a href="#special-tz">🧩 Специальные ТЗ</a>
+  </details>
+
+  <details class="nav-group">
+    <summary>📚 Правила и источники</summary>
+    <a href="source.html">📚 Полный источник</a>
+    <a href="#coverage">📚 Аудит полноты правил</a>
+    <a href="#mechanics">🧮 Механика и ограничения</a>
+  </details>
+
+  <details class="nav-group">
+    <summary>👑 Игровые страницы</summary>
+    <a href="#lords-pages">👑 Страницы Владык</a>
+    <a href="#turns-pages">📋 Ход ИС</a>
+  </details>
 </nav>
 
 <!-- ОСНОВНОЙ КОНТЕНТ -->
@@ -59,7 +77,14 @@
   <p>✦ 🌌 ✦</p>
   <h1>Вдохновение Астрала</h1>
   <p>Стратегия по мотивам вселенной Эадора — полные правила</p>
+</div><div class="quick-nav" aria-label="Быстрый доступ">
+  <a href="#races">🧬 Расы</a>
+  <a href="#tech">⚙️ Технологии</a>
+  <a href="#magic">🔮 Магия</a>
+  <a href="#troops">🛡️ Войска</a>
+  <a href="source.html">📚 Полный источник</a>
 </div>
+
 
 <!-- НАПОМИНАНИЕ -->
 <section id="reminder" class="section">
@@ -389,7 +414,17 @@
 </ul>
 </section>
 
-<section id="source-rules" class="section"><h2>📚 Полный источник правил</h2><div id="source-rules-content"></div></section>
+<section id="source-rules" class="section source-link-section">
+<h2>📚 Источники и правила</h2>
+<p>Полный текст исходного свода правил больше не загромождает основную страницу энциклопедии.</p>
+<div class="source-link-card">
+  <div>
+    <strong>Полный источник правил</strong>
+    <span>Оригинальный текст, перенесённый в справочник без сокращений и дополнительных трактовок.</span>
+  </div>
+  <a class="back-btn" href="source.html">Открыть полный источник →</a>
+</div>
+</section>
 
 <section id="coverage" class="section">
 <h2>📚 Аудит полноты правил</h2>
@@ -561,5 +596,5 @@
 </div>
 
 </div>
-<script src="rules-data.js?v=20261006e"></script><script src="special-tz-data.js?v=20261006b"></script><script src="rules-source-data.js?v=20261006b"></script><script src="rules-catalog.js?v=20261006m"></script>\n</body>
+<script src="rules-data.js?v=20261006e"></script><script src="special-tz-data.js?v=20261006b"></script><script src="rules-source-data.js?v=20261006b"></script><script src="rules-catalog.js?v=20261006m"></script>\n<script src="encyclopedia-ui.js?v=20261006a"></script>\n</body>
 </html>

@@ -118,18 +118,22 @@
     const extractMagicTZFromSource = () => {
       const source = typeof window.VA34_RULES_SOURCE === 'string' ? window.VA34_RULES_SOURCE : '';
       if (!source) return [];
-      const lines = source.split(/\n/);
+      const allLines = source.split(/\n/);
+      const start = allLines.findIndex(line => String(line).replace(/\u00a0/g,' ').trim() === 'Школы Магии');
+      const end = allLines.findIndex((line,i) => i > start && String(line).replace(/\u00a0/g,' ').trim() === 'Уровни ТЗ');
+      if (start < 0 || end < 0 || end <= start) return [];
+      const lines = allLines.slice(start + 1, end);
+      const cleanHeading = value => String(value).replace(/\u00a0/g,' ').replace(/^\s*\d+\s*[.)]\s*/,'').trim();
       const starts = magicSourceSections.map(([school,heading]) => {
         const i = lines.findIndex(line => {
-          const clean = String(line).replace(/\u00a0/g,' ').trim();
+          const clean = cleanHeading(line);
           return clean === heading || clean.startsWith(heading+' -') || clean.startsWith(heading+' –') || clean.startsWith(heading+' —');
         });
         return i < 0 ? null : {school,heading,index:i};
       }).filter(Boolean).sort((a,b)=>a.index-b.index);
       const result = [];
       starts.forEach((item,pos) => {
-        const end = pos+1 < starts.length ? starts[pos+1].index : lines.length;
-        const blockLines = lines.slice(item.index+1,end);
+        const blockLines = lines.slice(item.index+1, pos+1 < starts.length ? starts[pos+1].index : lines.length);
         const levelStarts = [];
         blockLines.forEach((line,i) => {
           const clean=String(line).replace(/\u00a0/g,' ').trim();

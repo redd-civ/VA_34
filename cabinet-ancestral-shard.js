@@ -20,11 +20,41 @@
     shard.buildings=Number(shard.buildings||0);
   }
 
+  async function persistApplicationFields(){
+    try{
+      if(typeof state==='undefined'||!state.lord||!window.supabase||!window.VA34_SUPABASE)return;
+      const client=window.supabase.createClient(VA34_SUPABASE.url,VA34_SUPABASE.publishableKey);
+      const auth=await client.auth.getUser();
+      const user=auth.data.user;
+      if(!user)return;
+      let q=client.from('lords').select('id').eq('player_id',user.id).order('created_at',{ascending:false}).limit(1);
+      const gameId=localStorage.getItem('va34_current_game_id');
+      if(gameId)q=q.eq('game_id',gameId);
+      const found=await q.maybeSingle();
+      if(found.error||!found.data)return;
+      const lord=state.lord;
+      await client.from('lords').update({
+        world_name:lord.worldName||'',
+        player_name:lord.playerName||'',
+        starting_tech:lord.startingTech||'',
+        starting_magic:lord.startingMagic||'',
+        starting_troops:lord.startingTroops||'',
+        updated_at:new Date().toISOString()
+      }).eq('id',found.data.id);
+    }catch(e){
+      // Основное сохранение не блокируем, если миграция дополнительных полей
+      // ещё не выполнена в Supabase.
+      console.warn('VA34 application fields were not persisted:',e);
+    }
+  }
+
   if(typeof save==='function'){
     const originalSave=save;
     save=function(){
       ensureAncestralShard();
-      return originalSave.apply(this,arguments);
+      const result=originalSave.apply(this,arguments);
+      persistApplicationFields();
+      return result;
     };
   }
 

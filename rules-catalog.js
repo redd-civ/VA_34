@@ -102,8 +102,8 @@
   }
   const shard = document.getElementById('shard');
   if (shard) shard.innerHTML = '<h2>🏝️ Осколок</h2><table><tr><th>Размер</th><th>Значение</th></tr>'+R.shardSizes.map(s=>'<tr><td>'+esc(s.name)+'</td><td>'+s.value+'</td></tr>').join('')+'</table><p><strong>Типы:</strong> '+R.shardTypes.map(s=>esc(s.name)).join(', ')+'.</p><p><strong>Настроения:</strong> '+R.moods.map(esc).join(', ')+'.</p><ul><li>Лимит зданий: floor(размер); родовой — 4.</li><li>Хранение энергии: 20 э + 10 э за осколок.</li><li>Новый контент начинает действовать со следующего хода.</li></ul>';
-  const source = document.getElementById('source');
-  if (source) source.innerHTML = '<h2>💠 Источник</h2><ul><li>Сохраняется после захвата и продолжает давать преимущества.</li><li>Сила определяется гарнизоном.</li><li>Гарнизон уменьшается на 1 каждый ход, минимум до 1.</li><li>Защита обычного мира на источник не распространяется.</li><li>Источник можно захватить или уничтожить.</li></ul>';
+  const sourceShard = document.getElementById('source');
+  if (sourceShard) sourceShard.innerHTML = '<h2>💠 Источник</h2><ul><li>Сохраняется после захвата и продолжает давать преимущества.</li><li>Сила определяется гарнизоном.</li><li>Гарнизон уменьшается на 1 каждый ход, минимум до 1.</li><li>Защита обычного мира на источник не распространяется.</li><li>Источник можно захватить или уничтожить.</li></ul>';
   const mechanics = document.getElementById('mechanics');
   if (mechanics) {
     const fmt = v => esc(typeof v === 'object' ? JSON.stringify(v) : v);

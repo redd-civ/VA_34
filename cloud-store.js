@@ -105,7 +105,7 @@
     if (!client || !user) throw new Error('Нет авторизованного пользователя.');
     if (!gameId) throw new Error('Сначала выберите игру.');
     if (lordId) return lordId;
-    const { data, error } = await client.from('lords').insert({
+    let insertPayload = {
       player_id: user.id,
       game_id: gameId,
       name: '',
@@ -118,7 +118,12 @@
       traits: '',
       items: '',
       resources: ''
-    }).select('id').single();
+    };
+    let { data, error } = await client.from('lords').insert(insertPayload).select('id').single();
+    if (error && error.code === 'PGRST204') {
+      delete insertPayload.world_name;
+      ({ data, error } = await client.from('lords').insert(insertPayload).select('id').single());
+    }
     if (error) throw error;
     lordId = data.id;
     return lordId;
@@ -154,8 +159,21 @@
     };
     let { error: lordError } = await client.from('lords').update(lordPayload).eq('id', id);
     if (lordError && lordError.code === 'PGRST204') {
-      delete lordPayload.world_name;
-      ({ error: lordError } = await client.from('lords').update(lordPayload).eq('id', id));
+      // Старые инсталляции VA-34 могут не иметь новых колонок lords.
+      // Повторяем запись только с базовыми полями, чтобы облако не блокировало кабинет.
+      const basePayload = {
+        name: lordPayload.name,
+        race: lordPayload.race,
+        motto: lordPayload.motto,
+        energy: lordPayload.energy,
+        status: lordPayload.status,
+        ability: lordPayload.ability,
+        traits: lordPayload.traits,
+        items: lordPayload.items,
+        resources: lordPayload.resources,
+        updated_at: lordPayload.updated_at
+      };
+      ({ error: lordError } = await client.from('lords').update(basePayload).eq('id', id));
     }
     if (lordError) throw lordError;
 

@@ -17,12 +17,25 @@
     master=!!me.data?.is_master;
     s.textContent='Аккаунт: '+(me.data?.player_name||me.data?.display_name||user.email||user.id);
 
-    const result=await db.from('games').select('*').order('created_at',{ascending:true}).limit(1).maybeSingle();
+    let result=await db.from('games').select('*').order('created_at',{ascending:true}).limit(1).maybeSingle();
     if(result.error) throw result.error;
     game=result.data;
 
+    // Игра одна. Если её ещё нет, она создаётся автоматически при первом входе назначенного Мастера.
+    if(!game && master){
+      const created=await db.from('games').insert({
+        master_id:user.id,
+        name:'Вдохновение Астрала',
+        description:'Основная кампания VA-34.',
+        max_players:100,
+        status:'open'
+      }).select('*').single();
+      if(created.error) throw created.error;
+      game=created.data;
+    }
+
     if(!game){
-      document.getElementById('game').innerHTML='<div class="notice">Основная игра пока не настроена Мастером.</div>';
+      document.getElementById('game').innerHTML='<div class="notice">Основная игра пока не настроена. Обратитесь к Мастеру.</div>';
       document.getElementById('myApplicationSection').style.display='none';
       return;
     }

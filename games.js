@@ -125,10 +125,15 @@
     const starterMagicRows=developments.filter(x=>x.kind==='starting_magic');
     const starterTech=lord?.starting_tech || starterTechRows.map(x=>x.name+' '+Number(x.level||1)).join(', ');
     const starterMagic=lord?.starting_magic || starterMagicRows.map(x=>x.name+' '+Number(x.level||1)).join(', ');
+    const starterTroops=lord?.starting_troops || troops.map(x=>{
+      const qty=Number(x.quantity||0);
+      const tier=Number(x.tier||1);
+      return x.name+(qty ? ' × '+qty : '')+(tier ? ' (ур. '+tier+')' : '');
+    }).join(', ');
     let html='';
     if(!lord)html='<div class="warning">Карточка Владыки ещё не создана.</div>';
     else{
-      html+=section('👑 Владыка',row('Имя',lord.name)+row('Игрок',lord.player_name||player.player_name||player.display_name||'—')+row('Раса',lord.race)+row('Мир',lord.world_name||lord.worldName)+row('Статус',lord.status)+row('Начальная энергия',lord.energy)+row('Девиз',lord.motto)+row('Способность',lord.ability)+row('Особенности',lord.traits)+row('Артефакты / предметы',lord.items)+row('Ресурсы и постоянные источники дохода',lord.resources)+row('Стартовые рода войск',lord.starting_troops)+row('Стартовые технологии',starterTech)+row('Стартовые школы магии',starterMagic));
+      html+=section('👑 Владыка',row('Имя',lord.name)+row('Игрок',lord.player_name||player.player_name||player.display_name||'—')+row('Раса',lord.race)+row('Мир',lord.world_name||lord.worldName)+row('Статус',lord.status)+row('Начальная энергия',lord.energy)+row('Девиз',lord.motto)+row('Способность',lord.ability)+row('Особенности',lord.traits)+row('Артефакты / предметы',lord.items)+row('Ресурсы и постоянные источники дохода',lord.resources)+row('Стартовые рода войск',starterTroops)+row('Стартовые технологии',starterTech)+row('Стартовые школы магии',starterMagic));
     }
 
     const ancestral=shards.find(x=>x.type==='ancestral'), ordinary=shards.filter(x=>x.type!=='ancestral');

@@ -141,61 +141,74 @@
       const source = typeof window.VA34_RULES_SOURCE === 'string' ? window.VA34_RULES_SOURCE : '';
       if (!source) return [];
       const allLines = source.split(/\n/);
-      const cleanHeading = value => String(value).replace(/\u00a0/g,' ').replace(/^\s*\d+\s*[.)]\s*/,'').trim();
-      const normalized = value => cleanHeading(value).replace(/\f/g,'').trim();
-      const hasLevelNearby = index => {
-        for (let j=index+1; j<Math.min(allLines.length,index+12); j++) {
-          const line = normalized(allLines[j]);
-          if (/^(Экспертн|Мастерск|Грандмастерск|Грандамастерск|Эпическ)/i.test(line)) return true;
-        }
-        return false;
-      };
-      const starts = [];
-      magicSourceSections.forEach(([school,headings]) => {
-        let best = null;
-        headings.forEach(heading => {
-          allLines.forEach((line,i) => {
-            const clean = normalized(line);
-            if (clean === heading && hasLevelNearby(i)) {
-              if (!best || i > best.index) best = {school,heading,index:i};
-            }
-          });
-        });
-        if (best) starts.push(best);
-      });
-      starts.sort((a,b)=>a.index-b.index);
+      const clean = value => String(value).replace(/\u00a0/g,' ').replace(/^\s*\d+\s*[.)]\s*/,'').replace(/\s+/g,' ').trim();
 
-      // ТЗ школы заканчивается не только на следующей школе магии,
-      // но и на следующем заголовке технологии. Это важно для
-      // «Магии порталов»: после неё в исходнике идут технологические ТЗ.
-      const boundaryHeadings = new Set();
-      magicSourceSections.forEach(([,headings]) => headings.forEach(h => boundaryHeadings.add(h)));
-      if (Array.isArray(R.technologies)) {
-        R.technologies.forEach(name => {
-          const clean = String(name).replace(/\s+/g,' ').trim();
-          boundaryHeadings.add(clean);
-          clean.split(/\s+и\s+/i).forEach(part => boundaryHeadings.add(part.trim()));
-        });
-      }
-      const nextBoundary = startIndex => {
-        for (let i=startIndex+1; i<allLines.length; i++) {
-          if (boundaryHeadings.has(normalized(allLines[i]))) return i;
+      // IMPORTANT: magic TЗ are extracted only from the actual «Уровни ТЗ»
+      // catalogue. This prevents later technology/update headings from
+      // becoming part of «Магия порталов» or another school.
+      const tzStart = allLines.findIndex(x => clean(x) === 'Уровни ТЗ');
+      const tzEnd = allLines.findIndex((x,i) => i > tzStart && clean(x) === 'Допцифры к ТЗ');
+      if (tzStart < 0 || tzEnd < 0) return [];
+
+      const magicHeadings = new Set();
+      magicSourceSections.forEach(([school,headings]) => headings.forEach(h => magicHeadings.add(clean(h))));
+
+      const technologyHeadings = new Set([
+        'Сельское хозяйство - пассивно бонусный доход +1/1.5/2/3/4 на',
+        'Экономика - пассивно бонусный доход +1/1.5/2/3/4',
+        'Дипломатия - пассивно плюс к переговорам',
+        'Кузнечное дело (металлургия) -',
+        'Инженерное дело - пассивно удешевление построек - 1 на',
+        'Военное дело - пассивно плюс в бою',
+        'Артефактология/Артефакторика -',
+        'Разведка -','Маскировка -','Шпионаж -','Контрразведка – эффективно контрит шпионаж, разведку и',
+        'Пропаганда - пассивно немного ослабляет шпионаж и повышает',
+        'Огнестрел - на старте что-то типа аркебуз и пистолей.',
+        'Кораблестроение - на старте что-то типа античных галер',
+        'Энерговооружение - пассивно повышается дальнобойность и',
+        'Энергощиты',
+        'Кристалломантия (пассивно укрепляет Кристаллинов)',
+        'Контрабанда - пассивно растет защита и сложность обнаружения',
+        'Алхимия - гибкие и сильные эффекты. Слабые зелья требуют',
+        'Химия - вспомогательная технология для хайтека',
+        'Роботизация - доступна высокотехнологичным мирам'
+      ].map(clean));
+
+      const starts = [];
+      for (let i=tzStart+1; i<tzEnd; i++) {
+        const heading = clean(allLines[i]);
+        if (!magicHeadings.has(heading)) continue;
+        // A real magic-TЗ heading has a level marker shortly below it.
+        let hasLevel = false;
+        for (let j=i+1; j<Math.min(tzEnd,i+12); j++) {
+          if (/^(Экспертн|Мастерск|Грандмастерск|Грандамастерск|Эпическ)/i.test(clean(allLines[j]))) {
+            hasLevel = true; break;
+          }
+          if (magicHeadings.has(clean(allLines[j])) || technologyHeadings.has(clean(allLines[j]))) break;
         }
-        return allLines.length;
+        if (hasLevel) starts.push({school:magicSourceSections.find(([s,hs]) => hs.some(h=>clean(h)===heading))[0], heading, index:i});
+      }
+
+      const boundaryHeadings = new Set([...magicHeadings, ...technologyHeadings]);
+      const nextBoundary = startIndex => {
+        for (let i=startIndex+1; i<tzEnd; i++) {
+          if (boundaryHeadings.has(clean(allLines[i]))) return i;
+        }
+        return tzEnd;
       };
 
       const result = [];
-      starts.forEach((item) => {
+      starts.forEach(item => {
         const blockLines = allLines.slice(item.index+1, nextBoundary(item.index));
         const levelStarts = [];
         blockLines.forEach((line,i) => {
-          const clean=normalized(line);
-          for(const [level,re] of magicLevelPatterns) if(re.test(clean)){levelStarts.push([i,level]);break;}
+          const value=clean(line);
+          for (const [level,re] of magicLevelPatterns) if (re.test(value)) { levelStarts.push([i,level]); break; }
         });
-        levelStarts.forEach(([s,level],n)=>{
-          const e=n+1<levelStarts.length?levelStarts[n+1][0]:blockLines.length;
+        levelStarts.forEach(([s,level],n) => {
+          const e=n+1<levelStarts.length ? levelStarts[n+1][0] : blockLines.length;
           const effect=normalizeMagicText(blockLines.slice(s,e).join('\n'));
-          if(effect) result.push({
+          if (effect) result.push({
             id:'source-magic-'+result.length,
             name:item.school+' — '+({3:'Экспертное',4:'Мастерское',5:'Грандмастерское',6:'Эпическое'}[level]||'ТЗ'),
             category:'magic_level',school:item.school,requiredLevel:level,effect,

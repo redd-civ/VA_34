@@ -143,12 +143,9 @@
         return '<details class="tech-tz"><summary>ТЗ технологии</summary><div class="notice">ТЗ заявлено в исходном файле, но ещё не перенесено в структурированный каталог.</div></details>';
       }
       const body = rows.map(t => {
-        const level = Number(t.requiredLevel);
-        const levelLabel = levelNames[level] || (t.requiredLevel ? String(t.requiredLevel) : 'Без уровня');
         const req = t.requirement ? '<p><strong>Требование:</strong> '+esc(t.requirement)+'</p>' : '';
         const cost = t.cost ? '<p><strong>Стоимость:</strong> '+esc(JSON.stringify(t.cost))+'</p>' : '';
-        const roman = level >= 1 && level <= 6 ? ['I','II','III','IV','V','VI'][level-1] : '';
-        return '<article class="catalog-card"><h4>'+esc(t.name)+'</h4><p><strong>Уровень:</strong> '+esc(levelLabel)+(roman ? ' ('+roman+')' : '')+'</p>'+req+'<p><strong>Эффект:</strong> '+esc(t.effect||'—')+'</p>'+cost+'<p class="muted"><strong>Источник:</strong> '+esc(t.source||'исходные правила')+'</p></article>';
+        return '<article class="catalog-card"><h4>'+esc(t.name)+'</h4>'+req+'<p><strong>Эффект:</strong> '+esc(t.effect||'—')+'</p>'+cost+'<p class="muted"><strong>Источник:</strong> '+esc(t.source||'исходные правила')+'</p></article>';
       }).join('');
       return '<details class="tech-tz"><summary>ТЗ технологии ('+rows.length+')</summary><div class="catalog-grid compact">'+body+'</div></details>';
     };

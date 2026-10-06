@@ -5,7 +5,34 @@
   const list = arr => '<ul>'+arr.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>';
 
   const races = document.getElementById('races');
-  if (races) races.innerHTML = '<h2>🧬 Расы</h2><p>Раса влияет на стоимость развития, свойства войск, доступные направления и дипломатию. Ниже — полный текущий справочник рас проекта; положительные и отрицательные особенности взяты из текущей базы правил и не заменяются догадками.</p><div class="catalog-grid">'+R.races.map(r => '<article class="catalog-card"><h3>'+esc(r.name)+'</h3><p><strong>Карма / мировоззрение:</strong> '+esc(r.alignment)+'</p><p><strong>Особенности:</strong></p>'+list(r.traits)+'<p><strong>Ограничения:</strong></p>'+list(r.limitations)+'</article>').join('')+'</div>';
+  if (races) {
+    const rawRaceSource = window.VA34_RULES_SOURCE ? String(window.VA34_RULES_SOURCE).replace(/\\\\n/g,'\\n') : '';
+    const raceSourceStart = rawRaceSource.indexOf('Вдохновение Астрала. Расы');
+    const raceSourceEnd = rawRaceSource.indexOf('Список родов войск', raceSourceStart);
+    const raceSource = raceSourceStart >= 0
+      ? rawRaceSource.slice(raceSourceStart, raceSourceEnd > raceSourceStart ? raceSourceEnd : rawRaceSource.length)
+      : '';
+    const raceBlock = name => {
+      if (!raceSource) return '';
+      const pos = raceSource.indexOf('\\n'+String(name)+'\\n');
+      if (pos < 0) return '';
+      const start = pos + 1;
+      let end = raceSource.length;
+      R.races.forEach(other => {
+        if (other.name === name) return;
+        const p = raceSource.indexOf('\\n'+String(other.name)+'\\n', start);
+        if (p >= 0 && p < end) end = p;
+      });
+      return raceSource.slice(start, end).trim();
+    };
+    const cards = R.races.map(r => {
+      const block = raceBlock(r.name);
+      return '<article class="catalog-card"><h3>🧬 '+esc(r.name)+'</h3>'+
+        (block ? '<details><summary>Описание и свойства из исходного файла</summary><pre class="race-source">'+esc(block)+'</pre></details>' : '<p class="notice">Запись есть в источнике, но автоматическое извлечение блока не удалось.</p>')+
+        '</article>';
+    }).join('');
+    races.innerHTML = '<h2>🧬 Расы</h2><p>Проверено по библиотечному файлу «компиляция ВА34.pdf». В справочник внесены только расы и подвиды, реально присутствующие в источнике. Текст свойств не пересказывается и не дополняется предположениями.</p><div class="catalog-grid">'+cards+'</div>';
+  };
 
   const troops = document.getElementById('troops');
   if (troops) troops.innerHTML = '<h2>🛡️ Рода войск</h2><p>Текущий справочник содержит следующие базовые рода войск:</p><div class="catalog-grid compact">'+R.troopTypes.map(x=>'<article class="catalog-card"><h3>🛡️ '+esc(x)+'</h3></article>').join('')+'</div><div class="notice">Отдельные числовые характеристики родов войск в опубликованном справочнике не заданы и поэтому здесь не добавляются.</div>';

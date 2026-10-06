@@ -855,7 +855,8 @@ window.VA34_RULES = {
           "id": "race_148",
           "name": "Дьяволы"
       }
-  ]  techLevels:[
+  ],
+  techLevels:[
     {id:"basic",name:"Базовый",rank:1},
     {id:"advanced",name:"Продвинутый",rank:2},
     {id:"expert",name:"Экспертный",rank:3},

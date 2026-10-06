@@ -54,7 +54,15 @@
         ability: lord.ability || '',
         traits: lord.traits || '',
         items: lord.items || '',
-        resources: lord.resources || ''
+        resources: lord.resources || '',
+        ancestralName: lord.ancestral_name || '',
+        ancestralRace: lord.ancestral_race || '',
+        ancestralTerrain: lord.ancestral_terrain || '',
+        ancestralIncome: Number(lord.ancestral_income || 0),
+        ancestralGarrison: Number(lord.ancestral_garrison || 0),
+        startingTroops: lord.starting_troops || '',
+        startingMagic: lord.starting_magic || '',
+        startingTech: lord.starting_tech || ''
       },
       shards: (shards.data || []).map(x => ({
         id: x.id, name: x.name || '', type: x.type || 'ordinary',
@@ -134,6 +142,14 @@
       traits: state.lord.traits || '',
       items: state.lord.items || '',
       resources: state.lord.resources || '',
+      ancestral_name: state.lord.ancestralName || '',
+      ancestral_race: state.lord.ancestralRace || '',
+      ancestral_terrain: state.lord.ancestralTerrain || '',
+      ancestral_income: Number(state.lord.ancestralIncome || 0),
+      ancestral_garrison: Number(state.lord.ancestralGarrison || 0),
+      starting_troops: state.lord.startingTroops || '',
+      starting_magic: state.lord.startingMagic || '',
+      starting_tech: state.lord.startingTech || '',
       updated_at: new Date().toISOString()
     };
     let { error: lordError } = await client.from('lords').update(lordPayload).eq('id', id);

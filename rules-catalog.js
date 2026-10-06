@@ -121,36 +121,46 @@
       const source = typeof window.VA34_RULES_SOURCE === 'string' ? window.VA34_RULES_SOURCE : '';
       if (!source) return [];
       const allLines = source.split(/\n/);
-      const start = allLines.findIndex(line => String(line).replace(/\u00a0/g,' ').trim() === 'Школы Магии');
-      const end = allLines.findIndex((line,i) => i > start && String(line).replace(/\u00a0/g,' ').trim() === 'Уровни ТЗ');
-      if (start < 0 || end < 0 || end <= start) return [];
-      const lines = allLines.slice(start + 1, end);
       const cleanHeading = value => String(value).replace(/\u00a0/g,' ').replace(/^\s*\d+\s*[.)]\s*/,'').trim();
-      const starts = magicSourceSections.map(([school,headings]) => {
-        let found = null;
+      const normalized = value => cleanHeading(value).replace(/\f/g,'').trim();
+      const hasLevelNearby = index => {
+        for (let j=index+1; j<Math.min(allLines.length,index+12); j++) {
+          const line = normalized(allLines[j]);
+          if (/^(Экспертн|Мастерск|Грандмастерск|Грандамастерск|Эпическ)/i.test(line)) return true;
+        }
+        return false;
+      };
+      const starts = [];
+      magicSourceSections.forEach(([school,headings]) => {
+        let best = null;
         headings.forEach(heading => {
-          for (let i = lines.length - 1; i >= 0; i--) {
-            const clean = cleanHeading(lines[i]);
-            if (clean === heading || clean.startsWith(heading+' -') || clean.startsWith(heading+' –') || clean.startsWith(heading+' —')) {
-              if (found === null || i > found.index) found = {school,heading,index:i};
-              break;
+          allLines.forEach((line,i) => {
+            const clean = normalized(line);
+            if (clean === heading && hasLevelNearby(i)) {
+              if (!best || i > best.index) best = {school,heading,index:i};
             }
-          }
+          });
         });
-        return found;
-      }).filter(Boolean).sort((a,b)=>a.index-b.index);
+        if (best) starts.push(best);
+      });
+      starts.sort((a,b)=>a.index-b.index);
       const result = [];
       starts.forEach((item,pos) => {
-        const blockLines = lines.slice(item.index+1, pos+1 < starts.length ? starts[pos+1].index : lines.length);
+        const blockLines = allLines.slice(item.index+1, pos+1 < starts.length ? starts[pos+1].index : allLines.length);
         const levelStarts = [];
         blockLines.forEach((line,i) => {
-          const clean=String(line).replace(/\u00a0/g,' ').trim();
+          const clean=normalized(line);
           for(const [level,re] of magicLevelPatterns) if(re.test(clean)){levelStarts.push([i,level]);break;}
         });
         levelStarts.forEach(([s,level],n)=>{
           const e=n+1<levelStarts.length?levelStarts[n+1][0]:blockLines.length;
           const effect=normalizeMagicText(blockLines.slice(s,e).join('\n'));
-          if(effect) result.push({id:'source-magic-'+result.length,name:item.school+' — '+({3:'Экспертное',4:'Мастерское',5:'Грандмастерское',6:'Эпическое'}[level]||'ТЗ'),category:'magic_level',school:item.school,requiredLevel:level,effect,source:'компиляция ВА34.pdf — раздел «'+item.heading+'»'});
+          if(effect) result.push({
+            id:'source-magic-'+result.length,
+            name:item.school+' — '+({3:'Экспертное',4:'Мастерское',5:'Грандмастерское',6:'Эпическое'}[level]||'ТЗ'),
+            category:'magic_level',school:item.school,requiredLevel:level,effect,
+            source:'компиляция ВА34.pdf — раздел «'+item.heading+'»'
+          });
         });
       });
       return result;

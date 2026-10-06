@@ -76,8 +76,14 @@
     });
     const tzHtml = name => {
       const rows = byTechnology[name] || [];
-      if (!rows.length) {
-        return '<details class="tech-tz"><summary>ТЗ технологии</summary><div class="notice">В источнике для этой технологии отдельные ТЗ не заданы. Пассивные бонусы могут существовать независимо от ТЗ.</div></details>';
+      const hasTZ = R.technologyTZStatus && Object.prototype.hasOwnProperty.call(R.technologyTZStatus, name)
+        ? R.technologyTZStatus[name]
+        : rows.length > 0;
+      if (!rows.length && !hasTZ) {
+        return '<details class="tech-tz"><summary>ТЗ технологии</summary><div class="notice">ТЗ не предусмотрено согласно исходному файлу. Пассивные бонусы этой технологии действуют независимо от ТЗ.</div></details>';
+      }
+      if (!rows.length && hasTZ) {
+        return '<details class="tech-tz"><summary>ТЗ технологии</summary><div class="notice">ТЗ заявлено в исходном файле, но ещё не перенесено в структурированный каталог.</div></details>';
       }
       const body = rows.map(t => {
         const level = Number(t.requiredLevel);

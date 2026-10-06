@@ -3,37 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>VA-34 — Игры</title>
+<title>VA-34 — Игра</title>
 <link rel="stylesheet" href="cabinet.css">
 </head>
 <body>
 <main style="max-width:1100px;margin:30px auto;padding:20px">
   <p><a href="cabinet.html">← Личный кабинет</a></p>
-  <h1>Игры VA-34</h1><p><a class="back" href="master.html">👑 Кабинет мастера</a></p>
+  <h1>Игра VA-34</h1>
+  <p><a class="back" href="master.html">👑 Кабинет мастера</a></p>
   <p id="status">Загрузка…</p>
 
   <section>
-    <h2>Доступные игры</h2>
-    <div id="games"></div>
+    <h2>Основная игра</h2>
+    <div id="game"></div>
   </section>
 
-  <section>
-    <h2>Мои заявки</h2>
-    <div id="myApplications"></div>
+  <section id="myApplicationSection">
+    <h2>Моя заявка</h2>
+    <div id="myApplication"></div>
   </section>
 
   <section id="masterPanel" style="display:none">
-    <h2>Мастер: создать игру</h2>
-    <form id="createGame" class="entity">
-      <input name="name" required placeholder="Название игры">
-      <textarea name="description" placeholder="Описание и правила кампании"></textarea>
-      <label>Максимум игроков
-        <input name="max" type="number" min="1" max="100" value="10">
-      </label>
-      <button class="primary">Создать игру</button>
-    </form>
-    <h2>Мои игры и заявки игроков</h2>
-    <div id="myGames"></div>
+    <h2>Мастер: заявки игроков</h2>
+    <p class="muted">Игра уже создана. Мастер только принимает или отклоняет заявки игроков.</p>
+    <div id="applications"></div>
   </section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

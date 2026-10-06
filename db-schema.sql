@@ -24,9 +24,21 @@ create table if not exists public.lords (
   traits text default '',
   items text default '',
   resources text default '',
+  world_name text default '',
+  player_name text default '',
+  starting_tech text default '',
+  starting_magic text default '',
+  starting_troops text default '',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- Миграция старых установок, где таблица lords уже существовала.
+alter table public.lords add column if not exists world_name text default '';
+alter table public.lords add column if not exists player_name text default '';
+alter table public.lords add column if not exists starting_tech text default '';
+alter table public.lords add column if not exists starting_magic text default '';
+alter table public.lords add column if not exists starting_troops text default '';
 
 create table if not exists public.shards (
   id uuid primary key default gen_random_uuid(),

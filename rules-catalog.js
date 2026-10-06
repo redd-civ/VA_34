@@ -14,7 +14,25 @@
   if (resources) resources.innerHTML = '<h2>💎 Ресурсы</h2><p>Ресурс — особый вид сырья. Его можно накапливать и организовывать поставки. По текущему правилу поставка может идти максимум двум Владыкам одновременно, включая хозяина ресурса.</p><div class="notice"><strong>Важно:</strong> отдельного фиксированного списка названий ресурсов в текущем справочнике правил нет. Поэтому инструмент позволяет Мастеру и игрокам указывать название и свойства ресурса свободным текстом, не придумывая официальный каталог.</div>';
 
   const magic = document.getElementById('magic');
-  if (magic) magic.innerHTML = '<h2>🔮 Школы магии</h2><p>Школы магии развиваются теми же уровнями, что и технологии. На экспертном уровне и выше открываются специальные ТЗ.</p><div class="catalog-grid">'+R.magicSchools.map((x,i)=>'<article class="catalog-card"><h3>🔮 '+esc(x)+'</h3><p>Школа магии №'+(i+1)+'. Конкретные эффекты определяются уровнем школы и доступными правилами/специальными ТЗ.</p></article>').join('')+'</div>';
+  if (magic) {
+    const magicTZ = Array.isArray(window.VA34_SPECIAL_TZ) ? window.VA34_SPECIAL_TZ.filter(t => t && t.school) : [];
+    const knownSchoolTZ = {};
+    const unlinkedMagicTZ = [];
+    magicTZ.forEach(t => {
+      const school = String(t.school);
+      if (R.magicSchools.includes(school)) (knownSchoolTZ[school] ||= []).push(t);
+      else unlinkedMagicTZ.push(t);
+    });
+    const magicTZHtml = name => {
+      const rows = knownSchoolTZ[name] || [];
+      if (!rows.length) return '<p class="muted">Отдельных ТЗ, прямо привязанных к этой школе в текущем перенесённом источнике, не задано.</p>';
+      return '<details class="tech-tz"><summary>Специальные ТЗ ('+rows.length+')</summary><div class="catalog-grid compact">'+rows.map(t => '<article class="catalog-card"><h4>'+esc(t.name)+'</h4><p><strong>Требование:</strong> уровень школы в источнике не указан.</p><p><strong>Эффект:</strong> '+esc(t.effect||'—')+'</p>'+(t.cost?'<p><strong>Стоимость:</strong> '+esc(JSON.stringify(t.cost))+'</p>':'')+'<p class="muted"><strong>Источник:</strong> '+esc(t.source||'исходные правила')+'</p></article>').join('')+'</div></details>';
+    };
+    const unlinked = unlinkedMagicTZ.length
+      ? '<div class="notice"><strong>Отдельные магические ТЗ без однозначной привязки к текущему списку школ:</strong><ul>'+unlinkedMagicTZ.map(t=>'<li>'+esc(t.name)+' — указано как «'+esc(t.school)+'», но такой школы нет в текущем справочнике из '+R.magicSchools.length+' школ. Не переименовываем и не относим её к другой школе предположительно.</li>').join('')+'</ul></div>'
+      : '';
+    magic.innerHTML = '<h2>🔮 Школы магии</h2><p>Школы магии развиваются теми же уровнями, что и технологии. В текущем перенесённом источнике нет полной таблицы эффектов всех школ по уровням. Поэтому уровни и ТЗ не додумываются.</p><div class="catalog-grid">'+R.magicSchools.map((x,i)=>'<article class="catalog-card"><h3>🔮 '+esc(x)+'</h3><p>Школа магии №'+(i+1)+'.</p>'+magicTZHtml(x)+'</article>').join('')+'</div>'+unlinked;
+  }
 
   const terrain = document.getElementById('terrain');
   if (terrain) terrain.innerHTML = '<h2>🌲 Ландшафт</h2><p>Ландшафт влияет на применение войск и условия боя. Текущий справочник содержит '+R.terrains.length+' базовых типов.</p><div class="catalog-grid compact">'+R.terrains.map(x=>'<article class="catalog-card"><h3>🌲 '+esc(x)+'</h3><p>Базовый тип местности.</p></article>').join('')+'</div>';

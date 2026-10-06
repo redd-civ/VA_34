@@ -735,3 +735,21 @@ tr:nth-child(even) td {
   font: 13px/1.55 Consolas, "Courier New", monospace;
   color: #39332c;
 }
+
+/* ===== Группы рас ===== */
+.race-group {
+  margin: 18px 0 24px;
+  padding: 14px;
+  background: rgba(250,246,238,.72);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.race-group > h3 {
+  margin: 0 0 12px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid var(--border);
+  color: var(--heading);
+}
+.race-group .catalog-grid {
+  margin: 0;
+}

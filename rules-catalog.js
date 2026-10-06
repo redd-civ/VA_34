@@ -82,12 +82,26 @@
 
   const magic = document.getElementById('magic');
   if (magic) {
-    const magicTZ = Array.isArray(window.VA34_SPECIAL_TZ) ? window.VA34_SPECIAL_TZ.filter(t => t && t.school) : [];
+    const legacyMagicTZ = Array.isArray(window.VA34_SPECIAL_TZ) ? window.VA34_SPECIAL_TZ.filter(t => t && t.school) : [];
+    const generatedMagicTZ = Array.isArray(window.VA34_MAGIC_TZ) ? window.VA34_MAGIC_TZ : [];
+    const magicTZ = [...legacyMagicTZ, ...generatedMagicTZ];
     const knownSchoolTZ = {};
     const unlinkedMagicTZ = [];
+    const aliases = {
+      "Магия разума":"Колдовство",
+      "Магия иллюзий":"Колдовство",
+      "Магия теней (тьмы)":"Тени",
+      "Магия природы":"Природа",
+      "Магия призыва":"Призыв",
+      "Магия света (священная)":"Священная (свет)",
+      "Биомантия (бионика)":"Природа",
+      "Магия порталов":"Портальная",
+      "Ваагх":"Ваагх!"
+    };
     magicTZ.forEach(t => {
-      const school = String(t.school);
-      if (R.magicSchools.includes(school)) (knownSchoolTZ[school] ||= []).push(t);
+      const rawSchool = String(t.school);
+      const school = aliases[rawSchool] || rawSchool;
+      if (R.magicSchools.includes(school)) (knownSchoolTZ[school] ||= []).push({...t, school});
       else unlinkedMagicTZ.push(t);
     });
     const magicTZHtml = name => {
@@ -163,7 +177,7 @@
 
   const special = document.getElementById('special-tz');
   if (special && Array.isArray(window.VA34_SPECIAL_TZ)) {
-    const otherTZ = window.VA34_SPECIAL_TZ.filter(t => !t.technology);
+    const otherTZ = window.VA34_SPECIAL_TZ.filter(t => !t.technology && !t.school);
     special.innerHTML = '<h2>🧩 Прочие специальные ТЗ</h2><p>Технологические ТЗ перенесены непосредственно в карточки соответствующих технологий. Здесь остаются только ТЗ, не привязанные к технологии.</p><div class="catalog-grid">'+otherTZ.map(t=>'<article class="catalog-card"><h3>'+esc(t.name)+'</h3><p><strong>Требование:</strong> '+esc(t.requiredLevel ? ("уровень "+t.requiredLevel+" / "+(["I","II","III","IV","V","VI"][(+t.requiredLevel||1)-1]||t.requiredLevel)) : "отдельное специальное ТЗ")+'</p><p><strong>Эффект:</strong> '+esc(t.effect)+'</p>'+(t.cost?'<p><strong>Стоимость:</strong> '+esc(JSON.stringify(t.cost))+'</p>':'')+'<p class="muted"><strong>Источник:</strong> '+esc(t.source||'исходные правила')+'</p></article>').join('')+'</div>';
   }
   const shard = document.getElementById('shard');

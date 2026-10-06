@@ -82,7 +82,14 @@
   function chips(items){return list(items).map(x=>'<span class="badge">'+esc(x)+'</span>').join(' ')||'—';}
 
   async function findLordId(playerId){
-    const res=await db.from('lords').select('id').eq('game_id',game.id).eq('player_id',playerId).order('created_at',{ascending:false}).limit(1);
+    // Основной вариант: Владыка привязан к текущей игре.
+    let res=await db.from('lords').select('id').eq('game_id',game.id).eq('player_id',playerId).order('created_at',{ascending:false}).limit(1);
+    // Совместимость со старыми записями: если game_id ещё не был добавлен/заполнен,
+    // ищем Владыку по игроку. Это позволяет Мастеру увидеть уже созданную заявку
+    // до завершения миграции старых данных.
+    if(res.error && ['42703','PGRST204','PGRST205'].includes(res.error.code)){
+      res=await db.from('lords').select('id').eq('player_id',playerId).order('created_at',{ascending:false}).limit(1);
+    }
     if(res.error)throw res.error;
     return {ids:(res.data||[]).map(x=>x.id)};
   }
@@ -97,8 +104,11 @@
     let lordIds=[];
     try{lordIds=(await findLordId(playerId)).ids;}catch(e){target.innerHTML='<div class="warning">Не удалось найти Владыку: '+esc(e.message)+'</div>';return;}
     const playerRes=await db.from('players').select('display_name,player_name').eq('id',playerId).maybeSingle();
-    const [lordRes,shardRes,devRes,heroRes,troopRes]=await Promise.all([
-      db.from('lords').select('*').eq('game_id',game.id).eq('player_id',playerId).order('created_at',{ascending:false}).limit(1).maybeSingle(),
+    let lordRes=await db.from('lords').select('*').eq('game_id',game.id).eq('player_id',playerId).order('created_at',{ascending:false}).limit(1).maybeSingle();
+    if(lordRes.error && ['42703','PGRST204','PGRST205'].includes(lordRes.error.code)){
+      lordRes=await db.from('lords').select('*').eq('player_id',playerId).order('created_at',{ascending:false}).limit(1).maybeSingle();
+    }
+    const [shardRes,devRes,heroRes,troopRes]=await Promise.all([
       db.from('shards').select('*').in('lord_id',lordIds),
       db.from('developments').select('*').in('lord_id',lordIds),
       db.from('heroes').select('*').in('lord_id',lordIds),

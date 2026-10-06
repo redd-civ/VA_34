@@ -1,11 +1,11 @@
-name: Build VA-34 source data
+name: Build VA-34 source data\n# Rebuilds the generated magic TZ catalog together with the source catalog.
 
 on:
   workflow_dispatch:
   push:
     paths:
       - 'source/компиляция ВА34.pdf'
-      - 'tools/build-rules-source.py'\n      - 'tools/build-magic-tz.py'
+      - 'tools/build-rules-source.py'\n      - 'tools/build-magic-tz.py'\n      - '.github/workflows/build-rules-source.yml'
 
 permissions:
   contents: write

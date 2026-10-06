@@ -753,3 +753,75 @@ tr:nth-child(even) td {
 .race-group .catalog-grid {
   margin: 0;
 }
+
+
+/* ===== Новый вид каталога рас: одна колонка ===== */
+.race-group .catalog-grid {
+  display: block;
+}
+.race-group .race-card {
+  width: 100%;
+  margin: 10px 0;
+}
+.race-group .race-card h3 {
+  margin-bottom: 6px;
+}
+.race-group .race-card details {
+  margin-top: 4px;
+}
+
+/* ===== Карточки родов войск: преимущества / недостатки ===== */
+.troop-list {
+  margin: 14px 0;
+}
+.troop-card {
+  margin: 12px 0;
+  padding: 15px 18px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: 8px;
+  background: #fffdf8;
+}
+.troop-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 12px rgba(42,37,32,.07);
+  transform: none;
+}
+.troop-card h3 {
+  margin: 0 0 3px;
+  color: var(--heading);
+}
+.troop-card .troop-type {
+  margin: 0 0 10px;
+}
+.troop-traits {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+}
+.troop-trait {
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  border: 1px solid var(--border);
+}
+.troop-trait-pos {
+  background: var(--tag-pos-bg);
+  border-color: #b9d9bc;
+}
+.troop-trait-neg {
+  background: var(--tag-neg-bg);
+  border-color: #e7bcbc;
+}
+.troop-trait-title {
+  font-weight: 800;
+  margin-bottom: 3px;
+}
+.troop-trait-pos .troop-trait-title { color: var(--positive); }
+.troop-trait-neg .troop-trait-title { color: var(--negative); }
+
+@media (max-width: 760px) {
+  .troop-traits {
+    grid-template-columns: 1fr;
+  }
+}

@@ -4,6 +4,8 @@
   const esc=v=>String(v??'').replace(/[&<>\"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[m]));
   const statusText={open:'Приём заявок открыт',running:'Игра идёт',closed:'Приём заявок закрыт',finished:'Игра завершена'};
   const roleText={pending:'На рассмотрении',accepted:'Принята',rejected:'Отклонена',withdrawn:'Отозвана'};
+  const list=v=>Array.isArray(v)?v:(v?[String(v)]:[]);
+  const val=v=>v===null||v===undefined||v===''?'—':esc(v);
 
   async function init(){
     const s=document.getElementById('status');
@@ -97,6 +99,70 @@
     await loadMyApplication();
   }
 
+  function section(title,html){return '<div class="notice" style="margin-top:12px"><h4 style="margin-top:0">'+title+'</h4>'+html+'</div>';}
+  function row(label,value){return '<div><b>'+label+':</b> '+val(value)+'</div>';}
+  function chips(items){return list(items).map(x=>'<span class="badge">'+esc(x)+'</span>').join(' ')||'—';}
+
+  async function openApplication(playerId,targetId){
+    const target=document.getElementById(targetId);
+    if(!target)return;
+    if(target.dataset.loaded==='1'){
+      target.hidden=!target.hidden;
+      return;
+    }
+    target.hidden=false;
+    target.innerHTML='<div class="notice">Загрузка полной заявки…</div>';
+
+    const [lordRes,shardRes,devRes,heroRes,troopRes]=await Promise.all([
+      db.from('lords').select('*').eq('game_id',game.id).eq('player_id',playerId).order('created_at',{ascending:false}).limit(1).maybeSingle(),
+      db.from('shards').select('*').in('lord_id',(await findLordId(playerId)).ids),
+      db.from('developments').select('*').in('lord_id',(await findLordId(playerId)).ids),
+      db.from('heroes').select('*').in('lord_id',(await findLordId(playerId)).ids),
+      db.from('troops').select('*').in('lord_id',(await findLordId(playerId)).ids)
+    ]);
+
+    const errors=[lordRes,shardRes,devRes,heroRes,troopRes].filter(x=>x.error&&x.error.code!=='PGRST116');
+    if(errors.length){target.innerHTML='<div class="warning">Не удалось загрузить полную заявку: '+esc(errors[0].error.message)+'</div>';return;}
+
+    const lord=lordRes.data||null;
+    const shards=shardRes.data||[];
+    const developments=devRes.data||[];
+    const heroes=heroRes.data||[];
+    const troops=troopRes.data||[];
+    let html='';
+
+    if(!lord){
+      html='<div class="warning">Карточка Владыки ещё не создана.</div>';
+    }else{
+      html+=section('👑 Владыка',
+        row('Имя',lord.name)+row('Раса',lord.race)+row('Мир',lord.world_name||lord.worldName)+row('Статус',lord.status)+row('Начальная энергия',lord.energy)+row('Девиз',lord.motto)+row('Способность',lord.ability)+row('Особенности',lord.traits)+row('Артефакты / предметы',lord.items)+row('Ресурсы и постоянные источники дохода',lord.resources));
+    }
+
+    const ancestral=shards.find(x=>x.type==='ancestral');
+    const ordinary=shards.filter(x=>x.type!=='ancestral');
+    if(ancestral){
+      html+=section('🌿 Родовой осколок',
+        row('Название',ancestral.name)+row('Раса',ancestral.race)+row('Ландшафт',ancestral.terrain)+row('Размер',ancestral.size)+row('Доход',ancestral.income)+row('Гарнизон',ancestral.garrison)+row('Снабжение',ancestral.supply)+row('Защита',ancestral.defense)+row('Здания',ancestral.buildings)+row('Ресурсы / трофеи',ancestral.resources));
+    }else html+=section('🌿 Родовой осколок','<span class="muted">Родовой осколок ещё не сохранён.</span>');
+
+    html+=section('🌍 Обычные осколки',ordinary.length?ordinary.map((x,i)=>'<div style="margin-bottom:10px"><b>'+(i+1)+'. '+val(x.name)+'</b>'+row('Тип',x.type)+row('Размер',x.size)+row('Раса',x.race)+row('Ландшафт',x.terrain)+row('Доход',x.income)+row('Население',x.population)+row('Настроение',x.mood)+row('Гарнизон',x.garrison)+row('Снабжение',x.supply)+row('Защита',x.defense)+row('Здания',x.buildings)+row('Ресурсы / трофеи',x.resources)+'</div>').join(''):'<span class="muted">Обычных осколков нет.</span>');
+
+    html+=section('⚙️ Технологии и магия',developments.length?developments.map(x=>'<div style="margin-bottom:8px"><b>'+val(x.name)+'</b>'+row('Тип',x.kind)+row('Уровень',x.level)+row('Стоимость',x.cost)+(x.description?row('Описание',x.description):'')+'</div>').join(''):'<span class="muted">Сохранённых технологий/школ магии нет.</span>');
+
+    html+=section('🎭 Герои',heroes.length?heroes.map(x=>'<div style="margin-bottom:8px"><b>'+val(x.name)+'</b>'+row('Раса',x.race)+row('Уровень',x.level)+row('Опыт',x.xp)+row('Навыки',chips(x.skills))+row('Перки',chips(x.perks))+row('Витязи',chips(x.knights))+row('Предметы',chips(x.items))+row('Артефакты',chips(x.artifacts))+'</div>').join(''):'<span class="muted">Героев пока нет.</span>');
+
+    html+=section('⚔️ Войска',troops.length?troops.map(x=>'<div style="margin-bottom:8px"><b>'+val(x.name)+'</b>'+row('Тип',x.type)+row('Уровень',x.tier)+row('Количество',x.quantity)+row('Особенности',chips(x.traits))+'</div>').join(''):'<span class="muted">Родов войск пока нет.</span>');
+
+    target.innerHTML=html;
+    target.dataset.loaded='1';
+  }
+
+  async function findLordId(playerId){
+    const res=await db.from('lords').select('id').eq('game_id',game.id).eq('player_id',playerId).order('created_at',{ascending:false}).limit(1);
+    if(res.error)throw res.error;
+    return {ids:(res.data||[]).map(x=>x.id)};
+  }
+
   async function loadApplications(){
     const box=document.getElementById('applications');
     const {data,error}=await db.from('game_applications').select('id,player_id,message,status,created_at').eq('game_id',game.id).order('created_at',{ascending:true});
@@ -105,20 +171,20 @@
 
     const ids=[...new Set(data.map(a=>a.player_id))];
     const people=await db.from('players').select('id,display_name,player_name').in('id',ids);
-    const names={};(people.data||[]).forEach(p=>names[p.id]=p.player_name||p.display_name||p.id);
+    const names={};(people.data||[]).forEach(p=>names[p.id]=p.player_name||p.display_name||'Игрок');
 
-    // Подтягиваем Владыку отдельно: заявка хранит только player_id.
-    // Если Владыка ещё не создан, показываем это явно, а не UUID.
     const lords=await db.from('lords').select('id,player_id,name').eq('game_id',game.id).in('player_id',ids);
     const lordNames={};(lords.data||[]).forEach(l=>lordNames[l.player_id]=l.name||'Безымянный Владыка');
 
     box.innerHTML=data.map(a=>{
       const playerName=names[a.player_id]||'Игрок без имени';
       const lordName=lordNames[a.player_id]||'Владыка ещё не создан';
-      return '<div class="notice"><b>'+esc(playerName)+'</b> · 👑 '+esc(lordName)+' — '+esc(roleText[a.status]||a.status)+(a.message?'<br>'+esc(a.message):'')+(a.status==='pending'?' <button data-accept="'+a.id+'">Принять</button> <button data-reject="'+a.id+'">Отклонить</button>':'')+'</div>';
+      const detailId='applicationDetail_'+a.id;
+      return '<div class="notice" style="margin-bottom:12px"><div><b>'+esc(playerName)+'</b> · 👑 '+esc(lordName)+' — '+esc(roleText[a.status]||a.status)+'</div>'+(a.message?'<div class="muted" style="margin-top:6px">Сообщение: '+esc(a.message)+'</div>':'')+'<div style="margin-top:10px"><button type="button" class="primary" data-view-application="'+a.player_id+'" data-target="'+detailId+'">👁 Просмотреть полную заявку</button>'+(a.status==='pending'?' <button data-accept="'+a.id+'">Принять</button> <button data-reject="'+a.id+'">Отклонить</button>':'')+'</div><div id="'+detailId+'" style="margin-top:10px" hidden></div></div>';
     }).join('');
     box.querySelectorAll('[data-accept]').forEach(b=>b.onclick=()=>decide(b.dataset.accept,'accepted'));
     box.querySelectorAll('[data-reject]').forEach(b=>b.onclick=()=>decide(b.dataset.reject,'rejected'));
+    box.querySelectorAll('[data-view-application]').forEach(b=>b.onclick=()=>openApplication(b.dataset.viewApplication,b.dataset.target));
   }
 
   async function decide(id,status){

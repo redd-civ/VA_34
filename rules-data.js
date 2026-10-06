@@ -744,6 +744,11 @@ window.VA34_RULES = {
           "name": "Эльфы"
       },
       {
+          "id": "race_120a",
+          "name": "Высшие эльфы",
+          "sourceVerified": true
+      },
+      {
           "id": "race_121",
           "name": "Темные эльфы"
       },

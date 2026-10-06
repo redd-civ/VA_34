@@ -100,56 +100,25 @@
       "Ваагх":"Ваагх!"
     };
     const magicSourceSections = [
-      ["Демонология","Демонология"],
-      ["Техномагия","Техномагия"],
-      ["Колдовство","Колдовство"],
-      ["Магия разума","Магия разума"],
-      ["Магия иллюзий","Магия иллюзий"],
-      ["Магия земли","Магия земли"],
-      ["Природа","Магия природы"],
-      ["Биомантия","Биомантия (бионика)"],
-      ["Воздух","Магия воздуха"],
-      ["Ритуалистика","Ритуалистика"],
-      ["Волшебство","Волшебство"],
-      ["Огонь","Магия огня"],
-      ["Вода","Магия воды"],
-      ["Магия льда","Магия льда"],
-      ["Священная (свет)","Магия света (священная)"],
-      ["Призыв","Магия призыва"],
-      ["Некромантия","Некромантия"],
-      ["Тени","Магия теней (тьмы)"],
-      ["Чума","Чума"],
-      ["Кровь","Магия крови"],
-      ["Разрушение","Разрушение"],
-      ["Рунная","Рунная магия"],
-      ["Поглощение","Поглощение"],
-      ["Антимагия","Антимагия"],
-      ["Магия войны","Магия войны"],
-      ["Металл","Магия металла"],
-      ["Шаманизм","Шаманизм"],
-      ["Инквизиторская","Инквизиторская магия"],
-      ["Пропаганда","Пропаганда"],
-      ["Солнечная","Солнечная магия"],
-      ["Вуду","Вуду"],
-      ["Астральная магия","Астральная магия"],
-      ["Ваагх!","Ваагх"],
-      ["Портальная","Магия порталов"]
+      ["Волшебство","Волшебство"],["Колдовство","Колдовство"],["Магия разума","Магия разума"],["Магия иллюзий","Магия иллюзий"],
+      ["Огонь","Огонь"],["Солнечная","Солнечная магия"],["Вода","Вода"],["Магия льда","Магия льда"],
+      ["Воздух","Воздух"],["Земля","Земля"],["Священная (свет)","Священная (свет)"],["Инквизиторская","Инквизиторская магия"],
+      ["Благословенная","Благословенная"],["Призыв","Призыв"],["Некромантия","Некромантия (смерть)"],
+      ["Магия теней","Магия теней"],["Магия чумы","Магия чумы"],["Демонология","Демонология"],["Разрушение","Разрушение"],
+      ["Природа","Природа"],["Биомантия","Биомантия"],["Рунная","Рунная магия"],["Кровь","Кровь"],
+      ["Поглощение","Поглощение"],["Ритуалистика","Ритуалистика"],["Шаманизм","Шаманизм"],["Магия войны","Магия войны"],
+      ["Металл","Металл"],["Ваагх!","Ваагх!"],["Портальная","Магия порталов"],["Астральная магия","Астральная магия"],
+      ["Вуду","Вуду"],["Антимагия","Антимагия"],["Техномагия","Техномагия"]
     ];
     const magicLevelPatterns = [
-      [6,/^Эпическ/i],
-      [5,/^Грандмастерск|^Грандамастерск/i],
-      [4,/^Мастерск/i],
-      [3,/^Эспертн|^Экспертн/i]
+      [6,/^Эпическ/i],[5,/^Грандмастерск|^Грандамастерск/i],[4,/^Мастерск/i],[3,/^Экспертн|^Экспертный/i]
     ];
     const normalizeMagicText = value => String(value || '')
-      .replace(/\u00a0/g,' ')
-      .replace(/[ \t]+/g,' ')
-      .replace(/\\n+/g,' ')
-      .trim();
+      .replace(/\u00a0/g,' ').replace(/[ \t]+/g,' ').replace(/\n+/g,' ').trim();
     const extractMagicTZFromSource = () => {
       const source = typeof window.VA34_RULES_SOURCE === 'string' ? window.VA34_RULES_SOURCE : '';
       if (!source) return [];
-      const lines = source.split(/\\n/);
+      const lines = source.split(/\n/);
       const starts = magicSourceSections.map(([school,heading]) => {
         const i = lines.findIndex(line => {
           const clean = String(line).replace(/\u00a0/g,' ').trim();
@@ -159,44 +128,17 @@
       }).filter(Boolean).sort((a,b)=>a.index-b.index);
       const result = [];
       starts.forEach((item,pos) => {
-        let end = pos+1 < starts.length ? starts[pos+1].index : lines.length;
-        let block = lines.slice(item.index+1,end).join('\\n');
-        if (item.school === 'Портальная') {
-          const cut = block.search(/^Энерговооружение и щиты доступны/m);
-          if (cut >= 0) block = block.slice(0,cut);
-        }
-        if (item.school === 'Ваагх!') {
-          const cut = block.search(/^Огнестрел -/m);
-          if (cut >= 0) block = block.slice(0,cut);
-        }
+        const end = pos+1 < starts.length ? starts[pos+1].index : lines.length;
+        const blockLines = lines.slice(item.index+1,end);
         const levelStarts = [];
-        block.split(/\\n/).forEach((line,i) => {
-          const clean = String(line).replace(/\u00a0/g,' ').trim();
-          for (const [level,re] of magicLevelPatterns) {
-            if (re.test(clean)) { levelStarts.push([i,level]); break; }
-          }
+        blockLines.forEach((line,i) => {
+          const clean=String(line).replace(/\u00a0/g,' ').trim();
+          for(const [level,re] of magicLevelPatterns) if(re.test(clean)){levelStarts.push([i,level]);break;}
         });
-        const blockLines = block.split(/\\n/);
-        if (!levelStarts.length) {
-          const effect = normalizeMagicText(block);
-          if (effect) result.push({id:'source-magic-'+result.length, name:item.school+' — ТЗ из источника', category:'magic_level', school:item.school, requiredLevel:null, effect, source:'компиляция ВА34.pdf — раздел «'+item.heading+'»'});
-          return;
-        }
-        levelStarts.forEach(([start,level],n) => {
-          const endLine = n+1 < levelStarts.length ? levelStarts[n+1][0] : blockLines.length;
-          const effect = normalizeMagicText(blockLines.slice(start,endLine).join('\\n'));
-          if (!effect) return;
-          const reqMatch = effect.match(/Требуется(?:ся)?\\s*[-–—:]\\s*([^.;]+)/i);
-          result.push({
-            id:'source-magic-'+result.length,
-            name:item.school+' — '+({3:'Экспертное',4:'Мастерское',5:'Грандмастерское',6:'Эпическое'}[level] || 'ТЗ'),
-            category:'magic_level',
-            school:item.school,
-            requiredLevel:level,
-            requirement:reqMatch ? reqMatch[1].trim() : null,
-            effect,
-            source:'компиляция ВА34.pdf — раздел «'+item.heading+'»'
-          });
+        levelStarts.forEach(([s,level],n)=>{
+          const e=n+1<levelStarts.length?levelStarts[n+1][0]:blockLines.length;
+          const effect=normalizeMagicText(blockLines.slice(s,e).join('\n'));
+          if(effect) result.push({id:'source-magic-'+result.length,name:item.school+' — '+({3:'Экспертное',4:'Мастерское',5:'Грандмастерское',6:'Эпическое'}[level]||'ТЗ'),category:'magic_level',school:item.school,requiredLevel:level,effect,source:'компиляция ВА34.pdf — раздел «'+item.heading+'»'});
         });
       });
       return result;

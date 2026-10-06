@@ -198,7 +198,7 @@
       ['troops', state.troops.map(x => ({
         ...(isUUID(x.id) ? { id: x.id } : {}),
         lord_id: id, name: x.name || '', type: x.type || '',
-        tier: Number(x.tier || 1), quantity: Number(x.quantity || 0),
+        tier: Number.isFinite(Number(x.tier)) ? Number(x.tier) : 1, quantity: Number.isFinite(Number(x.quantity)) ? Number(x.quantity) : 0,
         traits: csv(x.traits), description: x.description || ''
       }))],
       ['developments', state.tech.map(x => ({
@@ -207,6 +207,28 @@
         level: Number(x.level || 0), cost: Number(x.cost || 0), description: x.description || ''
       }))]
     ];
+    // Стартовые технологии и школы магии дублируем в developments специальным kind.
+    // Это позволяет Мастеру видеть выбор даже в старой БД, где в lords ещё нет
+    // колонок starting_tech / starting_magic.
+    const parseStarterRows = (value, kind) => String(value || '').split(/[\\n,]/).map(s => s.trim()).filter(Boolean).map(raw => {
+      const m = raw.match(/^(.*?)(?:\\s+([1-6]))?$/);
+      return { name: (m?.[1] || raw).trim(), level: Number(m?.[2] || 1), kind };
+    });
+    const starterRows = [
+      ...parseStarterRows(state.lord.startingTech, 'starting_technology'),
+      ...parseStarterRows(state.lord.startingMagic, 'starting_magic')
+    ].map(x => ({ lord_id: id, name: x.name, kind: x.kind, level: x.level, cost: 0, description: '' }));
+    const { data: existingStarter, error: starterReadError } = await client.from('developments').select('id,kind').eq('lord_id', id).in('kind',['starting_technology','starting_magic']);
+    if (starterReadError) throw starterReadError;
+    if ((existingStarter || []).length) {
+      const { error } = await client.from('developments').delete().in('id',(existingStarter || []).map(x => x.id));
+      if (error) throw error;
+    }
+    if (starterRows.length) {
+      const { error } = await client.from('developments').insert(starterRows);
+      if (error) throw error;
+    }
+
     const ledgerRows = (state.ledger || []).map(x => ({
       ...(isUUID(x.id) ? { id: x.id } : {}),
       game_id: gameId,

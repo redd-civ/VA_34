@@ -337,7 +337,7 @@
     const unlinked = unlinkedMagicTZ.length
       ? '<div class="notice"><strong>Отдельные магические ТЗ без однозначной привязки:</strong><ul>'+unlinkedMagicTZ.map(t=>'<li>'+esc(t.name)+' — источник указывает «'+esc(t.school)+'», но карточка с таким названием не найдена.</li>').join('')+'</ul></div>'
       : '';
-    magic.innerHTML = '<h2>🔮 Школы магии</h2><p>Базовые школы и явно названные в источнике поднаправления показываются раздельно. Связь поднаправления с базовой школой обозначается только как справочная принадлежность и не сливает их в одну школу.</p><div class="catalog-grid">'+magicDisplaySchools.map(x=>'<article class="catalog-card"><h3>🔮 '+esc(x.name)+'</h3>'+(x.parent?'<p class="muted">Поднаправление школы: '+esc(x.parent)+'</p>':'')+'<p>'+esc((R.magicSourceNotes&&R.magicSourceNotes[x.name])||'Отдельное описание в текущем справочнике отсутствует.')+'</p>'+magicTZHtml(x.name)+'</article>').join('')+'</div>'+unlinked;
+    magic.innerHTML = '<h2>🔮 Школы магии</h2><p>Базовые школы и явно названные в источнике поднаправления показываются раздельно. Связь поднаправления с базовой школой обозначается только как справочная принадлежность и не сливает их в одну школу.</p><div class="catalog-grid">'+magicDisplaySchools.map(x=>'<article class="catalog-card"><h3>'+window.VA34_ICON_FOR(x.name,'magic')+' '+esc(x.name)+'</h3>'+(x.parent?'<p class="muted">Поднаправление школы: '+esc(x.parent)+'</p>':'')+'<p>'+esc((R.magicSourceNotes&&R.magicSourceNotes[x.name])||'Отдельное описание в текущем справочнике отсутствует.')+'</p>'+magicTZHtml(x.name)+'</article>').join('')+'</div>'+unlinked;
   }
 
   const terrain = document.getElementById('terrain');
@@ -388,7 +388,7 @@
       }).join('');
       return '<details class="tech-tz"><summary>ТЗ технологии ('+rows.length+')</summary><div class="catalog-grid compact">'+body+'</div></details>';
     };
-    tech.innerHTML = '<h2>⚙️ Технологии</h2><p>Ниже перенесены технологии из исходного файла. Для каждой показывается базовое описание, а доступные уровни ТЗ будут добавляться из структурированного каталога. Незаполненные уровни не заменяются предположениями.</p><div class="catalog-grid">'+R.technologies.map(x=>'<article class="catalog-card"><h3>⚙ '+esc(x)+'</h3><p>'+esc((R.technologySourceNotes&&R.technologySourceNotes[x]) || R.technologyNotes[x] || 'Описание в источнике не задано.')+'</p>'+tzHtml(x)+'</article>').join('')+'</div>';
+    tech.innerHTML = '<h2>⚙️ Технологии</h2><p>Ниже перенесены технологии из исходного файла. Для каждой показывается базовое описание, а доступные уровни ТЗ будут добавляться из структурированного каталога. Незаполненные уровни не заменяются предположениями.</p><div class="catalog-grid">'+R.technologies.map(x=>'<article class="catalog-card"><h3>'+window.VA34_ICON_FOR(x,'technology')+' '+esc(x)+'</h3><p>'+esc((R.technologySourceNotes&&R.technologySourceNotes[x]) || R.technologyNotes[x] || 'Описание в источнике не задано.')+'</p>'+tzHtml(x)+'</article>').join('')+'</div>';
   }
 
   const levels = document.getElementById('techlevels');

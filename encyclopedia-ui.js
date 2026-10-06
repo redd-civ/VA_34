@@ -82,22 +82,26 @@
     }[ch]));
 
     const raceBlock = name => {
-      const title = String(name);
-      const re = new RegExp('(?:^|\\n)' + title.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&') + '(?=\\n|$)');
-      const match = re.exec(raceSource);
-      if (!match) return '';
-      const blockStart = match.index + (match[0].startsWith('\n') ? 1 : 0);
-      let blockEnd = raceSource.length;
-      for (const other of R.races) {
-        if (!other || other.name === title) continue;
-        const escaped = String(other.name).replace(/[.*+?^${}()|[\\]\\]/g, '\\$&');
-        const next = new RegExp('\\n' + escaped + '(?=\\n|$)').exec(raceSource.slice(blockStart + 1));
-        if (next) {
-          const p = blockStart + 1 + next.index + 1;
-          if (p < blockEnd) blockEnd = p;
+      const title = String(name).trim();
+      const lines = raceSource.split(/\n/);
+      const clean = value => String(value || '')
+        .replace(/\u00a0/g, ' ')
+        .replace(/[ \t]+/g, ' ')
+        .trim();
+
+      // PDF may contain extra spaces or non-breaking spaces in race headings.
+      const startIndex = lines.findIndex(line => clean(line) === clean(title));
+      if (startIndex < 0) return '';
+
+      const raceNames = new Set(R.races.map(r => clean(r && r.name)));
+      let endIndex = lines.length;
+      for (let i = startIndex + 1; i < lines.length; i++) {
+        if (raceNames.has(clean(lines[i]))) {
+          endIndex = i;
+          break;
         }
       }
-      return raceSource.slice(blockStart, blockEnd).trim();
+      return lines.slice(startIndex, endIndex).join('\n').trim();
     };
 
     const cardHtml = r => {

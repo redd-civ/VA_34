@@ -70,12 +70,20 @@
     const start = source.indexOf(startMarker);
     if (start < 0) return;
 
-    let end = source.length;
-    for (const marker of endMarkers) {
-      const p = source.indexOf(marker, start + startMarker.length);
-      if (p >= 0 && p < end) end = p;
+    // Ищем конец раздела только по отдельной строке-заголовку. Нельзя использовать
+    // обычный indexOf по всему тексту: внутри описаний встречаются фразы вроде
+    // «Технологии Древних», которые не являются началом раздела «Технологии».
+    const sourceLines = source.split(/\\n/);
+    const startLine = sourceLines.findIndex(line => String(line).includes(startMarker));
+    let endLine = sourceLines.length;
+    for (let i = startLine + 1; i < sourceLines.length; i++) {
+      const cleanLine = String(sourceLines[i]).replace(/\\u00a0/g, ' ').trim();
+      if (endMarkers.includes(cleanLine)) {
+        endLine = i;
+        break;
+      }
     }
-    const raceSource = source.slice(start, end);
+    const raceSource = sourceLines.slice(startLine, endLine).join('\\n');
 
     const esc = value => String(value ?? '').replace(/[&<>"']/g, ch => ({
       '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'

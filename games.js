@@ -146,8 +146,20 @@
     const people=await db.from('players').select('id,display_name,player_name').in('id',ids);
     const names={};(people.data||[]).forEach(p=>names[p.id]=p.player_name||p.display_name||'Игрок');
     if(people.error){console.warn('Не удалось загрузить имена игроков:',people.error.message);}
-    const lords=await db.from('lords').select('id,player_id,name').eq('game_id',game.id).in('player_id',ids);
-    const lordNames={};(lords.data||[]).forEach(l=>lordNames[l.player_id]=l.name||'Безымянный Владыка');
+    let lords=await db.from('lords').select('id,player_id,name,game_id,created_at').eq('game_id',game.id).in('player_id',ids);
+    // Совместимость со старыми Владыками: если game_id ещё не заполнен,
+    // дополнительно ищем запись по player_id.
+    if(!lords.error){
+      const found=new Set((lords.data||[]).map(l=>l.player_id));
+      const missing=ids.filter(id=>!found.has(id));
+      if(missing.length){
+        const legacy=await db.from('lords').select('id,player_id,name,game_id,created_at').in('player_id',missing).order('created_at',{ascending:false});
+        if(!legacy.error) lords={data:[...(lords.data||[]),...(legacy.data||[])],error:null};
+      }
+    }
+    const lordNames={};(lords.data||[]).forEach(l=>{
+      if(!lordNames[l.player_id] || l.game_id===game.id) lordNames[l.player_id]=l.name||'Безымянный Владыка';
+    });
     box.innerHTML=data.map(a=>{
       const playerName=names[a.player_id]||'Игрок без имени', lordName=lordNames[a.player_id]||'Владыка ещё не создан', detailId='applicationDetail_'+a.id;
       return '<div class="notice" style="margin-bottom:12px"><div><b>'+esc(playerName)+'</b> · 👑 '+esc(lordName)+' — '+esc(roleText[a.status]||a.status)+'</div>'+(a.message?'<div class="muted" style="margin-top:6px">Сообщение: '+esc(a.message)+'</div>':'')+'<div style="margin-top:10px"><button type="button" class="primary" data-view-application="'+a.player_id+'" data-target="'+detailId+'">👁 Просмотреть полную заявку</button>'+(a.status==='pending'?' <button data-accept="'+a.id+'">Принять</button> <button data-reject="'+a.id+'">Отклонить</button>':'')+'</div><div id="'+detailId+'" style="margin-top:10px" hidden></div></div>';

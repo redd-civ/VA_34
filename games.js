@@ -87,7 +87,7 @@
     // Совместимость со старыми записями: если game_id ещё не был добавлен/заполнен,
     // ищем Владыку по игроку. Это позволяет Мастеру увидеть уже созданную заявку
     // до завершения миграции старых данных.
-    if(res.error && ['42703','PGRST204','PGRST205'].includes(res.error.code)){
+    if((res.error && ['42703','PGRST204','PGRST205'].includes(res.error.code)) || (!res.error && !(res.data||[]).length)){
       res=await db.from('lords').select('id').eq('player_id',playerId).order('created_at',{ascending:false}).limit(1);
     }
     if(res.error)throw res.error;
@@ -105,7 +105,7 @@
     try{lordIds=(await findLordId(playerId)).ids;}catch(e){target.innerHTML='<div class="warning">Не удалось найти Владыку: '+esc(e.message)+'</div>';return;}
     const playerRes=await db.from('players').select('display_name,player_name').eq('id',playerId).maybeSingle();
     let lordRes=await db.from('lords').select('*').eq('game_id',game.id).eq('player_id',playerId).order('created_at',{ascending:false}).limit(1).maybeSingle();
-    if(lordRes.error && ['42703','PGRST204','PGRST205'].includes(lordRes.error.code)){
+    if((lordRes.error && ['42703','PGRST204','PGRST205'].includes(lordRes.error.code)) || (!lordRes.error && !lordRes.data)){
       lordRes=await db.from('lords').select('*').eq('player_id',playerId).order('created_at',{ascending:false}).limit(1).maybeSingle();
     }
     const [shardRes,devRes,heroRes,troopRes]=await Promise.all([

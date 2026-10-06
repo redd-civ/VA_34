@@ -164,9 +164,29 @@
         if (best) starts.push(best);
       });
       starts.sort((a,b)=>a.index-b.index);
+
+      // ТЗ школы заканчивается не только на следующей школе магии,
+      // но и на следующем заголовке технологии. Это важно для
+      // «Магии порталов»: после неё в исходнике идут технологические ТЗ.
+      const boundaryHeadings = new Set();
+      magicSourceSections.forEach(([,headings]) => headings.forEach(h => boundaryHeadings.add(h)));
+      if (Array.isArray(R.technologies)) {
+        R.technologies.forEach(name => {
+          const clean = String(name).replace(/\s+/g,' ').trim();
+          boundaryHeadings.add(clean);
+          clean.split(/\s+и\s+/i).forEach(part => boundaryHeadings.add(part.trim()));
+        });
+      }
+      const nextBoundary = startIndex => {
+        for (let i=startIndex+1; i<allLines.length; i++) {
+          if (boundaryHeadings.has(normalized(allLines[i]))) return i;
+        }
+        return allLines.length;
+      };
+
       const result = [];
-      starts.forEach((item,pos) => {
-        const blockLines = allLines.slice(item.index+1, pos+1 < starts.length ? starts[pos+1].index : allLines.length);
+      starts.forEach((item) => {
+        const blockLines = allLines.slice(item.index+1, nextBoundary(item.index));
         const levelStarts = [];
         blockLines.forEach((line,i) => {
           const clean=normalized(line);

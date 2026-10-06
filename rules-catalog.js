@@ -13,6 +13,16 @@
   const resources = document.getElementById('resources');
   if (resources) resources.innerHTML = '<h2>💎 Ресурсы</h2><p>Ресурс — особый вид сырья. Его можно накапливать и организовывать поставки. По текущему правилу поставка может идти максимум двум Владыкам одновременно, включая хозяина ресурса.</p><div class="notice"><strong>Важно:</strong> отдельного фиксированного списка названий ресурсов в текущем справочнике правил нет. Поэтому инструмент позволяет Мастеру и игрокам указывать название и свойства ресурса свободным текстом, не придумывая официальный каталог.</div>';
 
+  const source = document.getElementById('source-rules');
+  if (source && window.VA34_RULES_SOURCE) {
+    const raw = String(window.VA34_RULES_SOURCE);
+    const lines = raw.split(/\\n/);
+    const escHtml = value => String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    source.innerHTML = '<h2>📚 Полный свод правил из файла «компиляция ВА34.pdf»</h2>'+
+      '<p>Ниже приведено всё содержимое файла правил, доступного в библиотеке на момент заполнения энциклопедии. Текст не сокращается и не дополняется предположениями.</p>'+
+      '<div class="rule-source"><pre>'+lines.map(escHtml).join('\\n')+'</pre></div>';
+  }
+
   const magic = document.getElementById('magic');
   if (magic) {
     const magicTZ = Array.isArray(window.VA34_SPECIAL_TZ) ? window.VA34_SPECIAL_TZ.filter(t => t && t.school) : [];

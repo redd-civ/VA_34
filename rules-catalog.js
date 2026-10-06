@@ -133,6 +133,8 @@
     return '◆';
   };
 
+  window.VA34_ICON_FOR = iconFor;
+
   const troops = document.getElementById('troops');
   if (troops) {
     /*

@@ -2,12 +2,12 @@
   // При сохранении Владыки родовой осколок является частью его стартовой заявки
   // и не должен требовать отдельного создания в разделе «Мир».
   function ensureAncestralShard(){
-    if(!window.state || !window.state.lord) return;
-    const lord=window.state.lord;
-    let shard=window.state.shards.find(x=>x.type==='ancestral');
+    if(typeof state==='undefined'||!state.lord) return;
+    const lord=state.lord;
+    let shard=state.shards.find(x=>x.type==='ancestral');
     if(!shard){
       shard={id:typeof id==='function'?id():Date.now().toString(36),type:'ancestral',size:1,income:0,garrison:0,supply:0,defense:0,buildings:0,resources:'',description:''};
-      window.state.shards.unshift(shard);
+      state.shards.unshift(shard);
     }
     shard.name=lord.ancestralName||shard.name||'';
     shard.race=lord.ancestralRace||shard.race||'';
@@ -22,7 +22,7 @@
 
   if(typeof save==='function'){
     const originalSave=save;
-    window.save=function(){
+    save=function(){
       ensureAncestralShard();
       return originalSave.apply(this,arguments);
     };

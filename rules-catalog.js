@@ -85,20 +85,40 @@
     const legacyMagicTZ = Array.isArray(window.VA34_SPECIAL_TZ)
       ? window.VA34_SPECIAL_TZ.filter(t => t && t.school)
       : [];
-    const magicAliases = {
-      "Магия разума":"Колдовство",
-      "Магия иллюзий":"Колдовство",
-      "Магия теней (тьмы)":"Тени",
-      "Магия природы":"Природа",
-      "Биомантия (бионика)":"Природа",
-      "Чума":"Некромантия",
-      "Инквизиторская":"Священная (свет)",
-      "Солнечная":"Огонь",
-      "Магия призыва":"Призыв",
+    /*
+     * Нормализация названий источника без объединения разных школ.
+     * Явно названные поднаправления остаются отдельными карточками.
+     */
+    const magicNameNormalize = {
+      "Магия огня":"Огонь",
+      "Солнечная магия":"Солнечная",
+      "Магия воды":"Вода",
+      "Магия воздуха":"Воздух",
+      "Магия земли":"Земля",
       "Магия света (священная)":"Священная (свет)",
+      "Магия призыва":"Призыв",
+      "Некромантия (смерть)":"Некромантия",
+      "Магия теней (тьмы)":"Магия теней",
+      "Чума":"Магия чумы",
+      "Магия природы":"Природа",
+      "Биомантия (бионика)":"Биомантия",
+      "Магия металла":"Металл",
       "Магия порталов":"Портальная",
       "Ваагх":"Ваагх!"
     };
+
+    const magicDisplaySchools = [
+      ...R.magicSchools.map(name => ({name, parent:null})),
+      {name:"Магия иллюзий", parent:"Колдовство"},
+      {name:"Магия разума", parent:"Колдовство"},
+      {name:"Солнечная", parent:"Огонь"},
+      {name:"Магия льда", parent:"Вода"},
+      {name:"Инквизиторская", parent:"Священная (свет)"},
+      {name:"Благословенная", parent:"Священная (свет)"},
+      {name:"Магия теней", parent:"Некромантия"},
+      {name:"Магия чумы", parent:"Некромантия"},
+      {name:"Биомантия", parent:"Природа"}
+    ];
     const magicSourceSections = [
       ["Волшебство",["Волшебство"]],["Колдовство",["Колдовство"]],["Магия разума",["Магия разума"]],["Магия иллюзий",["Магия иллюзий"]],
       ["Огонь",["Магия огня","Огонь"]],["Солнечная",["Солнечная магия"]],["Вода",["Магия воды","Вода"]],["Магия льда",["Магия льда"]],
@@ -171,8 +191,8 @@
     const unlinkedMagicTZ = [];
     magicTZ.forEach(t => {
       const rawSchool = String(t.school);
-      const school = magicAliases[rawSchool] || rawSchool;
-      if (R.magicSchools.includes(school)) (knownSchoolTZ[school] ||= []).push({...t, school});
+      const school = magicNameNormalize[rawSchool] || rawSchool;
+      if (magicDisplaySchools.some(s => s.name === school)) (knownSchoolTZ[school] ||= []).push({...t, school});
       else unlinkedMagicTZ.push(t);
     });
     const magicTZHtml = name => {
@@ -181,9 +201,9 @@
       return '<details class="tech-tz"><summary>Специальные ТЗ ('+rows.length+')</summary><div class="catalog-grid compact">'+rows.map(t => '<article class="catalog-card"><h4>'+esc(t.name)+'</h4><p><strong>Требование:</strong> уровень школы в источнике не указан.</p><p><strong>Эффект:</strong> '+esc(t.effect||'—')+'</p>'+(t.cost?'<p><strong>Стоимость:</strong> '+esc(JSON.stringify(t.cost))+'</p>':'')+'<p class="muted"><strong>Источник:</strong> '+esc(t.source||'исходные правила')+'</p></article>').join('')+'</div></details>';
     };
     const unlinked = unlinkedMagicTZ.length
-      ? '<div class="notice"><strong>Отдельные магические ТЗ без однозначной привязки к текущему списку школ:</strong><ul>'+unlinkedMagicTZ.map(t=>'<li>'+esc(t.name)+' — указано как «'+esc(t.school)+'», но такой школы нет в текущем справочнике из '+R.magicSchools.length+' школ. Не переименовываем и не относим её к другой школе предположительно.</li>').join('')+'</ul></div>'
+      ? '<div class="notice"><strong>Отдельные магические ТЗ без однозначной привязки:</strong><ul>'+unlinkedMagicTZ.map(t=>'<li>'+esc(t.name)+' — источник указывает «'+esc(t.school)+'», но карточка с таким названием не найдена.</li>').join('')+'</ul></div>'
       : '';
-    magic.innerHTML = '<h2>🔮 Школы магии</h2><p>Ниже перенесены все школы магии, перечисленные в исходном файле. Подвиды и уровни не превращаются в отдельные школы без соответствующего указания в источнике.</p><div class="catalog-grid">'+R.magicSchools.map((x,i)=>'<article class="catalog-card"><h3>🔮 '+esc(x)+'</h3><p>'+esc((R.magicSourceNotes&&R.magicSourceNotes[x])||'Описание в источнике отсутствует.')+'</p>'+magicTZHtml(x)+'</article>').join('')+'</div>'+unlinked;
+    magic.innerHTML = '<h2>🔮 Школы магии</h2><p>Базовые школы и явно названные в источнике поднаправления показываются раздельно. Связь поднаправления с базовой школой обозначается только как справочная принадлежность и не сливает их в одну школу.</p><div class="catalog-grid">'+magicDisplaySchools.map(x=>'<article class="catalog-card"><h3>🔮 '+esc(x.name)+'</h3>'+(x.parent?'<p class="muted">Поднаправление школы: '+esc(x.parent)+'</p>':'')+'<p>'+esc((R.magicSourceNotes&&R.magicSourceNotes[x.name])||'Отдельное описание в текущем справочнике отсутствует.')+'</p>'+magicTZHtml(x.name)+'</article>').join('')+'</div>'+unlinked;
   }
 
   const terrain = document.getElementById('terrain');

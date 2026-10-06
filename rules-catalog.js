@@ -34,6 +34,105 @@
     races.innerHTML = '<h2>🧬 Расы</h2><p>Проверено по библиотечному файлу «компиляция ВА34.pdf». В справочник внесены только расы и подвиды, реально присутствующие в источнике. Текст свойств не пересказывается и не дополняется предположениями.</p><div class="catalog-grid">'+cards+'</div>';
   };
 
+  const iconFor = (name, category='') => {
+    const n = String(name || '').toLocaleLowerCase('ru-RU');
+    if (category === 'troop') {
+      if (n.includes('тяжёл')) return '🛡️';
+      if (n.includes('лёгк') || n.includes('пехот')) return '⚔️';
+      if (n.includes('кавалер')) return '🐎';
+      if (n.includes('стрел')) return '🏹';
+      if (n.includes('маг')) return '🧙';
+      if (n.includes('летун')) return '🪽';
+      if (n.includes('монстр')) return '🐉';
+      if (n.includes('артиллер')) return '💥';
+      return '⚔️';
+    }
+    if (category === 'magic') {
+      if (n.includes('огн') || n.includes('солнеч')) return '🔥';
+      if (n.includes('вод') || n.includes('лёд')) return '❄️';
+      if (n.includes('воздух')) return '🌪️';
+      if (n.includes('земл')) return '🪨';
+      if (n.includes('свет') || n.includes('свящ') || n.includes('благослов')) return '☀️';
+      if (n.includes('призыв')) return '🌀';
+      if (n.includes('некром') || n.includes('тен') || n.includes('чум')) return '☠️';
+      if (n.includes('кров')) return '🩸';
+      if (n.includes('природ') || n.includes('биомант')) return '🌿';
+      if (n.includes('рун')) return '🔯';
+      if (n.includes('портал')) return '🌀';
+      if (n.includes('техном')) return '⚡';
+      if (n.includes('металл')) return '🔩';
+      if (n.includes('разум') || n.includes('иллюз')) return '🧠';
+      if (n.includes('войн')) return '⚔️';
+      if (n.includes('разруш')) return '💥';
+      if (n.includes('демон')) return '😈';
+      if (n.includes('ритуал')) return '🕯️';
+      if (n.includes('астрал')) return '✨';
+      return '🔮';
+    }
+    if (category === 'tech') {
+      if (n.includes('сельск') || n.includes('ферм')) return '🌾';
+      if (n.includes('эконом')) return '💰';
+      if (n.includes('дипломат')) return '🤝';
+      if (n.includes('кузне') || n.includes('металл')) return '⚒️';
+      if (n.includes('инженер')) return '🛠️';
+      if (n.includes('военн')) return '⚔️';
+      if (n.includes('артефакт')) return '💎';
+      if (n.includes('развед')) return '🔭';
+      if (n.includes('маскиров')) return '🫥';
+      if (n.includes('шпионаж') || n.includes('контрразвед')) return '🕵️';
+      if (n.includes('пропаганд')) return '📣';
+      if (n.includes('огнестрел')) return '🔫';
+      if (n.includes('кораблестро')) return '⛵';
+      if (n.includes('энерговооруж')) return '⚡';
+      if (n.includes('энергощит') || n === 'щиты') return '🛡️';
+      if (n.includes('кристалломант')) return '💠';
+      if (n.includes('контрабанд')) return '🧳';
+      if (n.includes('алхим')) return '⚗️';
+      if (n.includes('хими')) return '🧪';
+      if (n.includes('робот')) return '🤖';
+      if (n.includes('торгов')) return '🪙';
+      if (n.includes('клониров')) return '🧬';
+      return '⚙️';
+    }
+    if (category === 'terrain') {
+      if (n.includes('лес')) return '🌲';
+      if (n.includes('гор') || n.includes('скал')) return '⛰️';
+      if (n.includes('пустын')) return '🏜️';
+      if (n.includes('болот')) return '🐊';
+      if (n.includes('равнин') || n.includes('степ')) return '🌾';
+      if (n.includes('тундр') || n.includes('снег') || n.includes('лед')) return '❄️';
+      if (n.includes('вулкан') || n.includes('лав')) return '🌋';
+      if (n.includes('море') || n.includes('океан') || n.includes('вод')) return '🌊';
+      if (n.includes('город')) return '🏙️';
+      return '🗺️';
+    }
+    if (category === 'skill') return n.includes('бо') || n.includes('военн') ? '⚔️' : n.includes('маг') ? '🔮' : n.includes('диплом') ? '🤝' : '🎯';
+    if (category === 'perk') return n.includes('защит') ? '🛡️' : n.includes('атак') || n.includes('урон') ? '⚔️' : n.includes('маг') ? '🔮' : '✨';
+    if (category === 'race') {
+      if (n.includes('ангел') || n.includes('сераф')) return '👼';
+      if (n.includes('демон') || n.includes('бес') || n.includes('черт') || n.includes('суккуб')) return '😈';
+      if (n.includes('дракон')) return '🐉';
+      if (n.includes('эльф')) return '🧝';
+      if (n.includes('гном') || n.includes('дварф')) return '⛏️';
+      if (n.includes('орк')) return '👹';
+      if (n.includes('гоблин')) return '👺';
+      if (n.includes('нежить') || n.includes('зомби') || n.includes('скелет') || n.includes('лич') || n.includes('вампир')) return '☠️';
+      if (n.includes('гигант') || n.includes('великан') || n.includes('титан')) return '🗿';
+      if (n.includes('фе') || n.includes('пикси') || n.includes('нимф') || n.includes('дриад')) return '🧚';
+      if (n.includes('элементал')) return '🌟';
+      if (n.includes('кры')) return '🐀';
+      if (n.includes('тролл') || n.includes('йети')) return '👣';
+      if (n.includes('джин') || n.includes('ифрит') || n.includes('марид')) return '🧞';
+      if (n.includes('кицун') || n.includes('лиса')) return '🦊';
+      if (n.includes('танук')) return '🦝';
+      if (n.includes('тенг')) return '🪽';
+      if (n.includes('сатир')) return '🐐';
+      if (n.includes('человек') || n === 'люди') return '🧑';
+      return '🧬';
+    }
+    return '◆';
+  };
+
   const troops = document.getElementById('troops');
   if (troops) {
     /*
@@ -53,7 +152,7 @@
     ];
     const troopCard = t =>
       '<article class="troop-card catalog-card">'+
-      '<h3>🛡️ '+esc(t.name)+'</h3>'+
+      '<h3>'+iconFor(t.name,'troop')+' '+esc(t.name)+'</h3>'+
       '<p class="troop-type">'+esc(t.type)+'</p>'+
       '<div class="troop-traits">'+
         '<div class="troop-trait troop-trait-pos"><div class="troop-trait-title">▲ Преимущества</div><div>'+esc(t.pos)+'</div></div>'+
@@ -240,13 +339,13 @@
   }
 
   const terrain = document.getElementById('terrain');
-  if (terrain) terrain.innerHTML = '<h2>🌲 Ландшафт</h2><p>Ландшафт влияет на применение войск и условия боя. Текущий справочник содержит '+R.terrains.length+' базовых типов.</p><div class="catalog-grid compact">'+R.terrains.map(x=>'<article class="catalog-card"><h3>🌲 '+esc(x)+'</h3><p>Базовый тип местности.</p></article>').join('')+'</div>';
+  if (terrain) terrain.innerHTML = '<h2>🌲 Ландшафт</h2><p>Ландшафт влияет на применение войск и условия боя. Текущий справочник содержит '+R.terrains.length+' базовых типов.</p><div class="catalog-grid compact">'+R.terrains.map(x=>'<article class="catalog-card"><h3>'+iconFor(x,'terrain')+' '+esc(x)+'</h3><p>Базовый тип местности.</p></article>').join('')+'</div>';
 
   const skills = document.getElementById('skills');
-  if (skills) skills.innerHTML = '<h2>⚡ Навыки героев</h2><p>Максимум — 6 разных навыков. Для мирных навыков действуют специальные скидки: инженер и управляющий — 1 за уровень, исследователь — 0,5 за уровень. Один навык ориентировочно соответствует 1 энергии эффективности.</p><div class="catalog-grid compact">'+R.heroSkills.map(x=>'<article class="catalog-card"><h3>⚡ '+esc(x)+'</h3></article>').join('')+'</div>';
+  if (skills) skills.innerHTML = '<h2>⚡ Навыки героев</h2><p>Максимум — 6 разных навыков. Для мирных навыков действуют специальные скидки: инженер и управляющий — 1 за уровень, исследователь — 0,5 за уровень. Один навык ориентировочно соответствует 1 энергии эффективности.</p><div class="catalog-grid compact">'+R.heroSkills.map(x=>'<article class="catalog-card"><h3>'+iconFor(x,'skill')+' '+esc(x)+'</h3></article>').join('')+'</div>';
 
   const perks = document.getElementById('perks');
-  if (perks) perks.innerHTML = '<h2>✨ Перки героев</h2><p>Перки — дополнительные особенности героя. Текущий справочник содержит следующие названия:</p><div class="catalog-grid compact">'+R.heroPerks.map(x=>'<article class="catalog-card"><h3>✨ '+esc(x)+'</h3></article>').join('')+'</div>';
+  if (perks) perks.innerHTML = '<h2>✨ Перки героев</h2><p>Перки — дополнительные особенности героя. Текущий справочник содержит следующие названия:</p><div class="catalog-grid compact">'+R.heroPerks.map(x=>'<article class="catalog-card"><h3>'+iconFor(x,'perk')+' '+esc(x)+'</h3></article>').join('')+'</div>';
 
   const tech = document.getElementById('tech');
   if (tech) {

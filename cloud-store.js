@@ -347,11 +347,34 @@
   }
   async function getGameContext() {
     if (!client || !user) return null;
-    const { data, error } = await client.from('game_members').select('game_id,role').eq('player_id', user.id);
-    if (error) throw error;
-    const ids=(data||[]).map(x=>x.game_id);
-    if (!ids.length) return [];
-    const { data: games, error: ge } = await client.from('games').select('*').in('id',ids).order('created_at',{ascending:false});
+
+    // Игрок должен иметь возможность сохранять заявку и созданного Владыку
+    // ещё ДО принятия в игру. Поэтому учитываем не только game_members,
+    // но и собственные заявки в game_applications.
+    const memberRes = await client.from('game_members').select('game_id,role').eq('player_id', user.id);
+    if (memberRes.error) throw memberRes.error;
+
+    const applicationRes = await client
+      .from('game_applications')
+      .select('game_id,status')
+      .eq('player_id', user.id);
+
+    // Если таблица заявок ещё не создана/миграция не применена, сохраняем
+    // прежнее поведение через game_members.
+    if (applicationRes.error && applicationRes.error.code !== 'PGRST205') {
+      throw applicationRes.error;
+    }
+
+    const ids=[...(memberRes.data||[]).map(x=>x.game_id), ...(applicationRes.data||[]).map(x=>x.game_id)]
+      .filter(Boolean);
+    const uniqueIds=[...new Set(ids)];
+    if (!uniqueIds.length) return [];
+
+    const { data: games, error: ge } = await client
+      .from('games')
+      .select('*')
+      .in('id',uniqueIds)
+      .order('created_at',{ascending:false});
     if (ge) throw ge;
     return games||[];
   }

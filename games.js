@@ -107,7 +107,16 @@
     const people=await db.from('players').select('id,display_name,player_name').in('id',ids);
     const names={};(people.data||[]).forEach(p=>names[p.id]=p.player_name||p.display_name||p.id);
 
-    box.innerHTML=data.map(a=>'<div class="notice"><b>'+esc(names[a.player_id]||a.player_id)+'</b> — '+esc(roleText[a.status]||a.status)+(a.message?'<br>'+esc(a.message):'')+(a.status==='pending'?' <button data-accept="'+a.id+'">Принять</button> <button data-reject="'+a.id+'">Отклонить</button>':'')+'</div>').join('');
+    // Подтягиваем Владыку отдельно: заявка хранит только player_id.
+    // Если Владыка ещё не создан, показываем это явно, а не UUID.
+    const lords=await db.from('lords').select('id,player_id,name').eq('game_id',game.id).in('player_id',ids);
+    const lordNames={};(lords.data||[]).forEach(l=>lordNames[l.player_id]=l.name||'Безымянный Владыка');
+
+    box.innerHTML=data.map(a=>{
+      const playerName=names[a.player_id]||'Игрок без имени';
+      const lordName=lordNames[a.player_id]||'Владыка ещё не создан';
+      return '<div class="notice"><b>'+esc(playerName)+'</b> · 👑 '+esc(lordName)+' — '+esc(roleText[a.status]||a.status)+(a.message?'<br>'+esc(a.message):'')+(a.status==='pending'?' <button data-accept="'+a.id+'">Принять</button> <button data-reject="'+a.id+'">Отклонить</button>':'')+'</div>';
+    }).join('');
     box.querySelectorAll('[data-accept]').forEach(b=>b.onclick=()=>decide(b.dataset.accept,'accepted'));
     box.querySelectorAll('[data-reject]').forEach(b=>b.onclick=()=>decide(b.dataset.reject,'rejected'));
   }

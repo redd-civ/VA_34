@@ -707,3 +707,31 @@ tr:nth-child(even) td {
 [id] {
   scroll-margin-top: 16px;
 }
+
+/* ===== Карточки рас: длинный исходный текст не должен ломать сетку ===== */
+.catalog-grid > .catalog-card {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+.catalog-card details,
+.catalog-card pre.race-source {
+  min-width: 0;
+  max-width: 100%;
+}
+.catalog-card pre.race-source {
+  box-sizing: border-box;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-height: 560px;
+  margin: 10px 0 0;
+  padding: 12px;
+  background: #fffdf8;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font: 13px/1.55 Consolas, "Courier New", monospace;
+  color: #39332c;
+}

@@ -26,7 +26,36 @@
   if (perks) perks.innerHTML = '<h2>✨ Перки героев</h2><p>Перки — дополнительные особенности героя. Текущий справочник содержит следующие названия:</p><div class="catalog-grid compact">'+R.heroPerks.map(x=>'<article class="catalog-card"><h3>✨ '+esc(x)+'</h3></article>').join('')+'</div>';
 
   const tech = document.getElementById('tech');
-  if (tech) tech.innerHTML = '<h2>⚙️ Технологии</h2><p>Технологии развиваются по уровням: базовый → продвинутый → экспертный → мастерский → грандмастерский → эпичный. За ход можно развить не более 3 уровней одной технологии, не более 3 разных технологий и не более 6 уровней суммарно.</p><div class="catalog-grid">'+R.technologies.map(x=>'<article class="catalog-card"><h3>⚙ '+esc(x)+'</h3><p>'+esc(R.technologyNotes[x] || 'Направление присутствует в официальном справочнике технологий. Отдельного числового эффекта в текущем источнике не задано; его не выдумываем.')+'</p></article>').join('')+'</div>';
+  if (tech) {
+    /*
+     * ТЗ, привязанные к уровням технологий, показываются непосредственно
+     * после описания соответствующей технологии. Источник не расширяем:
+     * если для технологии ТЗ пока не перенесено, явно показываем это.
+     */
+    const levelNames = {1:'Базовый',2:'Продвинутый',3:'Экспертный',4:'Мастерский',5:'Грандмастерский',6:'Эпичный'};
+    const technologyTZ = Array.isArray(window.VA34_SPECIAL_TZ)
+      ? window.VA34_SPECIAL_TZ.filter(t => t && t.technology)
+      : [];
+    const byTechnology = {};
+    technologyTZ.forEach(t => {
+      const key = String(t.technology);
+      (byTechnology[key] ||= []).push(t);
+    });
+    const tzHtml = name => {
+      const rows = byTechnology[name] || [];
+      if (!rows.length) {
+        return '<details class="tech-tz"><summary>ТЗ технологии</summary><div class="notice">В текущем перенесённом каталоге отдельные ТЗ для этой технологии пока не заданы. Новые правила не добавляются предположительно.</div></details>';
+      }
+      const body = rows.map(t => {
+        const level = Number(t.requiredLevel);
+        const levelLabel = levelNames[level] || (t.requiredLevel ? String(t.requiredLevel) : 'Без уровня');
+        const cost = t.cost ? '<p><strong>Стоимость:</strong> '+esc(JSON.stringify(t.cost))+'</p>' : '';
+        return '<article class="catalog-card"><h4>'+esc(t.name)+'</h4><p><strong>Уровень:</strong> '+esc(levelLabel)+(level ? ' (VI'===levelLabel?'VI':(['I','II','III','IV','V','VI'][level-1]||level))+')' : '')+'</p><p><strong>Эффект:</strong> '+esc(t.effect||'—')+'</p>'+cost+'<p class="muted"><strong>Источник:</strong> '+esc(t.source||'исходные правила')+'</p></article>';
+      }).join('');
+      return '<details class="tech-tz"><summary>ТЗ технологии ('+rows.length+')</summary><div class="catalog-grid compact">'+body+'</div></details>';
+    };
+    tech.innerHTML = '<h2>⚙️ Технологии</h2><p>Технологии развиваются по уровням: базовый → продвинутый → экспертный → мастерский → грандмастерский → эпичный. За ход можно развить не более 3 уровней одной технологии, не более 3 разных технологий и не более 6 уровней суммарно.</p><div class="catalog-grid">'+R.technologies.map(x=>'<article class="catalog-card"><h3>⚙ '+esc(x)+'</h3><p>'+esc(R.technologyNotes[x] || 'Направление присутствует в официальном справочнике технологий. Отдельного числового эффекта в текущем источнике не задано; его не выдумываем.')+'</p>'+tzHtml(x)+'</article>').join('')+'</div>';
+  }
 
   const levels = document.getElementById('techlevels');
   if (levels) levels.innerHTML += '<h3>Полная шкала уровней</h3><table><tr><th>Уровень</th><th>Ранг</th><th>Статус</th></tr>'+R.techLevels.map(x=>'<tr><td>'+esc(x.name)+'</td><td>'+x.rank+'</td><td>'+(x.rank===6?'Эпичный: требуется специальное ТЗ или решение Мастера.':'Обычный уровень развития')+'</td></tr>').join('')+'</table>';
@@ -38,7 +67,10 @@
   if (general) general.innerHTML += '<h3>📚 Справочник данных</h3><p>Кабинет игрока использует те же справочники рас, родов войск, магии, ландшафтов, навыков, перков и технологий, что и эта страница. Неизвестные или индивидуальные элементы можно оставить на согласование Мастеру.</p>';
 
   const special = document.getElementById('special-tz');
-  if (special && Array.isArray(window.VA34_SPECIAL_TZ)) special.innerHTML = '<h2>🧩 Специальные ТЗ</h2><p>Только ТЗ из исходного каталога проекта.</p><div class="catalog-grid">'+window.VA34_SPECIAL_TZ.map(t=>'<article class="catalog-card"><h3>'+esc(t.name)+'</h3><p><strong>Требование:</strong> '+esc(t.requiredLevel ? ("уровень "+t.requiredLevel+" / "+(["I","II","III","IV","V","VI"][(+t.requiredLevel||1)-1]||t.requiredLevel)) : "отдельное специальное ТЗ")+'</p><p><strong>Эффект:</strong> '+esc(t.effect)+'</p>'+(t.cost?'<p><strong>Стоимость:</strong> '+esc(JSON.stringify(t.cost))+'</p>':'')+'<p class="muted"><strong>Источник:</strong> '+esc(t.source||'исходные правила')+'</p></article>').join('')+'</div>';
+  if (special && Array.isArray(window.VA34_SPECIAL_TZ)) {
+    const otherTZ = window.VA34_SPECIAL_TZ.filter(t => !t.technology);
+    special.innerHTML = '<h2>🧩 Прочие специальные ТЗ</h2><p>Технологические ТЗ перенесены непосредственно в карточки соответствующих технологий. Здесь остаются только ТЗ, не привязанные к технологии.</p><div class="catalog-grid">'+otherTZ.map(t=>'<article class="catalog-card"><h3>'+esc(t.name)+'</h3><p><strong>Требование:</strong> '+esc(t.requiredLevel ? ("уровень "+t.requiredLevel+" / "+(["I","II","III","IV","V","VI"][(+t.requiredLevel||1)-1]||t.requiredLevel)) : "отдельное специальное ТЗ")+'</p><p><strong>Эффект:</strong> '+esc(t.effect)+'</p>'+(t.cost?'<p><strong>Стоимость:</strong> '+esc(JSON.stringify(t.cost))+'</p>':'')+'<p class="muted"><strong>Источник:</strong> '+esc(t.source||'исходные правила')+'</p></article>').join('')+'</div>';
+  }
   const shard = document.getElementById('shard');
   if (shard) shard.innerHTML = '<h2>🏝️ Осколок</h2><table><tr><th>Размер</th><th>Значение</th></tr>'+R.shardSizes.map(s=>'<tr><td>'+esc(s.name)+'</td><td>'+s.value+'</td></tr>').join('')+'</table><p><strong>Типы:</strong> '+R.shardTypes.map(s=>esc(s.name)).join(', ')+'.</p><p><strong>Настроения:</strong> '+R.moods.map(esc).join(', ')+'.</p><ul><li>Лимит зданий: floor(размер); родовой — 4.</li><li>Хранение энергии: 20 э + 10 э за осколок.</li><li>Новый контент начинает действовать со следующего хода.</li></ul>';
   const source = document.getElementById('source');

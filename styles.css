@@ -825,3 +825,88 @@ tr:nth-child(even) td {
     grid-template-columns: 1fr;
   }
 }
+
+/* ===== Мобильная версия ===== */
+.mobile-nav-toggle {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .nav-panel {
+    width: min(300px, 86vw);
+    height: 100vh;
+    z-index: 1000;
+    transform: translateX(-105%);
+    transition: transform .2s ease;
+    box-shadow: 5px 0 18px rgba(42,37,32,.18);
+  }
+
+  .nav-panel.mobile-nav-open {
+    transform: translateX(0);
+  }
+
+  .main-content {
+    width: 100%;
+    max-width: none;
+    margin-left: 0;
+    padding: 14px 12px 30px;
+  }
+
+  .mobile-nav-toggle {
+    display: block;
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 1100;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--panel);
+    color: var(--heading);
+    box-shadow: 0 2px 8px rgba(42,37,32,.15);
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .header-block {
+    padding: 24px 14px 18px;
+    padding-top: 58px;
+  }
+
+  .section {
+    padding: 14px;
+  }
+
+  .catalog-grid,
+  .catalog-grid.compact {
+    grid-template-columns: 1fr;
+  }
+
+  .troop-traits {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-nav {
+    gap: 6px;
+    padding: 8px;
+  }
+
+  .quick-nav a {
+    padding: 6px 8px;
+    font-size: 14px;
+  }
+
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .source-link-card {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

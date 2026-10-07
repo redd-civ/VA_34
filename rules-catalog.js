@@ -135,11 +135,11 @@
     races.innerHTML = '<h2>🧬 Расы</h2><p>Проверено по библиотечному файлу «компиляция ВА34.pdf». В справочник внесены только расы и подвиды, реально присутствующие в источнике. Текст свойств не пересказывается и не дополняется предположениями.</p><div class="catalog-grid">'+cards+'</div>';
   };
 
-  const sourceText = window.VA34_RULES_SOURCE ? String(window.VA34_RULES_SOURCE).replace(/\\\\n/g,'\\n') : '';
+  const sourceText = window.VA34_RULES_SOURCE ? String(window.VA34_RULES_SOURCE) : '';
   const sourceEntries = (sectionName, names, endNames=[]) => {
     if (!sourceText) return {};
-    const lines = sourceText.split(/\\n/);
-    const clean = v => String(v || '').replace(/[\\u200b\\ufeff]/g,'').replace(/[ \\t]+/g,' ').trim();
+    const lines = sourceText.split(/\n/);
+    const clean = v => String(v || '').replace(/[\u200b\ufeff]/g,'').replace(/[ \\t]+/g,' ').trim();
     const start = lines.findIndex(line => clean(line) === clean(sectionName));
     if (start < 0) return {};
     let end = lines.length;
@@ -171,7 +171,7 @@
         if (/^(?:Школы магии|Технологии|Перки героев|Навыки героев|Ландшафт|Список родов войск|Ресурсы)$/i.test(next)) break;
         parts.push(next);
       }
-      found[matched]=parts.join(' ').replace(/\\s+/g,' ').trim();
+      found[matched]=parts.join(' ').replace(/\s+/g,' ').trim();
     }
     return found;
   };

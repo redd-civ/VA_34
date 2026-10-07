@@ -114,7 +114,7 @@
 
     const cardHtml = r => {
       const block = raceBlock(r.name);
-      return '<article class="catalog-card race-card"><h3>🧬 '+esc(r.name)+'</h3>' +
+      return '<article class="catalog-card race-card"><h3>'+window.VA34_ICON_FOR(r.name,'race')+' '+esc(r.name)+'</h3>' +
         (block
           ? '<details><summary>Описание и свойства из исходного файла</summary><pre class="race-source">'+esc(block)+'</pre></details>'
           : '<p class="notice">Запись есть в структурированном каталоге, но её заголовок не найден в текущем полном источнике.</p>') +

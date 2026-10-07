@@ -135,6 +135,47 @@
     races.innerHTML = '<h2>🧬 Расы</h2><p>Проверено по библиотечному файлу «компиляция ВА34.pdf». В справочник внесены только расы и подвиды, реально присутствующие в источнике. Текст свойств не пересказывается и не дополняется предположениями.</p><div class="catalog-grid">'+cards+'</div>';
   };
 
+  const sourceText = window.VA34_RULES_SOURCE ? String(window.VA34_RULES_SOURCE).replace(/\\\\n/g,'\\n') : '';
+  const sourceEntries = (sectionName, names, endNames=[]) => {
+    if (!sourceText) return {};
+    const lines = sourceText.split(/\\n/);
+    const clean = v => String(v || '').replace(/[\\u200b\\ufeff]/g,'').replace(/[ \\t]+/g,' ').trim();
+    const start = lines.findIndex(line => clean(line) === clean(sectionName));
+    if (start < 0) return {};
+    let end = lines.length;
+    const endSet = new Set(endNames.map(clean));
+    for (let i=start+1;i<lines.length;i++) {
+      if (endSet.has(clean(lines[i]))) { end=i; break; }
+    }
+    const wanted = new Map(names.map(name => [clean(name), name]));
+    const found = {};
+    for (let i=start+1;i<end;i++) {
+      const line=clean(lines[i]);
+      if (!line) continue;
+      let matched=null;
+      for (const [key,name] of wanted) {
+        if (line === key || line.startsWith(key+'.') || line.startsWith(key+' —') || line.startsWith(key+' -')) { matched=name; break; }
+      }
+      if (!matched) continue;
+      let text=line.slice(clean(matched).length).replace(/^\\s*(?:[.\\-—:]\\s*)?/,'').trim();
+      const parts=[];
+      if (text) parts.push(text);
+      for (let j=i+1;j<end;j++) {
+        const next=clean(lines[j]);
+        if (!next) continue;
+        let isNext=false;
+        for (const [key] of wanted) {
+          if (next === key || next.startsWith(key+'.') || next.startsWith(key+' —') || next.startsWith(key+' -')) { isNext=true; break; }
+        }
+        if (isNext) break;
+        if (/^(?:Школы магии|Технологии|Перки героев|Навыки героев|Ландшафт|Список родов войск|Ресурсы)$/i.test(next)) break;
+        parts.push(next);
+      }
+      found[matched]=parts.join(' ').replace(/\\s+/g,' ').trim();
+    }
+    return found;
+  };
+
   const troops = document.getElementById('troops');
   if (troops) {
     /*
@@ -341,13 +382,22 @@
   }
 
   const terrain = document.getElementById('terrain');
-  if (terrain) terrain.innerHTML = '<h2>🌲 Ландшафт</h2><p>Ландшафт влияет на применение войск и условия боя. Текущий справочник содержит '+R.terrains.length+' базовых типов.</p><div class="catalog-grid compact">'+R.terrains.map(x=>'<article class="catalog-card"><h3>'+iconFor(x,'terrain')+' '+esc(x)+'</h3><p>Базовый тип местности.</p></article>').join('')+'</div>';
+  if (terrain) {
+    const descriptions = sourceEntries('Ландшафт', R.terrains, ['Навыки героев']);
+    terrain.innerHTML = '<h2>🌲 Ландшафт</h2><p>Ландшафт влияет на применение войск и условия боя.</p><div class="catalog-grid compact">'+R.terrains.map(x=>'<article class="catalog-card"><h3>'+iconFor(x,'terrain')+' '+esc(x)+'</h3><p>'+esc(descriptions[x] || 'Описание в исходном разделе не найдено.')+'</p></article>').join('')+'</div>';
+  }
 
   const skills = document.getElementById('skills');
-  if (skills) skills.innerHTML = '<h2>⚡ Навыки героев</h2><p>Максимум — 6 разных навыков. Для мирных навыков действуют специальные скидки: инженер и управляющий — 1 за уровень, исследователь — 0,5 за уровень. Один навык ориентировочно соответствует 1 энергии эффективности.</p><div class="catalog-grid compact">'+R.heroSkills.map(x=>'<article class="catalog-card"><h3>'+iconFor(x,'skill')+' '+esc(x)+'</h3></article>').join('')+'</div>';
+  if (skills) {
+    const descriptions = sourceEntries('Навыки героев', R.heroSkills, ['Перки героев']);
+    skills.innerHTML = '<h2>⚡ Навыки героев</h2><p>Максимум — 6 разных навыков. Для мирных навыков действуют специальные скидки: инженер и управляющий — 1 за уровень, исследователь — 0,5 за уровень.</p><div class="catalog-grid compact">'+R.heroSkills.map(x=>'<article class="catalog-card"><h3>'+iconFor(x,'skill')+' '+esc(x)+'</h3><p>'+esc(descriptions[x] || 'Описание в исходном разделе не найдено.')+'</p></article>').join('')+'</div>';
+  }
 
   const perks = document.getElementById('perks');
-  if (perks) perks.innerHTML = '<h2>✨ Перки героев</h2><p>Перки — дополнительные особенности героя. Текущий справочник содержит следующие названия:</p><div class="catalog-grid compact">'+R.heroPerks.map(x=>'<article class="catalog-card"><h3>'+iconFor(x,'perk')+' '+esc(x)+'</h3></article>').join('')+'</div>';
+  if (perks) {
+    const descriptions = sourceEntries('Перки героев', R.heroPerks, ['Школы магии']);
+    perks.innerHTML = '<h2>✨ Перки героев</h2><p>Перки — дополнительные особенности героя. Они не прокачиваются и, как правило, появляются на старте или в результате событий.</p><div class="catalog-grid compact">'+R.heroPerks.map(x=>'<article class="catalog-card"><h3>'+iconFor(x,'perk')+' '+esc(x)+'</h3><p>'+esc(descriptions[x] || 'Описание в исходном разделе не найдено.')+'</p></article>').join('')+'</div>';
+  }
 
   const tech = document.getElementById('tech');
   if (tech) {

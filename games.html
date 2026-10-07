@@ -5,34 +5,94 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>VA-34 — Игра</title>
 <link rel="stylesheet" href="cabinet.css">
+<style>
+.game-shell{max-width:1180px;margin:30px auto;padding:20px}
+.game-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}
+.game-tabs button.active{box-shadow:0 0 0 2px rgba(255,255,255,.2) inset}
+.game-tab-panel[hidden],#turnDetail[hidden],#shardCreator[hidden]{display:none}
+.game-hero{display:flex;justify-content:space-between;gap:20px;align-items:center}
+.game-card-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
+.game-subcard{margin-top:12px}
+.game-list-row{padding:7px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.game-list-row:last-child{border-bottom:0}
+@media(max-width:760px){.game-shell{margin:10px auto;padding:12px}.game-hero{display:block}.game-card-grid{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
-<main style="max-width:1100px;margin:30px auto;padding:20px">
+<main class="game-shell">
   <p><a href="cabinet.html">← Личный кабинет</a></p>
-  <h1>Игра VA-34</h1>
-  <p><a class="back" href="master.html">👑 Кабинет мастера</a></p>
+  <h1>🌌 Игра VA-34</h1>
   <p id="status">Загрузка…</p>
 
-  <section>
-    <h2>Основная игра</h2>
-    <div id="game"></div>
+  <section id="game"></section>
+
+  <nav class="game-tabs" aria-label="Разделы игры">
+    <button type="button" class="active" data-game-tab="overview">Об игре</button>
+    <button type="button" data-game-tab="lords">👑 Владыки</button>
+    <button type="button" data-game-tab="shards">🏝️ Осколки</button>
+    <button type="button" data-game-tab="turns">📋 Ходы ИС</button>
+    <button type="button" data-game-tab="application">📨 Моя заявка</button>
+  </nav>
+
+  <section id="tab-overview" class="game-tab-panel">
+    <article class="entity">
+      <h2>Об игре</h2>
+      <p>На этой странице собраны участники, Владыки, свободные осколки и опубликованные ходы ИС текущей игры.</p>
+      <p class="muted">Личные данные и редактирование своего Владыки находятся в игровом кабинете.</p>
+    </article>
   </section>
 
-  <section id="myApplicationSection">
-    <h2>Моя заявка</h2>
+  <section id="tab-lords" class="game-tab-panel" hidden>
+    <h2>👑 Владыки игроков</h2>
+    <p class="muted">Здесь размещаются Владыки всех принятых игроков этой игры.</p>
+    <div id="lordsList"></div>
+  </section>
+
+  <section id="tab-shards" class="game-tab-panel" hidden>
+    <h2>🏝️ Осколки</h2>
+    <p class="muted">Мастер создаёт нейтральные осколки здесь; после передачи игроку осколок остаётся в истории игры с отметкой о передаче.</p>
+    <section id="shardCreator" class="entity" hidden>
+      <div class="section-head"><h3>👑 Мастер: создать осколок</h3><span class="muted">Новый нейтральный осколок</span></div>
+      <form id="shardCreatorForm" class="form-grid">
+        <label>Название<input name="name" required></label>
+        <label>Тип<select name="type" id="shardType"></select></label>
+        <label>Размер<select name="size" id="shardSize"></select></label>
+        <label>Доход<input name="income" type="number" min="0" step=".5" value="0"></label>
+        <label>Раса<input name="race"></label>
+        <label>Население<input name="population"></label>
+        <label>Настроение<select name="mood" id="shardMood"></select></label>
+        <label>Гарнизон<input name="garrison" type="number" min="0" step=".5" value="0"></label>
+        <label>Снабжение<input name="supply" type="number" min="0" step=".5" value="0"></label>
+        <label>Защита<input name="defense" type="number" min="0" step=".5" value="0"></label>
+        <label>Ландшафт<select name="terrain" id="shardTerrain"></select></label>
+        <label class="wide">Описание<textarea name="description"></textarea></label>
+        <div class="wide"><button class="primary">Создать осколок</button></div>
+      </form>
+    </section>
+    <div id="shardsList"></div>
+  </section>
+
+  <section id="tab-turns" class="game-tab-panel" hidden>
+    <h2>📋 Ходы ИС</h2>
+    <p class="muted">История ходов игроков в рамках этой игры.</p>
+    <div id="turnsList"></div>
+    <div id="turnDetail" hidden></div>
+  </section>
+
+  <section id="tab-application" class="game-tab-panel" hidden>
+    <h2>📨 Участие в игре</h2>
     <div id="myApplication"></div>
   </section>
 
   <section id="masterPanel" style="display:none">
-    <h2>Мастер: заявки игроков</h2>
-    <p class="muted">Игра уже создана. Мастер только принимает или отклоняет заявки игроков.</p>
+    <h2>👑 Панель мастера</h2>
     <div id="applications"></div>
   </section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script src="cloud-store.js"></script>
-<script src="games.js?v=20261006b"></script>
-<script src="games-reapplication-fix.js?v=20261006a"></script>
+<script src="rules-data.js"></script>
+<script src="games.js?v=20261008a"></script>
 </body>
 </html>

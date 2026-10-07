@@ -168,3 +168,21 @@
   renderRacesFromSource();
   applySearch();
 })();
+/* Мобильная навигация: на узких экранах основное поле занимает всю ширину. */
+document.addEventListener('DOMContentLoaded', () => {
+  const toggle = document.querySelector('.mobile-nav-toggle');
+  const nav = document.querySelector('.nav-panel');
+  if (!toggle || !nav) return;
+  toggle.addEventListener('click', () => {
+    const open = nav.classList.toggle('mobile-nav-open');
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.setAttribute('aria-label', open ? 'Закрыть навигацию' : 'Открыть навигацию');
+    toggle.textContent = open ? '×' : '☰';
+  });
+  nav.querySelectorAll('a').forEach(link => link.addEventListener('click', () => {
+    nav.classList.remove('mobile-nav-open');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-label', 'Открыть навигацию');
+    toggle.textContent = '☰';
+  }));
+});

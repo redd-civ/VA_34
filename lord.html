@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Владыка — VA-34</title>
+<link rel="stylesheet" href="cabinet.css">
+<style>
+.lord-page{max-width:1100px;margin:30px auto;padding:20px}
+.lord-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.lord-block{margin-top:12px}
+@media(max-width:700px){.lord-page{margin:10px auto;padding:12px}.lord-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main class="lord-page">
+<p><a id="backGame" href="games.html">← К игре</a></p>
+<div id="lordPage"><p class="notice">Загрузка…</p></div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="cloud-store.js"></script>
+<script src="lord-page.js?v=20261008a"></script>
+</body>
+</html>

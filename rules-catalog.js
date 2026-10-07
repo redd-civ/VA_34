@@ -4,36 +4,6 @@
   const esc = v => String(v ?? '').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
   const list = arr => '<ul>'+arr.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>';
 
-  const races = document.getElementById('races');
-  if (races) {
-    const rawRaceSource = window.VA34_RULES_SOURCE ? String(window.VA34_RULES_SOURCE).replace(/\\\\n/g,'\\n') : '';
-    const raceSourceStart = rawRaceSource.indexOf('Вдохновение Астрала. Расы');
-    const raceSourceEnd = rawRaceSource.indexOf('Список родов войск', raceSourceStart);
-    const raceSource = raceSourceStart >= 0
-      ? rawRaceSource.slice(raceSourceStart, raceSourceEnd > raceSourceStart ? raceSourceEnd : rawRaceSource.length)
-      : '';
-    const raceBlock = name => {
-      if (!raceSource) return '';
-      const pos = raceSource.indexOf('\\n'+String(name)+'\\n');
-      if (pos < 0) return '';
-      const start = pos + 1;
-      let end = raceSource.length;
-      R.races.forEach(other => {
-        if (other.name === name) return;
-        const p = raceSource.indexOf('\\n'+String(other.name)+'\\n', start);
-        if (p >= 0 && p < end) end = p;
-      });
-      return raceSource.slice(start, end).trim();
-    };
-    const cards = R.races.map(r => {
-      const block = raceBlock(r.name);
-      return '<article class="catalog-card"><h3>'+window.VA34_ICON_FOR(r.name,'race')+' '+esc(r.name)+'</h3>'+
-        (block ? '<details><summary>Описание и свойства из исходного файла</summary><pre class="race-source">'+esc(block)+'</pre></details>' : '<p class="notice">Запись есть в источнике, но автоматическое извлечение блока не удалось.</p>')+
-        '</article>';
-    }).join('');
-    races.innerHTML = '<h2>🧬 Расы</h2><p>Проверено по библиотечному файлу «компиляция ВА34.pdf». В справочник внесены только расы и подвиды, реально присутствующие в источнике. Текст свойств не пересказывается и не дополняется предположениями.</p><div class="catalog-grid">'+cards+'</div>';
-  };
-
   const iconFor = (name, category='') => {
     const n = String(name || '').toLocaleLowerCase('ru-RU');
     if (category === 'troop') {
@@ -134,6 +104,36 @@
   };
 
   window.VA34_ICON_FOR = iconFor;
+
+  const races = document.getElementById('races');
+  if (races) {
+    const rawRaceSource = window.VA34_RULES_SOURCE ? String(window.VA34_RULES_SOURCE).replace(/\\\\n/g,'\\n') : '';
+    const raceSourceStart = rawRaceSource.indexOf('Вдохновение Астрала. Расы');
+    const raceSourceEnd = rawRaceSource.indexOf('Список родов войск', raceSourceStart);
+    const raceSource = raceSourceStart >= 0
+      ? rawRaceSource.slice(raceSourceStart, raceSourceEnd > raceSourceStart ? raceSourceEnd : rawRaceSource.length)
+      : '';
+    const raceBlock = name => {
+      if (!raceSource) return '';
+      const pos = raceSource.indexOf('\\n'+String(name)+'\\n');
+      if (pos < 0) return '';
+      const start = pos + 1;
+      let end = raceSource.length;
+      R.races.forEach(other => {
+        if (other.name === name) return;
+        const p = raceSource.indexOf('\\n'+String(other.name)+'\\n', start);
+        if (p >= 0 && p < end) end = p;
+      });
+      return raceSource.slice(start, end).trim();
+    };
+    const cards = R.races.map(r => {
+      const block = raceBlock(r.name);
+      return '<article class="catalog-card"><h3>'+window.VA34_ICON_FOR(r.name,'race')+' '+esc(r.name)+'</h3>'+
+        (block ? '<details><summary>Описание и свойства из исходного файла</summary><pre class="race-source">'+esc(block)+'</pre></details>' : '<p class="notice">Запись есть в источнике, но автоматическое извлечение блока не удалось.</p>')+
+        '</article>';
+    }).join('');
+    races.innerHTML = '<h2>🧬 Расы</h2><p>Проверено по библиотечному файлу «компиляция ВА34.pdf». В справочник внесены только расы и подвиды, реально присутствующие в источнике. Текст свойств не пересказывается и не дополняется предположениями.</p><div class="catalog-grid">'+cards+'</div>';
+  };
 
   const troops = document.getElementById('troops');
   if (troops) {
@@ -388,7 +388,7 @@
       }).join('');
       return '<details class="tech-tz"><summary>ТЗ технологии ('+rows.length+')</summary><div class="catalog-grid compact">'+body+'</div></details>';
     };
-    tech.innerHTML = '<h2>⚙️ Технологии</h2><p>Ниже перенесены технологии из исходного файла. Для каждой показывается базовое описание, а доступные уровни ТЗ будут добавляться из структурированного каталога. Незаполненные уровни не заменяются предположениями.</p><div class="catalog-grid">'+R.technologies.map(x=>'<article class="catalog-card"><h3>'+window.VA34_ICON_FOR(x,'technology')+' '+esc(x)+'</h3><p>'+esc((R.technologySourceNotes&&R.technologySourceNotes[x]) || R.technologyNotes[x] || 'Описание в источнике не задано.')+'</p>'+tzHtml(x)+'</article>').join('')+'</div>';
+    tech.innerHTML = '<h2>⚙️ Технологии</h2><p>Ниже перенесены технологии из исходного файла. Для каждой показывается базовое описание, а доступные уровни ТЗ будут добавляться из структурированного каталога. Незаполненные уровни не заменяются предположениями.</p><div class="catalog-grid">'+R.technologies.map(x=>'<article class="catalog-card"><h3>'+window.VA34_ICON_FOR(x,'tech')+' '+esc(x)+'</h3><p>'+esc((R.technologySourceNotes&&R.technologySourceNotes[x]) || R.technologyNotes[x] || 'Описание в источнике не задано.')+'</p>'+tzHtml(x)+'</article>').join('')+'</div>';
   }
 
   const levels = document.getElementById('techlevels');

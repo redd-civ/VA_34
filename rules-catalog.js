@@ -139,7 +139,14 @@
   const sourceEntries = (sectionName, names, endNames=[]) => {
     if (!sourceText) return {};
     const lines = sourceText.split(/\n/);
-    const clean = v => String(v || '').replace(/[\\u200b\\ufeff]/g,'').replace(/[\\f]/g,' ').replace(/[ *]/g,'').replace(/^\\s*[-–—•]+\\s*/,'').replace(/[ \\t]+/g,' ').trim();
+    const clean = v => String(v || '')
+      .replace(/[\\u200b\\ufeff]/g,'')
+      .replace(/[\\f]/g,' ')
+      .replace(/^\\s*[-–—•]+\\s*/,'')
+      .replace(/^\\s+/,'')
+      .replace(/[ *]+/g,' ')
+      .replace(/[ \\t]+/g,' ')
+      .trim();
     const start = lines.findIndex(line => clean(line) === clean(sectionName));
     if (start < 0) return {};
     let end = lines.length;
@@ -147,18 +154,22 @@
     for (let i=start+1;i<lines.length;i++) {
       if (endSet.has(clean(lines[i]))) { end=i; break; }
     }
-    const wanted = new Map(names.map(name => [clean(name), name]));
+    const aliases = new Map(names.map(name => [clean(name), name]));
+    const normalizedKey = value => clean(value).replace(/\\*/g,'').replace(/\\s+/g,' ');
+    const wanted = new Map(names.map(name => [normalizedKey(name), name]));
     const found = {};
     for (let i=start+1;i<end;i++) {
       const line=clean(lines[i]);
       if (!line) continue;
       let matched=null;
       for (const [key,name] of wanted) {
-        const boundary = line.slice(key.length, key.length + 1);
-        if (line === key || (line.startsWith(key) && /^[.\\-—:]|\\s/.test(boundary))) { matched=name; break; }
+        const normalizedLine = normalizedKey(line);
+        const boundary = normalizedLine.slice(key.length, key.length + 1);
+        if (normalizedLine === key || (normalizedLine.startsWith(key) && /^[.\\-—:]|\\s/.test(boundary))) { matched=name; break; }
       }
       if (!matched) continue;
-      let text=line.slice(clean(matched).length).replace(/^\\s*(?:[.\\-—:]\\s*)?/,'').trim();
+      const normalizedLine = normalizedKey(line);
+      let text=normalizedLine.slice(normalizedKey(matched).length).replace(/^\\s*(?:[.\\-—:]\\s*)?/,'').trim();
       const parts=[];
       if (text) parts.push(text);
       for (let j=i+1;j<end;j++) {
@@ -166,8 +177,9 @@
         if (!next) continue;
         let isNext=false;
         for (const [key] of wanted) {
-          const boundary = next.slice(key.length, key.length + 1);
-          if (next === key || (next.startsWith(key) && /^[.\\-—:]|\\s/.test(boundary))) { isNext=true; break; }
+          const normalizedNext = normalizedKey(next);
+          const boundary = normalizedNext.slice(key.length, key.length + 1);
+          if (normalizedNext === key || (normalizedNext.startsWith(key) && /^[.\\-—:]|\\s/.test(boundary))) { isNext=true; break; }
         }
         if (isNext) break;
         if (/^(?:Школы магии|Технологии|Перки героев|Навыки героев|Ландшафт|Список родов войск|Ресурсы)$/i.test(next)) break;

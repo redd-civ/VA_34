@@ -112,7 +112,7 @@
     box.innerHTML='<div class="entity-list">'+lords.data.map(l=>{
       const ss=lordShards[l.id]||[],hs=lordHeroes[l.id]||[],ts=lordTroops[l.id]||[],ds=lordDevs[l.id]||[];
       const ancestral=ss.find(x=>x.type==='ancestral');
-      return '<article class="entity lord-game-card"><div class="section-head"><div><h3>👑 '+val(l.name||'Безымянный Владыка')+'</h3><p>Игрок: '+esc(names[l.player_id]||l.player_id)+' · '+val(l.race)+'</p></div><span class="badge">'+val(l.status)+'</span></div>'+
+      return '<article class="entity lord-game-card"><div class="section-head"><div><h3>👑 '+val(l.name||'Безымянный Владыка')+'</h3><p>Игрок: '+esc(names[l.player_id]||l.player_id)+' · '+val(l.race)+'</p></div><span class="badge">'+val(l.status)+'</span></div><p><a class="primary" href="lord.html?id='+encodeURIComponent(l.id)+'">Открыть страницу Владыки</a></p>'+
         '<div class="game-card-grid">'+row('Мир',l.world_name||l.worldName)+row('Энергия',l.energy)+row('Девиз',l.motto)+row('Способность',l.ability)+row('Особенности',l.traits)+row('Осколки',ss.length)+row('Герои',hs.length)+row('Рода войск',ts.length)+row('Развития',ds.length)+'</div>'+
         (ancestral?section('🌿 Родовой осколок',row('Название',ancestral.name)+row('Размер',ancestral.size)+row('Доход',ancestral.income)+row('Ландшафт',ancestral.terrain)+row('Гарнизон',ancestral.garrison)+row('Защита',ancestral.defense)):'')+
         (ss.length?section('🌍 Осколки',ss.map(x=>'<div class="game-list-row"><b>'+val(x.name)+'</b> · '+val(x.type)+' · размер '+val(x.size)+' · доход '+val(x.income)+'</div>').join('')):'')+

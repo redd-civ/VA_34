@@ -1,193 +1,209 @@
 (()=> {
   let user=null, db=null, master=false, game=null;
 
-  const esc=v=>String(v??'').replace(/[&<>\"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[m]));
+  const esc=v=>String(v??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
   const statusText={open:'Приём заявок открыт',running:'Игра идёт',closed:'Приём заявок закрыт',finished:'Игра завершена'};
   const roleText={pending:'На рассмотрении',accepted:'Принята',rejected:'Отклонена',withdrawn:'Отозвана'};
+  const turnText={draft:'Черновик',submitted:'Отправлен',approved:'Принят',rejected:'Отклонён',resolved:'Разрешён'};
   const list=v=>Array.isArray(v)?v:(v?[String(v)]:[]);
   const val=v=>v===null||v===undefined||v===''?'—':esc(v);
+  const section=(title,html)=>'<div class="notice game-subcard"><h4>'+title+'</h4>'+html+'</div>';
+  const row=(label,value)=>'<div><b>'+label+':</b> '+val(value)+'</div>';
+  const chips=items=>list(items).map(x=>'<span class="badge">'+esc(x)+'</span>').join(' ')||'—';
 
   async function init(){
     const s=document.getElementById('status');
     const r=await VA34_CLOUD.init();
-    if(!r.authenticated){s.textContent='Войдите в аккаунт, чтобы подать заявку на участие.';return;}
+    if(!r.authenticated){s.textContent='Войдите в аккаунт, чтобы открыть игру.';return;}
     user=r.user;
     db=window.supabase.createClient(VA34_SUPABASE.url,VA34_SUPABASE.publishableKey);
-
     const me=await db.from('players').select('display_name,player_name,is_master').eq('id',user.id).single();
-    if(me.error) throw me.error;
+    if(me.error)throw me.error;
     master=!!me.data?.is_master;
     s.textContent='Аккаунт: '+(me.data?.player_name||me.data?.display_name||user.email||user.id);
 
-    let result=await db.from('games').select('*').order('created_at',{ascending:true}).limit(1).maybeSingle();
-    if(result.error) throw result.error;
+    const requested=new URLSearchParams(location.search).get('game');
+    let q=db.from('games').select('*');
+    if(requested)q=q.eq('id',requested);
+    const result=await q.order('created_at',{ascending:true}).limit(1).maybeSingle();
+    if(result.error)throw result.error;
     game=result.data;
 
     if(!game && master){
       const created=await db.from('games').insert({master_id:user.id,name:'Вдохновение Астрала',description:'Основная кампания VA-34.',max_players:100,status:'open'}).select('*').single();
-      if(created.error) throw created.error;
+      if(created.error)throw created.error;
       game=created.data;
     }
-
     if(!game){
-      document.getElementById('game').innerHTML='<div class="notice">Основная игра пока не настроена. Обратитесь к Мастеру.</div>';
-      document.getElementById('myApplicationSection').style.display='none';
+      document.getElementById('game').innerHTML='<div class="notice">Игра не найдена.</div>';
       return;
     }
-
-    if(game.master_id===user.id) master=true;
+    if(game.master_id===user.id)master=true;
+    localStorage.setItem('va34_current_game_id',game.id);
     renderGame();
-    await loadMyApplication();
+    bindTabs();
+    await Promise.all([loadMyApplication(),loadLords(),loadShards(),loadTurns()]);
     if(master && game.master_id===user.id){
       document.getElementById('masterPanel').style.display='block';
       await loadApplications();
+      initShardCreator();
     }
   }
 
   function renderGame(){
     const box=document.getElementById('game');
-    box.innerHTML='<article class="entity"><h3>'+esc(game.name)+'</h3><p>'+esc(game.description||'Основная кампания VA-34.')+'</p><p>Статус: '+esc(statusText[game.status]||game.status)+'</p></article>';
+    box.innerHTML='<article class="entity game-hero"><div><span class="badge">'+esc(statusText[game.status]||game.status)+'</span><h2>'+esc(game.name)+'</h2><p>'+esc(game.description||'Основная кампания VA-34.')+'</p></div><div class="data-actions"><a class="primary" href="cabinet.html?game='+encodeURIComponent(game.id)+'">🧭 Мой кабинет</a>'+(master?'<a href="master.html">👑 Кабинет мастера</a>':'')+'</div></article>';
+  }
+
+  function bindTabs(){
+    document.querySelectorAll('[data-game-tab]').forEach(b=>b.onclick=()=>{
+      const tab=b.dataset.gameTab;
+      document.querySelectorAll('[data-game-tab]').forEach(x=>x.classList.toggle('active',x===b));
+      document.querySelectorAll('.game-tab-panel').forEach(x=>x.hidden=x.id!=='tab-'+tab);
+    });
   }
 
   async function loadMyApplication(){
-    const box=document.getElementById('myApplication');
+    const box=document.getElementById('myApplication'); if(!box)return;
     const {data,error}=await db.from('game_applications').select('id,status,message,created_at').eq('game_id',game.id).eq('player_id',user.id).maybeSingle();
     if(error){box.innerHTML='<div class="notice">'+esc(error.message)+'</div>';return;}
-    const {data:member,error:memberError}=await db.from('game_members').select('role').eq('game_id',game.id).eq('player_id',user.id).maybeSingle();
-    if(memberError){box.innerHTML='<div class="notice">'+esc(memberError.message)+'</div>';return;}
-    if(member){box.innerHTML='<div class="notice">✓ Вы приняты в игру. <a class="primary" href="cabinet.html">Открыть игровой кабинет</a></div>';return;}
+    const member=await db.from('game_members').select('role').eq('game_id',game.id).eq('player_id',user.id).maybeSingle();
+    if(member.error){box.innerHTML='<div class="notice">'+esc(member.error.message)+'</div>';return;}
+    if(member.data){box.innerHTML='<div class="notice">✓ Вы участник игры. <a class="primary" href="cabinet.html?game='+encodeURIComponent(game.id)+'">Открыть свой игровой кабинет</a></div>';return;}
     if(data){
-      if(data.status==='pending')box.innerHTML='<div class="notice">Ваша заявка находится на рассмотрении у Мастера.</div>';
-      else if(data.status==='accepted')box.innerHTML='<div class="notice">✓ Заявка принята. <a class="primary" href="cabinet.html">Открыть игровой кабинет</a></div>';
-      else box.innerHTML='<div class="notice">Статус заявки: '+esc(roleText[data.status]||data.status)+'</div>';
+      box.innerHTML='<div class="notice">Статус заявки: <b>'+esc(roleText[data.status]||data.status)+'</b>'+(data.message?'<p>'+esc(data.message)+'</p>':'')+'</div>';
       return;
     }
     if(game.status!=='open'){box.innerHTML='<div class="notice">Приём новых игроков сейчас закрыт.</div>';return;}
     box.innerHTML='<p>Чтобы присоединиться к игре, отправьте заявку Мастеру.</p><button class="primary" id="applyButton">Подать заявку</button>';
-    document.getElementById('applyButton').onclick=apply;
+    document.getElementById('applyButton').onclick=async()=>{
+      const message=prompt('Сообщение Мастеру (необязательно):','');
+      if(message===null)return;
+      const {error}=await db.from('game_applications').insert({game_id:game.id,player_id:user.id,message});
+      if(error){alert(error.message);return;} await loadMyApplication(); await loadLords();
+    };
   }
 
-  async function apply(){
-    const button=document.getElementById('applyButton');
-    if(button)button.disabled=true;
-    const message=prompt('Сообщение Мастеру (необязательно):','');
-    if(message===null){if(button)button.disabled=false;return;}
-    const {error}=await db.from('game_applications').insert({game_id:game.id,player_id:user.id,message});
-    if(error){alert(error.message);if(button)button.disabled=false;return;}
-    await loadMyApplication();
-  }
-
-  function section(title,html){return '<div class="notice" style="margin-top:12px"><h4 style="margin-top:0">'+title+'</h4>'+html+'</div>';}
-  function row(label,value){return '<div><b>'+label+':</b> '+val(value)+'</div>';}
-  function chips(items){return list(items).map(x=>'<span class="badge">'+esc(x)+'</span>').join(' ')||'—';}
-
-  async function findLordId(playerId){
-    // Основной вариант: Владыка привязан к текущей игре.
-    let res=await db.from('lords').select('id').eq('game_id',game.id).eq('player_id',playerId).order('created_at',{ascending:false}).limit(1);
-    // Совместимость со старыми записями: если game_id ещё не был добавлен/заполнен,
-    // ищем Владыку по игроку. Это позволяет Мастеру увидеть уже созданную заявку
-    // до завершения миграции старых данных.
-    if((res.error && ['42703','PGRST204','PGRST205'].includes(res.error.code)) || (!res.error && !(res.data||[]).length)){
-      res=await db.from('lords').select('id').eq('player_id',playerId).order('created_at',{ascending:false}).limit(1);
-    }
-    if(res.error)throw res.error;
-    return {ids:(res.data||[]).map(x=>x.id)};
-  }
-
-  async function openApplication(playerId,targetId){
-    const target=document.getElementById(targetId);
-    if(!target)return;
-    if(target.dataset.loaded==='1'){target.hidden=!target.hidden;return;}
-    target.hidden=false;
-    target.innerHTML='<div class="notice">Загрузка полной заявки…</div>';
-
-    let lordIds=[];
-    try{lordIds=(await findLordId(playerId)).ids;}catch(e){target.innerHTML='<div class="warning">Не удалось найти Владыку: '+esc(e.message)+'</div>';return;}
-    const playerRes=await db.from('players').select('display_name,player_name').eq('id',playerId).maybeSingle();
-    let lordRes=lordIds.length
-      ? await db.from('lords').select('*').eq('id',lordIds[0]).maybeSingle()
-      : {data:null,error:null};
-    if(lordRes.error && ['42703','PGRST204','PGRST205'].includes(lordRes.error.code)){
-      lordRes=await db.from('lords').select('*').eq('player_id',playerId).order('created_at',{ascending:false}).limit(1).maybeSingle();
-    }
-    const [shardRes,devRes,heroRes,troopRes]=await Promise.all([
-      db.from('shards').select('*').in('lord_id',lordIds),
-      db.from('developments').select('*').in('lord_id',lordIds),
-      db.from('heroes').select('*').in('lord_id',lordIds),
-      db.from('troops').select('*').in('lord_id',lordIds)
+  async function loadLords(){
+    const box=document.getElementById('lordsList'); if(!box)return;
+    const members=await db.from('game_members').select('player_id,role').eq('game_id',game.id);
+    if(members.error){box.innerHTML='<div class="notice">'+esc(members.error.message)+'</div>';return;}
+    const players=(members.data||[]).filter(x=>x.role==='player').map(x=>x.player_id);
+    if(!players.length){box.innerHTML='<div class="notice">Принятых игроков пока нет.</div>';return;}
+    const [lords,people]=await Promise.all([
+      db.from('lords').select('*').eq('game_id',game.id).in('player_id',players).order('created_at',{ascending:true}),
+      db.from('players').select('id,display_name,player_name').in('id',players)
     ]);
-    const errors=[lordRes,shardRes,devRes,heroRes,troopRes].filter(x=>x.error&&x.error.code!=='PGRST116');
-    if(errors.length){target.innerHTML='<div class="warning">Не удалось загрузить полную заявку: '+esc(errors[0].error.message)+'</div>';return;}
-
-    const lord=lordRes.data||null, shards=shardRes.data||[], developments=devRes.data||[], heroes=heroRes.data||[], troops=troopRes.data||[];
-    const player=playerRes.data||{};
-    const starterTechRows=developments.filter(x=>x.kind==='starting_technology');
-    const starterMagicRows=developments.filter(x=>x.kind==='starting_magic');
-    const starterTech=lord?.starting_tech || starterTechRows.map(x=>x.name+' '+Number(x.level||1)).join(', ');
-    const starterMagic=lord?.starting_magic || starterMagicRows.map(x=>x.name+' '+Number(x.level||1)).join(', ');
-    const starterTroops=lord?.starting_troops || troops.map(x=>{
-      const qty=Number(x.quantity||0);
-      const tier=Number(x.tier||1);
-      return x.name+(qty ? ' × '+qty : '')+(tier ? ' (ур. '+tier+')' : '');
-    }).join(', ');
-    let html='';
-    if(!lord)html='<div class="warning">Карточка Владыки ещё не создана.</div>';
-    else{
-      html+=section('👑 Владыка',row('Имя',lord.name)+row('Игрок',lord.player_name||player.player_name||player.display_name||'—')+row('Раса',lord.race)+row('Мир',lord.world_name||lord.worldName)+row('Статус',lord.status)+row('Начальная энергия',lord.energy)+row('Девиз',lord.motto)+row('Способность',lord.ability)+row('Особенности',lord.traits)+row('Артефакты / предметы',lord.items)+row('Ресурсы и постоянные источники дохода',lord.resources)+row('Стартовые рода войск',starterTroops)+row('Стартовые технологии',starterTech)+row('Стартовые школы магии',starterMagic));
-    }
-
-    const ancestral=shards.find(x=>x.type==='ancestral'), ordinary=shards.filter(x=>x.type!=='ancestral');
-    if(ancestral)html+=section('🌿 Родовой осколок',row('Название',ancestral.name)+row('Раса',ancestral.race)+row('Ландшафт',ancestral.terrain)+row('Размер',ancestral.size)+row('Доход',ancestral.income)+row('Гарнизон',ancestral.garrison)+row('Снабжение',ancestral.supply)+row('Защита',ancestral.defense)+row('Здания',ancestral.buildings)+row('Ресурсы / трофеи',ancestral.resources));
-    else html+=section('🌿 Родовой осколок','<span class="muted">Родовой осколок ещё не сохранён.</span>');
-
-    html+=section('🌍 Обычные осколки',ordinary.length?ordinary.map((x,i)=>'<div style="margin-bottom:10px"><b>'+(i+1)+'. '+val(x.name)+'</b>'+row('Тип',x.type)+row('Размер',x.size)+row('Раса',x.race)+row('Ландшафт',x.terrain)+row('Доход',x.income)+row('Население',x.population)+row('Настроение',x.mood)+row('Гарнизон',x.garrison)+row('Снабжение',x.supply)+row('Защита',x.defense)+row('Здания',x.buildings)+row('Ресурсы / трофеи',x.resources)+'</div>').join(''):'<span class="muted">Обычных осколков нет.</span>');
-    html+=section('⚙️ Технологии и магия',developments.length?developments.map(x=>'<div style="margin-bottom:8px"><b>'+val(x.name)+'</b>'+row('Тип',x.kind)+row('Уровень',x.level)+row('Стоимость',x.cost)+(x.description?row('Описание',x.description):'')+'</div>').join(''):'<span class="muted">Сохранённых технологий/школ магии нет.</span>');
-    html+=section('🎭 Герои',heroes.length?heroes.map(x=>'<div style="margin-bottom:8px"><b>'+val(x.name)+'</b>'+row('Раса',x.race)+row('Уровень',x.level)+row('Опыт',x.xp)+row('Навыки',chips(x.skills))+row('Перки',chips(x.perks))+row('Витязи',chips(x.knights))+row('Предметы',chips(x.items))+row('Артефакты',chips(x.artifacts))+'</div>').join(''):'<span class="muted">Героев пока нет.</span>');
-    html+=section('⚔️ Войска',troops.length?troops.map(x=>'<div style="margin-bottom:8px"><b>'+val(x.name)+'</b>'+row('Тип',x.type)+row('Уровень',x.tier)+row('Количество',x.quantity)+row('Особенности',chips(x.traits))+'</div>').join(''):'<span class="muted">Родов войск пока нет.</span>');
-    target.innerHTML=html;
-    target.dataset.loaded='1';
-  }
-
-  async function loadApplications(){
-    const box=document.getElementById('applications');
-    const {data,error}=await db.from('game_applications').select('id,player_id,message,status,created_at').eq('game_id',game.id).order('created_at',{ascending:true});
-    if(error){box.innerHTML='<div class="notice">'+esc(error.message)+'</div>';return;}
-    if(!data?.length){box.innerHTML='<div class="notice">Заявок пока нет.</div>';return;}
-    const ids=[...new Set(data.map(a=>a.player_id))];
-    const people=await db.from('players').select('id,display_name,player_name').in('id',ids);
+    if(lords.error){box.innerHTML='<div class="notice">'+esc(lords.error.message)+'</div>';return;}
     const names={};(people.data||[]).forEach(p=>names[p.id]=p.player_name||p.display_name||'Игрок');
-    if(people.error){console.warn('Не удалось загрузить имена игроков:',people.error.message);}
-    let lords=await db.from('lords').select('id,player_id,name,game_id,created_at').in('player_id',ids).order('created_at',{ascending:false});
-    if(lords.error && ['42703','PGRST204','PGRST205'].includes(lords.error.code)){
-      lords=await db.from('lords').select('id,player_id,name,created_at').in('player_id',ids).order('created_at',{ascending:false});
-    }
-    const lordNames={};(lords.data||[]).forEach(l=>{
-      if(!lordNames[l.player_id] || l.game_id===game.id) lordNames[l.player_id]=l.name||'Безымянный Владыка';
-    });
-    box.innerHTML=data.map(a=>{
-      const playerName=names[a.player_id]||'Игрок без имени', lordName=lordNames[a.player_id]||'Владыка ещё не создан', detailId='applicationDetail_'+a.id;
-      return '<div class="notice" style="margin-bottom:12px"><div><b>'+esc(playerName)+'</b> · 👑 '+esc(lordName)+' — '+esc(roleText[a.status]||a.status)+'</div>'+(a.message?'<div class="muted" style="margin-top:6px">Сообщение: '+esc(a.message)+'</div>':'')+'<div style="margin-top:10px"><button type="button" class="primary" data-view-application="'+a.player_id+'" data-target="'+detailId+'">👁 Просмотреть полную заявку</button>'+(a.status==='pending'?' <button data-accept="'+a.id+'">Принять</button> <button data-reject="'+a.id+'">Отклонить</button>':'')+'</div><div id="'+detailId+'" style="margin-top:10px" hidden></div></div>';
-    }).join('');
-    box.querySelectorAll('[data-accept]').forEach(b=>b.onclick=()=>decide(b.dataset.accept,'accepted'));
-    box.querySelectorAll('[data-reject]').forEach(b=>b.onclick=()=>decide(b.dataset.reject,'rejected'));
-    box.querySelectorAll('[data-view-application]').forEach(b=>b.onclick=()=>openApplication(b.dataset.viewApplication,b.dataset.target));
+    const ids=(lords.data||[]).map(x=>x.id);
+    const [shards,heroes,troops,devs]=await Promise.all([
+      ids.length?db.from('shards').select('*').in('lord_id',ids):{data:[]},
+      ids.length?db.from('heroes').select('*').in('lord_id',ids):{data:[]},
+      ids.length?db.from('troops').select('*').in('lord_id',ids):{data:[]},
+      ids.length?db.from('developments').select('*').in('lord_id',ids):{data:[]}
+    ]);
+    const lordShards={},lordHeroes={},lordTroops={},lordDevs={};
+    (shards.data||[]).forEach(x=>(lordShards[x.lord_id]??=[]).push(x));
+    (heroes.data||[]).forEach(x=>(lordHeroes[x.lord_id]??=[]).push(x));
+    (troops.data||[]).forEach(x=>(lordTroops[x.lord_id]??=[]).push(x));
+    (devs.data||[]).forEach(x=>(lordDevs[x.lord_id]??=[]).push(x));
+    if(!lords.data?.length){box.innerHTML='<div class="notice">Игроки приняты, но Владыки ещё не созданы.</div>';return;}
+    box.innerHTML='<div class="entity-list">'+lords.data.map(l=>{
+      const ss=lordShards[l.id]||[],hs=lordHeroes[l.id]||[],ts=lordTroops[l.id]||[],ds=lordDevs[l.id]||[];
+      const ancestral=ss.find(x=>x.type==='ancestral');
+      return '<article class="entity lord-game-card"><div class="section-head"><div><h3>👑 '+val(l.name||'Безымянный Владыка')+'</h3><p>Игрок: '+esc(names[l.player_id]||l.player_id)+' · '+val(l.race)+'</p></div><span class="badge">'+val(l.status)+'</span></div>'+
+        '<div class="game-card-grid">'+row('Мир',l.world_name||l.worldName)+row('Энергия',l.energy)+row('Девиз',l.motto)+row('Способность',l.ability)+row('Особенности',l.traits)+row('Осколки',ss.length)+row('Герои',hs.length)+row('Рода войск',ts.length)+row('Развития',ds.length)+'</div>'+
+        (ancestral?section('🌿 Родовой осколок',row('Название',ancestral.name)+row('Размер',ancestral.size)+row('Доход',ancestral.income)+row('Ландшафт',ancestral.terrain)+row('Гарнизон',ancestral.garrison)+row('Защита',ancestral.defense)):'')+
+        (ss.length?section('🌍 Осколки',ss.map(x=>'<div class="game-list-row"><b>'+val(x.name)+'</b> · '+val(x.type)+' · размер '+val(x.size)+' · доход '+val(x.income)+'</div>').join('')):'')+
+        (hs.length?section('🎭 Герои',hs.map(x=>'<div class="game-list-row"><b>'+val(x.name)+'</b> · ур. '+val(x.level)+' · '+chips(x.skills)+' '+chips(x.perks)+'</div>').join('')):'')+
+        (ts.length?section('⚔️ Войска',ts.map(x=>'<div class="game-list-row"><b>'+val(x.name)+'</b> · '+val(x.type)+' · '+val(x.quantity)+'</div>').join('')):'')+
+        '</article>';
+    }).join('')+'</div>';
   }
 
-  async function decide(id,status){
-    const {data:app,error:getError}=await db.from('game_applications').select('player_id').eq('id',id).eq('game_id',game.id).single();
-    if(getError){alert(getError.message);return;}
-    if(status==='accepted'){
-      const {error}=await db.from('game_members').upsert({game_id:game.id,player_id:app.player_id,role:'player'},{onConflict:'game_id,player_id'});
-      if(error){alert(error.message);return;}
-    }
-    const {error}=await db.from('game_applications').update({status,updated_at:new Date().toISOString()}).eq('id',id).eq('game_id',game.id);
-    if(error){alert(error.message);return;}
-    await loadApplications();
+  async function loadShards(){
+    const box=document.getElementById('shardsList'); if(!box)return;
+    const {data,error}=await db.from('free_shards').select('*').eq('game_id',game.id).order('created_at',{ascending:false});
+    if(error){box.innerHTML='<div class="notice">'+esc(error.message)+'</div>';return;}
+    if(!data?.length){box.innerHTML='<div class="notice">Мастер пока не создал свободных осколков.</div>';return;}
+    const assigned=data.filter(x=>x.assigned_lord_id).length;
+    box.innerHTML='<p class="muted">Свободных/созданных осколков: '+data.length+' · передано игрокам: '+assigned+'</p><div class="entity-list">'+data.map(s=>
+      '<article class="entity shard-game-card"><div class="section-head"><h3>🏝️ '+val(s.name||'Без названия')+'</h3><span class="badge">'+(s.assigned_lord_id?'Передан':'Свободен')+'</span></div>'+
+      '<p>'+val(s.type)+' · размер '+val(s.size)+' · доход '+val(s.income)+' · '+val(s.terrain||'ландшафт не указан')+'</p>'+
+      row('Раса',s.race)+row('Население',s.population)+row('Настроение',s.mood)+row('Гарнизон',s.garrison)+row('Снабжение',s.supply)+row('Защита',s.defense)+
+      (s.description?'<p>'+esc(s.description)+'</p>':'')+
+      (master&&!s.assigned_lord_id?'<div class="data-actions"><select data-assign-select="'+s.id+'"><option value="">— выбрать Владыку —</option></select><button class="primary" data-assign="'+s.id+'">Передать Владыке</button><button class="danger" data-delete-free="'+s.id+'">Удалить</button></div>':'')+
+      '</article>').join('')+'</div>';
+    if(master){await fillAssignSelectors(box,data);box.querySelectorAll('[data-assign]').forEach(b=>b.onclick=()=>assignShard(b.dataset.assign,box.querySelector('[data-assign-select="'+b.dataset.assign+'"]').value));box.querySelectorAll('[data-delete-free]').forEach(b=>b.onclick=()=>deleteShard(b.dataset.deleteFree));}
   }
 
-  document.addEventListener('DOMContentLoaded',()=>init().catch(e=>{
-    const s=document.getElementById('status');
-    if(s)s.textContent='Ошибка: '+e.message;
-    console.error('VA34 game page failed',e);
-  }));
+  async function fillAssignSelectors(box,shards){
+    const members=await db.from('game_members').select('player_id').eq('game_id',game.id).eq('role','player');
+    const ids=(members.data||[]).map(x=>x.player_id);
+    const lords=ids.length?await db.from('lords').select('id,name,player_id').eq('game_id',game.id).in('player_id',ids):{data:[]};
+    const people=ids.length?await db.from('players').select('id,display_name,player_name').in('id',ids):{data:[]};
+    const names={};(people.data||[]).forEach(x=>names[x.id]=x.player_name||x.display_name||'Игрок');
+    const options=(lords.data||[]).map(l=>'<option value="'+l.id+'">'+esc(l.name||'Безымянный')+' — '+esc(names[l.player_id]||'Игрок')+'</option>').join('');
+    box.querySelectorAll('[data-assign-select]').forEach(s=>s.insertAdjacentHTML('beforeend',options));
+  }
+
+  async function assignShard(id,lordId){
+    if(!lordId){alert('Выберите Владыку.');return;}
+    const free=await db.from('free_shards').select('*').eq('id',id).eq('game_id',game.id).single();
+    if(free.error){alert(free.error.message);return;}
+    const created=await db.from('shards').insert({lord_id:lordId,name:free.data.name,type:free.data.type,size:free.data.size,income:free.data.income,race:free.data.race,population:free.data.population,mood:free.data.mood,garrison:free.data.garrison,supply:free.data.supply,defense:free.data.defense,terrain:free.data.terrain,buildings:free.data.buildings||0,resources:free.data.resources||[],trophies:free.data.trophies||[],description:free.data.description}).select('id').single();
+    if(created.error){alert(created.error.message);return;}
+    const {error}=await db.from('free_shards').update({assigned_lord_id:lordId,assigned_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq('id',id);
+    if(error){await db.from('shards').delete().eq('id',created.data.id);alert(error.message);return;}
+    await loadShards();await loadLords();
+  }
+
+  async function deleteShard(id){
+    if(!confirm('Удалить этот свободный осколок?'))return;
+    const {error}=await db.from('free_shards').delete().eq('id',id).eq('game_id',game.id);
+    if(error)alert(error.message);else await loadShards();
+  }
+
+  function initShardCreator(){
+    const panel=document.getElementById('shardCreator'); if(!panel)return;
+    const form=document.getElementById('shardCreatorForm'); if(!form)return;
+    const fill=(id,items,label,value)=>{document.getElementById(id).innerHTML=items.map(x=>'<option value="'+esc(value(x))+'">'+esc(label(x))+'</option>').join('')};
+    fill('shardType',VA34_RULES.shardTypes,x=>x.name,x=>x.id);fill('shardSize',VA34_RULES.shardSizes,x=>x.name+' — '+x.value,x=>x.value);fill('shardMood',VA34_RULES.moods,x=>x,x=>x);fill('shardTerrain',VA34_RULES.terrains,x=>x,x=>x);
+    form.onsubmit=async e=>{e.preventDefault();const f=new FormData(form);const payload={game_id:game.id,created_by:user.id,name:String(f.get('name')||'').trim(),type:String(f.get('type')||'ordinary'),size:Number(f.get('size')||1),income:Number(f.get('income')||0),race:String(f.get('race')||''),population:String(f.get('population')||''),mood:String(f.get('mood')||'Спокойное'),garrison:Number(f.get('garrison')||0),supply:Number(f.get('supply')||0),defense:Number(f.get('defense')||0),terrain:String(f.get('terrain')||''),description:String(f.get('description')||'')};if(!payload.name){alert('Укажите название осколка.');return;}const {error}=await db.from('free_shards').insert(payload);if(error){alert(error.message);return;}form.reset();await loadShards();};
+    panel.hidden=false;
+  }
+
+  async function loadTurns(){
+    const box=document.getElementById('turnsList');if(!box)return;
+    const members=await db.from('game_members').select('player_id').eq('game_id',game.id).eq('role','player');
+    const ids=(members.data||[]).map(x=>x.player_id);
+    const lords=ids.length?await db.from('lords').select('id,name,player_id').eq('game_id',game.id).in('player_id',ids):{data:[]};
+    const lordIds=(lords.data||[]).map(x=>x.id);
+    if(!lordIds.length){box.innerHTML='<div class="notice">Ходов пока нет.</div>';return;}
+    const turns=await db.from('turns').select('*').in('lord_id',lordIds).order('turn_number',{ascending:false}).order('updated_at',{ascending:false});
+    if(turns.error){box.innerHTML='<div class="notice">'+esc(turns.error.message)+'</div>';return;}
+    const map={};(lords.data||[]).forEach(l=>map[l.id]=l);
+    const people=await db.from('players').select('id,display_name,player_name').in('id',ids);const names={};(people.data||[]).forEach(p=>names[p.id]=p.player_name||p.display_name||'Игрок');
+    if(!turns.data?.length){box.innerHTML='<div class="notice">Ходов пока нет.</div>';return;}
+    box.innerHTML='<div class="entity-list">'+turns.data.map(t=>{const l=map[t.lord_id]||{};return '<article class="entity"><h3>📋 Ход №'+t.turn_number+' — '+val(l.name||'Владыка')+'</h3><p>Игрок: '+esc(names[l.player_id]||'—')+' · <span class="badge">'+esc(turnText[t.status]||t.status)+'</span></p><p>Изменён: '+esc(new Date(t.updated_at||Date.now()).toLocaleString())+'</p><button data-open-turn="'+t.id+'">Открыть ход</button></article>';}).join('')+'</div>';
+    box.querySelectorAll('[data-open-turn]').forEach(b=>b.onclick=()=>openTurn(b.dataset.openTurn));
+  }
+
+  async function openTurn(turnId){
+    const t=await db.from('turns').select('*').eq('id',turnId).single();if(t.error){alert(t.error.message);return;}
+    const acts=await db.from('turn_actions').select('*').eq('turn_id',turnId).order('action_order',{ascending:true});if(acts.error){alert(acts.error.message);return;}
+    const lord=await db.from('lords').select('name,player_id').eq('id',t.data.lord_id).single();
+    const person=lord.data?await db.from('players').select('display_name,player_name').eq('id',lord.data.player_id).single():{data:null};
+    const detail=document.getElementById('turnDetail');
+    detail.hidden=false;detail.innerHTML='<div class="entity"><span class="badge">'+esc(turnText[t.data.status]||t.data.status)+'</span><h3>Ход №'+t.data.turn_number+' — '+val(lord.data?.name)+'</h3><p>Игрок: '+val(person.data?.player_name||person.data?.display_name)+'</p>'+(acts.data||[]).map((a,i)=>'<div class="notice"><b>'+(i+1)+'. '+val(a.title)+'</b><p>'+esc(a.action_kind==='main'?'Основное':'Дополнительное')+' · '+Number(a.energy_cost||0)+' энергии</p><p>'+esc(a.description||'')+'</p></div>').join('')+(master?'<div class="data-actions"><button class="primary" data-turn-status="approved">Принять</button><button data-turn-status="rejected">Отклонить</button><button data-turn-status="resolved">Разрешён</button></div>':'')+'</div>';
+    detail.querySelectorAll('[data-turn-status]').forEach(b=>b.onclick=()=>setTurnStatus(t.data.id,b.dataset.turnStatus));
+  }
+
+  async function setTurnStatus(id,status){
+    const {error}=await db.from('turns').update({status,updated_at:new Date().toISOString()}).eq('id',id);
+    if(error){alert(error.message);return;}document.getElementById('turnDetail').hidden=true;await loadTurns();
+  }
+
+  document.addEventListener('DOMContentLoaded',()=>init().catch(e=>{const s=document.getElementById('status');if(s)s.textContent='Ошибка: '+e.message;console.error(e)}));
 })();

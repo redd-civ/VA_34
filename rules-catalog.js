@@ -139,7 +139,7 @@
   const sourceEntries = (sectionName, names, endNames=[]) => {
     if (!sourceText) return {};
     const lines = sourceText.split(/\n/);
-    const clean = v => String(v || '').replace(/[\u200b\ufeff]/g,'').replace(/[ \\t]+/g,' ').trim();
+    const clean = v => String(v || '').replace(/[\\u200b\\ufeff]/g,'').replace(/[\\f]/g,' ').replace(/[ *]/g,'').replace(/^\\s*[-–—•]+\\s*/,'').replace(/[ \\t]+/g,' ').trim();
     const start = lines.findIndex(line => clean(line) === clean(sectionName));
     if (start < 0) return {};
     let end = lines.length;

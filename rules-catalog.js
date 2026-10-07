@@ -154,7 +154,8 @@
       if (!line) continue;
       let matched=null;
       for (const [key,name] of wanted) {
-        if (line === key || line.startsWith(key+'.') || line.startsWith(key+' —') || line.startsWith(key+' -')) { matched=name; break; }
+        const boundary = line.slice(key.length, key.length + 1);
+        if (line === key || (line.startsWith(key) && /^[.\\-—:]|\\s/.test(boundary))) { matched=name; break; }
       }
       if (!matched) continue;
       let text=line.slice(clean(matched).length).replace(/^\\s*(?:[.\\-—:]\\s*)?/,'').trim();
@@ -165,7 +166,8 @@
         if (!next) continue;
         let isNext=false;
         for (const [key] of wanted) {
-          if (next === key || next.startsWith(key+'.') || next.startsWith(key+' —') || next.startsWith(key+' -')) { isNext=true; break; }
+          const boundary = next.slice(key.length, key.length + 1);
+          if (next === key || (next.startsWith(key) && /^[.\\-—:]|\\s/.test(boundary))) { isNext=true; break; }
         }
         if (isNext) break;
         if (/^(?:Школы магии|Технологии|Перки героев|Навыки героев|Ландшафт|Список родов войск|Ресурсы)$/i.test(next)) break;

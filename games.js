@@ -165,6 +165,30 @@
     if(error)alert(error.message);else await loadShards();
   }
 
+  async function loadApplications(){
+    const box=document.getElementById('applications');if(!box)return;
+    const {data,error}=await db.from('game_applications').select('id,player_id,message,status,created_at').eq('game_id',game.id).order('created_at',{ascending:true});
+    if(error){box.innerHTML='<div class="notice">'+esc(error.message)+'</div>';return;}
+    if(!data?.length){box.innerHTML='<div class="notice">Заявок пока нет.</div>';return;}
+    const ids=[...new Set(data.map(a=>a.player_id))];
+    const people=await db.from('players').select('id,display_name,player_name').in('id',ids);
+    const names={};(people.data||[]).forEach(p=>names[p.id]=p.player_name||p.display_name||'Игрок');
+    box.innerHTML=data.map(a=>'<article class="entity"><h3>'+esc(names[a.player_id]||'Игрок')+' · '+esc(roleText[a.status]||a.status)+'</h3>'+(a.message?'<p>'+esc(a.message)+'</p>':'')+(a.status==='pending'?'<div class="data-actions"><button class="primary" data-app="'+a.id+'" data-app-status="accepted">Принять</button><button data-app="'+a.id+'" data-app-status="rejected">Отклонить</button></div>':'')+'</article>').join('');
+    box.querySelectorAll('[data-app]').forEach(b=>b.onclick=()=>decideApplication(b.dataset.app,b.dataset.appStatus));
+  }
+
+  async function decideApplication(id,status){
+    const app=await db.from('game_applications').select('player_id').eq('id',id).eq('game_id',game.id).single();
+    if(app.error){alert(app.error.message);return;}
+    if(status==='accepted'){
+      const member=await db.from('game_members').upsert({game_id:game.id,player_id:app.data.player_id,role:'player'},{onConflict:'game_id,player_id'});
+      if(member.error){alert(member.error.message);return;}
+    }
+    const {error}=await db.from('game_applications').update({status,updated_at:new Date().toISOString()}).eq('id',id).eq('game_id',game.id);
+    if(error){alert(error.message);return;}
+    await loadApplications();await loadLords();
+  }
+
   function initShardCreator(){
     const panel=document.getElementById('shardCreator'); if(!panel)return;
     const form=document.getElementById('shardCreatorForm'); if(!form)return;

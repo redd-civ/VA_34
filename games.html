@@ -31,6 +31,7 @@
     <button type="button" data-game-tab="lords">👑 Владыки</button>
     <button type="button" data-game-tab="shards">🏝️ Осколки</button>
     <button type="button" data-game-tab="turns">📋 Ходы ИС</button>
+    <button type="button" data-game-tab="my-turn">✍️ Мой ход</button>
     <button type="button" data-game-tab="application">📨 Моя заявка</button>
   </nav>
 
@@ -70,6 +71,12 @@
       </form>
     </section>
     <div id="shardsList"></div>
+  </section>
+
+  <section id="tab-my-turn" class="game-tab-panel" hidden>
+    <h2>✍️ Мой ход</h2>
+    <p class="muted">Первый этап: игрок создаёт черновик хода, добавляет действия и только после этого отправляет его Мастеру.</p>
+    <div id="myTurnEditor"></div>
   </section>
 
   <section id="tab-turns" class="game-tab-panel" hidden>

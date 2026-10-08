@@ -288,7 +288,7 @@
       if(!title){alert('Укажите название действия.');return;}
       const current=await db.from('turn_actions').select('action_order').eq('turn_id',turnId).order('action_order',{ascending:false}).limit(1);
       const order=Number(current.data?.[0]?.action_order||0)+1;
-      const validation={mechanic,mechanic_name:(kind==='other'?'Прочее':(actionMechanics[kind]||[]).find(x=>x.id===mechanic)?.name||mechanic)};
+      const validation={action_type:kind,mechanic,mechanic_name:(kind==='other'?'Прочее':(actionMechanics[kind]||[]).find(x=>x.id===mechanic)?.name||mechanic)};
       if(mechanic==='technology'||mechanic==='magic'){
         const developmentName=String(data.get('development_name')||'').trim();
         if(!developmentName){alert(mechanic==='technology'?'Выберите технологию.':'Выберите школу магии.');return;}

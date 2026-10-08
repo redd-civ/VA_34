@@ -42,7 +42,7 @@
     localStorage.setItem('va34_current_game_id',game.id);
     renderGame();
     bindTabs();
-    await Promise.all([loadMyApplication(),loadLords(),loadShards(),loadTurns()]);
+    await Promise.all([loadMyApplication(),loadLords(),loadShards(),loadTurns(),loadMyTurn()]);
     if(master && game.master_id===user.id){
       document.getElementById('masterPanel').style.display='block';
       await loadApplications();
@@ -196,6 +196,76 @@
     fill('shardType',VA34_RULES.shardTypes,x=>x.name,x=>x.id);fill('shardSize',VA34_RULES.shardSizes,x=>x.name+' — '+x.value,x=>x.value);fill('shardMood',VA34_RULES.moods,x=>x,x=>x);fill('shardTerrain',VA34_RULES.terrains,x=>x,x=>x);
     form.onsubmit=async e=>{e.preventDefault();const f=new FormData(form);const payload={game_id:game.id,created_by:user.id,name:String(f.get('name')||'').trim(),type:String(f.get('type')||'ordinary'),size:Number(f.get('size')||1),income:Number(f.get('income')||0),race:String(f.get('race')||''),population:String(f.get('population')||''),mood:String(f.get('mood')||'Спокойное'),garrison:Number(f.get('garrison')||0),supply:Number(f.get('supply')||0),defense:Number(f.get('defense')||0),terrain:String(f.get('terrain')||''),description:String(f.get('description')||'')};if(!payload.name){alert('Укажите название осколка.');return;}const {error}=await db.from('free_shards').insert(payload);if(error){alert(error.message);return;}form.reset();await loadShards();};
     panel.hidden=false;
+  }
+
+  async function loadMyTurn(){
+    const box=document.getElementById('myTurnEditor'); if(!box)return;
+    const mine=await db.from('lords').select('id,name').eq('game_id',game.id).eq('player_id',user.id).order('created_at',{ascending:true}).limit(1).maybeSingle();
+    if(mine.error){box.innerHTML='<div class="notice">'+esc(mine.error.message)+'</div>';return;}
+    if(!mine.data){box.innerHTML='<div class="notice">У вас пока нет Владыки в этой игре.</div>';return;}
+
+    const turns=await db.from('turns').select('*').eq('lord_id',mine.data.id).order('turn_number',{ascending:false}).limit(1);
+    if(turns.error){box.innerHTML='<div class="notice">'+esc(turns.error.message)+'</div>';return;}
+    let turn=turns.data?.[0]||null;
+
+    if(turn && turn.status!=='draft'){
+      const nextNumber=Number(turn.turn_number||0)+1;
+      const created=await db.from('turns').insert({lord_id:mine.data.id,turn_number:nextNumber,status:'draft'}).select('*').single();
+      if(created.error){box.innerHTML='<div class="notice">'+esc(created.error.message)+'</div>';return;}
+      turn=created.data;
+    } else if(!turn){
+      const created=await db.from('turns').insert({lord_id:mine.data.id,turn_number:1,status:'draft'}).select('*').single();
+      if(created.error){box.innerHTML='<div class="notice">'+esc(created.error.message)+'</div>';return;}
+      turn=created.data;
+    }
+
+    const actions=await db.from('turn_actions').select('*').eq('turn_id',turn.id).order('action_order',{ascending:true});
+    if(actions.error){box.innerHTML='<div class="notice">'+esc(actions.error.message)+'</div>';return;}
+
+    box.innerHTML='<article class="entity"><div class="section-head"><div><h3>Ход №'+turn.turn_number+' — '+val(mine.data.name)+'</h3><p class="muted">Статус: '+esc(turnText[turn.status]||turn.status)+'</p></div></div>'+
+      '<div id="myTurnActions">'+(actions.data||[]).map(renderMyTurnAction).join('')+'</div>'+
+      '<div class="data-actions"><button id="addTurnAction">＋ Добавить действие</button><button class="primary" id="submitMyTurn">Отправить Мастеру</button></div>'+
+      '</article>';
+
+    document.getElementById('addTurnAction').onclick=()=>addMyTurnAction(turn.id);
+    document.getElementById('submitMyTurn').onclick=()=>submitMyTurn(turn.id);
+    box.querySelectorAll('[data-delete-action]').forEach(b=>b.onclick=()=>deleteMyTurnAction(b.dataset.deleteAction,turn.id));
+  }
+
+  function renderMyTurnAction(a){
+    return '<article class="notice" data-action-card="'+a.id+'"><div class="section-head"><b>'+val(a.title||'Без названия')+'</b><button type="button" data-delete-action="'+a.id+'">Удалить</button></div><p>'+esc(a.action_kind==='main'?'Основное действие':'Дополнительное действие')+'</p><p>'+esc(a.description||'')+'</p></article>';
+  }
+
+  async function addMyTurnAction(turnId){
+    const title=prompt('Название действия:','');
+    if(title===null)return;
+    if(!title.trim()){alert('Укажите название действия.');return;}
+    const description=prompt('Опишите, что именно вы хотите сделать и чего хотите добиться:','');
+    if(description===null)return;
+    const kind=(prompt('Тип действия: main — основное, extra — дополнительное','main')||'main').trim()==='extra'?'extra':'main';
+    const current=await db.from('turn_actions').select('action_order').eq('turn_id',turnId).order('action_order',{ascending:false}).limit(1);
+    const order=Number(current.data?.[0]?.action_order||0)+1;
+    const {error}=await db.from('turn_actions').insert({turn_id:turnId,action_order:order,action_kind:kind,title:title.trim(),description:description.trim(),energy_cost:0,status:'pending'});
+    if(error){alert(error.message);return;}
+    await loadMyTurn();
+  }
+
+  async function deleteMyTurnAction(actionId,turnId){
+    if(!confirm('Удалить действие из черновика?'))return;
+    const {error}=await db.from('turn_actions').delete().eq('id',actionId).eq('turn_id',turnId);
+    if(error){alert(error.message);return;}
+    await loadMyTurn();
+  }
+
+  async function submitMyTurn(turnId){
+    const actions=await db.from('turn_actions').select('id').eq('turn_id',turnId);
+    if(actions.error){alert(actions.error.message);return;}
+    if(!actions.data?.length){alert('Добавьте хотя бы одно действие.');return;}
+    if(!confirm('Отправить ход Мастеру? После отправки редактирование будет закрыто.'))return;
+    const {error}=await db.from('turns').update({status:'submitted',submitted_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq('id',turnId).eq('status','draft');
+    if(error){alert(error.message);return;}
+    await loadMyTurn();
+    await loadTurns();
   }
 
   async function loadTurns(){

@@ -238,22 +238,69 @@
     box.querySelectorAll('[data-delete-action]').forEach(b=>b.onclick=()=>deleteMyTurnAction(b.dataset.deleteAction,turn.id));
   }
 
+  const actionMechanics={
+    main:[{id:'attack',name:'Атака'} ,{id:'other',name:'Прочее'}],
+    extra:[{id:'technology',name:'Развитие технологий'},{id:'magic',name:'Развитие магии'},{id:'other',name:'Прочее'}]
+  };
+
+  function developmentChoices(kind){
+    if(kind==='technology') return '<label>Технология<select name="development_name" required><option value="">— выбрать технологию —</option>'+list(window.VA34_RULES?.technologies).map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('')+'</select></label><label>Уровень развития<select name="development_level">'+[1,2,3,4,5,6].map(n=>'<option value="'+n+'">'+n+'</option>').join('')+'</select></label>';
+    if(kind==='magic') return '<label>Школа магии<select name="development_name" required><option value="">— выбрать школу магии —</option>'+list(window.VA34_RULES?.magicSchools).map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('')+'</select></label><label>Уровень развития<select name="development_level">'+[1,2,3,4,5,6].map(n=>'<option value="'+n+'">'+n+'</option>').join('')+'</select></label>';
+    return '';
+  }
+
+  function renderMechanicFields(form,kind){
+    const fields=form.querySelector('[data-mechanic-fields]');
+    if(fields)fields.innerHTML=developmentChoices(kind);
+  }
+
   function renderMyTurnAction(a){
-    return '<article class="notice" data-action-card="'+a.id+'"><div class="section-head"><b>'+val(a.title||'Без названия')+'</b><button type="button" data-delete-action="'+a.id+'">Удалить</button></div><p>'+esc(a.action_kind==='main'?'Основное действие':'Дополнительное действие')+'</p><p>'+esc(a.description||'')+'</p></article>';
+    const mechanism=a.validation?.mechanic_name||a.validation?.mechanic||'Прочее';
+    const target=a.validation?.development_name?'<p><b>'+esc(a.validation.development_type==='magic'?'Школа магии':'Технология')+':</b> '+esc(a.validation.development_name)+' · уровень '+esc(a.validation.development_level)+'</p>':'';
+    return '<article class="notice" data-action-card="'+a.id+'"><div class="section-head"><b>'+val(a.title||'Без названия')+'</b><button type="button" data-delete-action="'+a.id+'">Удалить</button></div><p>'+esc(a.action_kind==='main'?'Основное действие':'Дополнительное действие')+' · <b>'+esc(mechanism)+'</b></p>'+target+'<p>'+esc(a.description||'')+'</p></article>';
   }
 
   async function addMyTurnAction(turnId){
-    const title=prompt('Название действия:','');
-    if(title===null)return;
-    if(!title.trim()){alert('Укажите название действия.');return;}
-    const description=prompt('Опишите, что именно вы хотите сделать и чего хотите добиться:','');
-    if(description===null)return;
-    const kind=(prompt('Тип действия: main — основное, extra — дополнительное','main')||'main').trim()==='extra'?'extra':'main';
-    const current=await db.from('turn_actions').select('action_order').eq('turn_id',turnId).order('action_order',{ascending:false}).limit(1);
-    const order=Number(current.data?.[0]?.action_order||0)+1;
-    const {error}=await db.from('turn_actions').insert({turn_id:turnId,action_order:order,action_kind:kind,title:title.trim(),description:description.trim(),energy_cost:0,status:'pending'});
-    if(error){alert(error.message);return;}
-    await loadMyTurn();
+    const box=document.getElementById('myTurnEditor');
+    const old=box.querySelector('#myTurnActionForm');
+    if(old){old.remove();return;}
+    const form=document.createElement('form');
+    form.id='myTurnActionForm';
+    form.className='entity';
+    form.innerHTML='<h3>Новое действие</h3><div class="form-grid"><label>Тип действия<select name="action_kind" required><option value="main">Основное</option><option value="extra">Дополнительное</option><option value="other">Прочее</option></select></label><label>Механика<select name="mechanic" required></select></label><div class="wide" data-mechanic-fields></div><label class="wide">Название действия<input name="title" required></label><label class="wide">Описание / цель<textarea name="description" rows="4" placeholder="Что именно вы хотите сделать и чего хотите добиться?"></textarea></label><div class="wide data-actions"><button class="primary" type="submit">Добавить действие</button><button type="button" id="cancelTurnAction">Отмена</button></div></div>';
+    box.querySelector('.data-actions')?.before(form);
+    const kindSelect=form.querySelector('[name="action_kind"]');
+    const mechanicSelect=form.querySelector('[name="mechanic"]');
+    const otherMechanics=[{id:'other',name:'Прочее'}];
+    const refresh=()=>{
+      const kind=kindSelect.value;
+      const choices=kind==='other'?otherMechanics:actionMechanics[kind];
+      mechanicSelect.innerHTML=choices.map(x=>'<option value="'+x.id+'">'+esc(x.name)+'</option>').join('');
+      renderMechanicFields(form,mechanicSelect.value);
+    };
+    kindSelect.onchange=refresh;
+    mechanicSelect.onchange=()=>renderMechanicFields(form,mechanicSelect.value);
+    form.querySelector('#cancelTurnAction').onclick=()=>form.remove();
+    form.onsubmit=async e=>{
+      e.preventDefault();
+      const data=new FormData(form), kind=data.get('action_kind'), mechanic=data.get('mechanic');
+      const title=String(data.get('title')||'').trim();
+      if(!title){alert('Укажите название действия.');return;}
+      const current=await db.from('turn_actions').select('action_order').eq('turn_id',turnId).order('action_order',{ascending:false}).limit(1);
+      const order=Number(current.data?.[0]?.action_order||0)+1;
+      const validation={mechanic,mechanic_name:(kind==='other'?'Прочее':(actionMechanics[kind]||[]).find(x=>x.id===mechanic)?.name||mechanic)};
+      if(mechanic==='technology'||mechanic==='magic'){
+        const developmentName=String(data.get('development_name')||'').trim();
+        if(!developmentName){alert(mechanic==='technology'?'Выберите технологию.':'Выберите школу магии.');return;}
+        validation.development_type=mechanic;
+        validation.development_name=developmentName;
+        validation.development_level=Number(data.get('development_level')||1);
+      }
+      const {error}=await db.from('turn_actions').insert({turn_id:turnId,action_order:order,action_kind:kind==='extra'?'extra':'main',title,description:String(data.get('description')||'').trim(),energy_cost:0,status:'pending',validation});
+      if(error){alert(error.message);return;}
+      await loadMyTurn();
+    };
+    refresh();
   }
 
   async function deleteMyTurnAction(actionId,turnId){

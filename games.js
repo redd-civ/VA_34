@@ -209,6 +209,12 @@
     let turn=turns.data?.[0]||null;
 
     if(turn && turn.status!=='draft'){
+      if(turn.status==='submitted'){
+        const actions=await db.from('turn_actions').select('*').eq('turn_id',turn.id).order('action_order',{ascending:true});
+        if(actions.error){box.innerHTML='<div class="notice">'+esc(actions.error.message)+'</div>';return;}
+        box.innerHTML='<article class="entity"><h3>Ход №'+turn.turn_number+' — '+val(mine.data.name)+'</h3><p class="muted">Статус: <b>'+esc(turnText[turn.status]||turn.status)+'</b></p><p>Ход уже отправлен Мастеру и сейчас ожидает рассмотрения.</p><div class="notice">'+(actions.data||[]).map(renderMyTurnAction).join('')+'</div></article>';
+        return;
+      }
       const nextNumber=Number(turn.turn_number||0)+1;
       const created=await db.from('turns').insert({lord_id:mine.data.id,turn_number:nextNumber,status:'draft'}).select('*').single();
       if(created.error){box.innerHTML='<div class="notice">'+esc(created.error.message)+'</div>';return;}

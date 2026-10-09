@@ -160,8 +160,8 @@ window.VA34_SPECIAL_TZ = [
     category:"magic_level",
     school:"Природа",
     requiredLevel:3,
-    effect:"+3 к доходу на 3 хода.",
-    cost:{fixed:5},
+    effect:"+3 к доходу на 3 хода; применение требует дополнительного действия и 4 э.",
+    cost:{fixed:4},
     source:"Прочее — ТЗ природы"
   },
   {

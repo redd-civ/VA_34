@@ -139,13 +139,13 @@
     return {errors,warnings,main,extra,total,spent,energy,development};
   }
 
-  function developmentOptions(){
-    const tech=(RULES.technologies||[]).map(x=>'<option value="'+esc(x)+'">⚙ '+esc(x)+'</option>').join('');
-    const magic=(RULES.magicSchools||[]).map(x=>'<option value="'+esc(x)+'">🔮 '+esc(x)+'</option>').join('');
-    return '<select name="developmentName"><option value="">— выбрать —</option>'+tech+magic+'</select>';
+  function developmentOptions(kind='technology'){
+    const items=kind==='magic'?(RULES.magicSchools||[]):(RULES.technologies||[]);
+    const prefix=kind==='magic'?'🔮 ':'⚙ ';
+    return '<option value="">— выбрать —</option>'+items.map(x=>'<option value="'+esc(x)+'">'+prefix+esc(x)+'</option>').join('');
   }
   function actionForm(){
-    return '<form id="turnActionForm" class="form-grid"><label>Тип действия<select name="kind"><option value="main">Основное</option><option value="extra">Дополнительное</option></select></label><label>Тип механики<select name="actionType"><option value="normal">Обычное действие</option><option value="technology">Развитие технологии</option><option value="magic">Развитие магии</option><option value="specialTZ">Специальное ТЗ</option></select></label><label>Стоимость энергии<input name="cost" type="number" min="0" step="0.5" value="0"></label><label>Профиль стоимости<select name="costProfile"><option value="profile">Профильная</option><option value="nonProfile">Непрофильная</option><option value="veryNonProfile">Очень непрофильная</option></select></label><label>Скидка на стоимость, %<input name="discountPercent" type="number" min="0" max="100" step="0.5" value="0"></label><label>Уровень развития<select name="developmentLevel">'+[1,2,3,4,5,6].map(n=>'<option value="'+n+'">'+LEVEL_LABEL(n)+'</option>').join('')+'</select></label><label class="wide">Технология / школа / ТЗ'+developmentOptions()+'</label><label class="wide">Специальное ТЗ<select name="specialTZ"><option value="">— не используется —</option>'+((window.VA34_SPECIAL_TZ||[]).map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join(''))+'</select></label><label class="wide">Название действия<input name="title" required placeholder="Например: развитие Инженерного дела"></label><label class="wide">Описание / цель<textarea name="description" rows="4" placeholder="Что именно делает Владыка"></textarea></label><div><button class="primary" type="submit">Добавить действие</button></div></form>';
+    return '<form id="turnActionForm" class="form-grid"><label>Тип действия<select name="kind"><option value="main">Основное</option><option value="extra">Дополнительное</option></select></label><label>Тип механики<select name="actionType"><option value="attack">Атака</option><option value="other">Прочее</option></select></label><label>Стоимость энергии<input name="cost" type="number" min="0" step="0.5" value="0"></label><div id="developmentFields" class="wide" style="display:none"><label>Технология / школа магии<select name="developmentName">'+developmentOptions('technology')+'</select></label><label>Уровень развития<select name="developmentLevel">'+[1,2,3,4,5,6].map(n=>'<option value="'+n+'">'+LEVEL_LABEL(n)+'</option>').join('')+'</select></label><label>Профиль стоимости<select name="costProfile"><option value="profile">Профильная</option><option value="nonProfile">Непрофильная</option><option value="veryNonProfile">Очень непрофильная</option></select></label><label>Скидка на стоимость, %<input name="discountPercent" type="number" min="0" max="100" step="0.5" value="0"></label></div><label class="wide">Название действия<input name="title" required placeholder="Например: разведка, атака или развитие"></label><label class="wide">Описание / цель<textarea name="description" rows="4" placeholder="Что именно делает Владыка"></textarea></label><div><button class="primary" type="submit">Добавить действие</button></div></form>';
   }
   function LEVEL_LABEL(n){const names=['Базовый','Продвинутый','Экспертный','Мастерский','Грандмастерский','Эпичный'];return names[n-1]+' ('+['I','II','III','IV','V','VI'][n-1]+')';}
 
@@ -179,7 +179,25 @@
       '<div class="data-actions"><button id="validateTurnBtn" class="primary">Проверить ход</button><button id="submitTurnBtn" class="primary" '+(v.errors.length||!turn.actions.length||turn.status!=='draft'?'disabled':'')+'>Отправить ход</button><button id="clearTurnBtn" class="danger">Очистить черновик</button></div>';
 
     const f=document.getElementById('turnActionForm');
-    if(f)f.onsubmit=e=>{e.preventDefault();const x=Object.fromEntries(new FormData(f));const isDev=x.actionType==='technology'||x.actionType==='magic';let cost=Number(x.cost||0);if(isDev&&ENGINE){const p=ENGINE.technologyCost(x.developmentName,x.developmentLevel,x.costProfile);if(p.allowed){const discount=Math.max(0,Math.min(100,Number(x.discountPercent||0)));cost=Math.max(p.discountFloor,p.cost*(1-discount/100));}}turn.actions.push({id:uid(),kind:x.kind,cost,title:x.title.trim(),description:x.description||'',actionType:x.actionType,developmentName:x.developmentName||'',developmentLevel:Number(x.developmentLevel||1),techName:x.developmentName||'',techLevel:Number(x.developmentLevel||1),costProfile:x.costProfile||'profile',discountPercent:Number(x.discountPercent||0),specialTZ:x.specialTZ||''});saveTurn(turn);};
+    if(f){
+      const kindField=f.elements.kind, typeField=f.elements.actionType, nameField=f.elements.developmentName;
+      const devFields=document.getElementById('developmentFields');
+      const syncActionFields=()=>{
+        const kind=kindField.value;
+        const current=typeField.value;
+        const options=kind==='main'?[['attack','Атака'],['other','Прочее']]:[['technology','Развитие технологий'],['magic','Развитие магии'],['other','Прочее']];
+        typeField.innerHTML=options.map(([value,label])=>'<option value="'+value+'">'+label+'</option>').join('');
+        if(options.some(([value])=>value===current))typeField.value=current;
+        else typeField.value=kind==='main'?'attack':'technology';
+        const type=typeField.value;
+        if(devFields)devFields.style.display=(type==='technology'||type==='magic')?'grid':'none';
+        if(nameField)nameField.innerHTML=developmentOptions(type==='magic'?'magic':'technology');
+      };
+      kindField.onchange=syncActionFields;
+      typeField.onchange=syncActionFields;
+      syncActionFields();
+      f.onsubmit=e=>{e.preventDefault();const x=Object.fromEntries(new FormData(f));const isDev=x.actionType==='technology'||x.actionType==='magic';let cost=Number(x.cost||0);if(isDev&&ENGINE&&x.actionType==='technology'){const p=ENGINE.technologyCost(x.developmentName,x.developmentLevel,x.costProfile);if(p.allowed){const discount=Math.max(0,Math.min(100,Number(x.discountPercent||0)));cost=Math.max(p.discountFloor,p.cost*(1-discount/100));}}turn.actions.push({id:uid(),kind:x.kind,cost,title:x.title.trim(),description:x.description||'',actionType:x.actionType,developmentName:x.developmentName||'',developmentLevel:Number(x.developmentLevel||1),techName:x.developmentName||'',techLevel:Number(x.developmentLevel||1),costProfile:x.costProfile||'profile',discountPercent:Number(x.discountPercent||0),specialTZ:''});saveTurn(turn);};
+    }
     box.querySelectorAll('[data-remove-turn]').forEach(b=>b.onclick=()=>{turn.actions=turn.actions.filter(a=>a.id!==b.dataset.removeTurn);saveTurn(turn);});
     const submit=document.getElementById('submitTurnBtn'); if(submit)submit.onclick=async()=>{const check=validate(turn);if(check.errors.length){render();return;}turn.status='submitted';turn.submittedAt=new Date().toISOString();await saveTurn(turn);};
     const clear=document.getElementById('clearTurnBtn'); if(clear)clear.onclick=()=>{if(confirm('Очистить текущий черновик хода?'))saveTurn(defaultTurn());};

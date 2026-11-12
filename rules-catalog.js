@@ -529,13 +529,13 @@
       '<tr><td>Логистика: технический максимум дополнительных</td><td>'+fmt(R.actionRules?.logisticsExtraMax)+'</td></tr>' +
       '<tr><td>Бонус отказа от рода войск</td><td>до +'+fmt(R.refusalBonuses?.maxIncomeBonusPerTroopRefusal)+' дохода за отказ; учитывается до +'+fmt(R.refusalBonuses?.maxIncomeBonusFromTroopRefusals)+' от отказов</td></tr>' +
       '<tr><td>Общий максимум бонуса отказа</td><td>до +'+fmt(R.refusalBonuses?.maxIncomeBonus)+' дохода</td></tr>' +
-      '<tr><td>Защита мира (структурированный источник)</td><td>'+fmt(R.worldRules?.defenseEnergyRatio)+'</td></tr>' +
+      '<tr><td>Защита мира</td><td>'+fmt(R.worldRules?.defenseEnergyRatio)+'</td></tr>' +
       '<tr><td>Колонизация маленького осколка</td><td>'+fmt(R.worldRules?.colonization?.small)+'</td></tr>' +
       '<tr><td>Каждый следующий размер колонизации</td><td>+'+fmt(R.worldRules?.colonization?.perSizeAfterSmall)+'</td></tr>' +
       '</table>' +
       '<h3>⚙️ Стоимость развития по структурированному справочнику</h3>' +
       '<table><tr><th>Профиль</th><th>I</th><th>II</th><th>III</th><th>IV</th><th>V</th><th>VI</th></tr>'+techRows+'</table>' +
-      '<div class="notice"><strong>Расхождения источников сохраняются:</strong> старый текст правил и структурированный справочник имеют разные значения для стоимости технологий, логистики, призыва героев и защиты мира. Каталог не подменяет решение Мастера.</div>';
+      '<div class="notice"><strong>Примечание:</strong> значения логистики, призыва героев и защиты мира приведены по согласованным решениям Мастера. Расхождение по стоимости технологий пока остаётся на проверке.</div>';
   }
 
   const world = document.getElementById('world');

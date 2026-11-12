@@ -887,13 +887,13 @@ window.VA34_RULES = {
     {id:"epic",name:"Эпичный",rank:6}
   ],
   actionModes:[{id:"standard",name:"Стандарт",main:2,extra:2},{id:"mixed",name:"Смешанный",main:1,extra:3},{id:"extra",name:"Только дополнительные",main:0,extra:5},{id:"loner",name:"Одиночка",main:1,extra:3}],
-  actionRules:{mainCanBecomeExtra:true,extraCannotBecomeMain:true,smallActionsFree:true,mainMaxWithoutLogistics:2,extraMaxWithoutLogistics:5,logisticsMainMax:5,logisticsExtraMax:8},
+  actionRules:{mainCanBecomeExtra:true,extraCannotBecomeMain:true,mainToExtraRatio:1.5,conversionRounding:"floor",ownShardEffectsCountAsExtra:true,inlineEffectsCostNoAction:true,smallActionsFree:true,mainMaxWithoutLogistics:2,extraMaxWithoutLogistics:5,logisticsMainMax:5,logisticsExtraMax:8},
   logistics:{large:{firstCost:18,nextIncrease:3,actionPerLevel:1},small:{firstCost:6,nextIncrease:2,actionPerLevel:1}},
   technologyCosts:{profile:{basic:4,advanced:4,expert:4,master:6,grandmaster:6,epic:12},nonProfile:{basic:6,advanced:6,expert:6,master:10,grandmaster:10,epic:20},veryNonProfile:{basic:8,advanced:8,expert:8,master:12,grandmaster:12,epic:24},minimumAfterDiscount:0.5},
   heroRules:{maxHeroes:5,startSkillsRecommended:2,recruit:{baseCost:10,costIncrease:5,maxCost:30,skillsAtMaxCost:3},summon:{firstCost:12,nextMultiplier:2}},
   refusalBonuses:{maxIncomeBonus:4,maxIncomeBonusPerTroopRefusal:1,maxIncomeBonusFromTroopRefusals:2},
   turnPhases:["Вычитание энергии","Гарнизоны","Миссии вне мира","Атаки Владык","Атаки нейтралов","Действия внутри мира","События","Ничто","Доход","Завершение","Новый контент"],
-  worldRules:{defenseEnergyRatio:"1:2",colonization:{small:3,perSizeAfterSmall:4},freshContentStartsNextTurn:true,buildingsSizeLimit:"floor(size), ancestral=4"},
+  worldRules:{defenseEnergyRatio:"1:2",colonization:{small:3,perSizeAfterSmall:4},garrisonExpansion:{multiplierPerShardSize:3,technologyCost:6,stackable:true,examples:[{shardSize:0.5,additionalUnits:1,cost:1},{shardSize:2,additionalUnits:6,cost:2}]},freshContentStartsNextTurn:true,buildingsSizeLimit:"floor(size), ancestral=4"},
   constants:{
     defaultActions:4,
     defaultEnergyStorage:20,

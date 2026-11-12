@@ -289,8 +289,7 @@ window.VA34_SPECIAL_TZ = [
     effect:"+3 к доходу на 3 хода.",
     cost:{fixed:5},
     source:"Прочее — ТЗ природы"
-  }
-
+  },
   {
     id:"light-drain",
     name:"Вытягивание света",

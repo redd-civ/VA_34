@@ -509,6 +509,8 @@
       '<tr><td>Макс. школ магии на старте</td><td>'+fmt(R.constants?.maxStartingMagicSchools)+'</td></tr>' +
       '<tr><td>Стартовое развитие</td><td>'+fmt(R.constants?.startingTechLevelsMin)+'–'+fmt(R.constants?.startingTechLevelsMax)+' уровней</td></tr>' +
       '<tr><td>Макс. героев</td><td>'+fmt(R.heroRules?.maxHeroes)+'</td></tr>' +
+      '<tr><td>Призыв второго героя</td><td>'+fmt(R.heroRules?.summon?.secondCost)+' э</td></tr>' +
+      '<tr><td>Призыв третьего героя</td><td>'+fmt(R.heroRules?.summon?.thirdCost)+' э</td></tr>' +
       '<tr><td>Макс. навыков героя</td><td>'+fmt(R.constants?.maxHeroSkills)+'</td></tr>' +
       '<tr><td>Действий по умолчанию</td><td>'+fmt(R.constants?.defaultActions)+'</td></tr>' +
       '<tr><td>Макс. уровней одной технологии за ход</td><td>'+fmt(R.constants?.maxTechLevelsPerTurn)+'</td></tr>' +
